@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
-const env = (import.meta as any).env;
-const supabaseUrl = env?.VITE_SUPABASE_URL;
-const supabaseKey = env?.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export default function App() {
   const [resultado, setResultado] = useState("Probando conexión...");
@@ -34,7 +33,7 @@ export default function App() {
 
         setResultado(`HTTP ${res.status} ${res.statusText}`);
         setDetalle(texto);
-      } catch (error: any) {
+      } catch (error) {
         setResultado("Error real detectado");
         setDetalle(String(error));
       }
