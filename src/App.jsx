@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import * as XLSX from "xlsx";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -104,50 +105,42 @@ export default function App() {
     cargarVotantes();
   }
 
-  function exportarCSV() {
+  function exportarExcel() {
     if (votantesFiltrados.length === 0) {
       alert("No hay votantes para exportar.");
       return;
     }
 
-    const encabezados = [
-      "Nombre",
-      "Telefono",
-      "Barrio",
-      "Direccion",
-      "Estado",
-      "Observacion",
-      "Fecha",
+    const datos = votantesFiltrados.map((v) => ({
+      Nombre: v.nombre || "",
+      Telefono: v.telefono || "",
+      Barrio: v.barrio || "",
+      Direccion: v.direccion || "",
+      Estado:
+        v.estado === "apoya"
+          ? "Apoya"
+          : v.estado === "indeciso"
+          ? "Indeciso"
+          : "No apoya",
+      Observacion: v.observacion || "",
+      Fecha: v.created_at ? new Date(v.created_at).toLocaleString() : "",
+    }));
+
+    const hoja = XLSX.utils.json_to_sheet(datos);
+
+    hoja["!cols"] = [
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 24 },
+      { wch: 14 },
+      { wch: 28 },
+      { wch: 22 },
     ];
 
-    const filas = votantesFiltrados.map((v) => [
-      v.nombre || "",
-      v.telefono || "",
-      v.barrio || "",
-      v.direccion || "",
-      v.estado || "",
-      v.observacion || "",
-      v.created_at ? new Date(v.created_at).toLocaleString() : "",
-    ]);
-
-    const csv = [
-      encabezados.join(","),
-      ...filas.map((fila) =>
-        fila
-          .map((valor) => `"${String(valor).replace(/"/g, '""')}"`)
-          .join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "votantes_presidente_franco.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Votantes");
+    XLSX.writeFile(libro, "votantes_presidente_franco.xlsx");
   }
 
   const stats = useMemo(() => {
@@ -222,10 +215,7 @@ export default function App() {
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{ marginTop: 20 }}
-      >
+      <div className="card" style={{ marginTop: 20 }}>
         <div
           style={{
             display: "flex",
@@ -236,12 +226,13 @@ export default function App() {
           }}
         >
           <h2 style={{ margin: 0 }}>Gráfico de apoyos</h2>
+
           <button
             type="button"
-            onClick={exportarCSV}
+            onClick={exportarExcel}
             style={{ width: "auto", padding: "10px 16px" }}
           >
-            Exportar CSV
+            Exportar Excel
           </button>
         </div>
 
