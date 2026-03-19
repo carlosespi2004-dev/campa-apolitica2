@@ -15,10 +15,10 @@ const initialForm = {
 };
 
 export default function App() {
-const [form, setForm] = useState(initialForm);
-const [votantes, setVotantes] = useState([]);
-const [guardando, setGuardando] = useState(false);
-const [busqueda, setBusqueda] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [votantes, setVotantes] = useState([]);
+  const [guardando, setGuardando] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
   async function cargarVotantes() {
     const { data, error } = await supabase
@@ -63,19 +63,20 @@ const [busqueda, setBusqueda] = useState("");
       no_apoya: votantes.filter((v) => v.estado === "no_apoya").length,
     };
   }, [votantes]);
-const votantesFiltrados = useMemo(() => {
-  const texto = busqueda.toLowerCase().trim();
 
-  if (!texto) return votantes;
+  const votantesFiltrados = useMemo(() => {
+    const texto = busqueda.toLowerCase().trim();
 
-  return votantes.filter((v) => {
-    return (
-      (v.nombre || "").toLowerCase().includes(texto) ||
-      (v.telefono || "").toLowerCase().includes(texto) ||
-      (v.barrio || "").toLowerCase().includes(texto)
-    );
-  });
-}, [votantes, busqueda]);
+    if (!texto) return votantes;
+
+    return votantes.filter((v) => {
+      return (
+        (v.nombre || "").toLowerCase().includes(texto) ||
+        (v.telefono || "").toLowerCase().includes(texto) ||
+        (v.barrio || "").toLowerCase().includes(texto)
+      );
+    });
+  }, [votantes, busqueda]);
 
   return (
     <div className="container">
@@ -145,18 +146,33 @@ const votantesFiltrados = useMemo(() => {
           </form>
         </div>
 
- <div className="card">
-  <h2>Lista de votantes</h2>
+        <div className="card">
+          <h2>Lista de votantes</h2>
 
-  <input
-    type="text"
-    placeholder="Buscar por nombre, teléfono o barrio"
-    value={busqueda}
-    onChange={(e) => setBusqueda(e.target.value)}
-    style={{ marginBottom: 16 }}
-  />
+          <div style={{ position: "relative", marginBottom: 16 }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                opacity: 0.6,
+                pointerEvents: "none",
+              }}
+            >
+              🔍
+            </span>
 
-  <div className="table-wrap">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, teléfono o barrio"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              style={{ paddingLeft: 40 }}
+            />
+          </div>
+
+          <div className="table-wrap">
             <table>
               <thead>
                 <tr>
@@ -184,15 +200,16 @@ const votantesFiltrados = useMemo(() => {
                     </td>
                   </tr>
                 ))}
-               {votantesFiltrados.length === 0 && (
-  <tr>
-    <td colSpan="3">
-      {busqueda
-        ? "No se encontraron votantes con esa búsqueda."
-        : "Todavía no hay votantes cargados."}
-    </td>
-  </tr>
-)}
+
+                {votantesFiltrados.length === 0 && (
+                  <tr>
+                    <td colSpan="3">
+                      {busqueda
+                        ? "No se encontraron votantes con esa búsqueda."
+                        : "Todavía no hay votantes cargados."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
