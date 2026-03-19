@@ -15,12 +15,35 @@ const initialForm = {
   observacion: "",
 };
 
+const initialEquipoForm = {
+  nombre: "",
+  telefono: "",
+  rol: "coordinador",
+  zona: "",
+};
+
 export default function App() {
   const [form, setForm] = useState(initialForm);
   const [votantes, setVotantes] = useState([]);
   const [guardando, setGuardando] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [editandoId, setEditandoId] = useState(null);
+
+  const [equipo, setEquipo] = useState([]);
+  const [formEquipo, setFormEquipo] = useState(initialEquipoForm);
+  const [guardandoEquipo, setGuardandoEquipo] = useState(false);
+  const [editandoEquipoId, setEditandoEquipoId] = useState(null);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    function onResize() {
+      setIsMobile(window.innerWidth < 768);
+    }
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   async function cargarVotantes() {
     const { data, error } = await supabase
@@ -36,13 +59,33 @@ export default function App() {
     setVotantes(data || []);
   }
 
+  async function cargarEquipo() {
+    const { data, error } = await supabase
+      .from("equipo")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      alert("Error cargando equipo: " + error.message);
+      return;
+    }
+
+    setEquipo(data || []);
+  }
+
   useEffect(() => {
     cargarVotantes();
+    cargarEquipo();
   }, []);
 
   function limpiarFormulario() {
     setForm(initialForm);
     setEditandoId(null);
+  }
+
+  function limpiarFormularioEquipo() {
+    setFormEquipo(initialEquipoForm);
+    setEditandoEquipoId(null);
   }
 
   async function guardarVotante(e) {
@@ -98,11 +141,63 @@ export default function App() {
       return;
     }
 
-    if (editandoId === id) {
-      limpiarFormulario();
+    if (editandoId === id) limpiarFormulario();
+    cargarVotantes();
+  }
+
+  async function guardarMiembro(e) {
+    e.preventDefault();
+    setGuardandoEquipo(true);
+
+    let error = null;
+
+    if (editandoEquipoId) {
+      const respuesta = await supabase
+        .from("equipo")
+        .update(formEquipo)
+        .eq("id", editandoEquipoId);
+
+      error = respuesta.error;
+    } else {
+      const respuesta = await supabase.from("equipo").insert([formEquipo]);
+      error = respuesta.error;
     }
 
-    cargarVotantes();
+    setGuardandoEquipo(false);
+
+    if (error) {
+      alert("Error guardando miembro del equipo: " + error.message);
+      return;
+    }
+
+    limpiarFormularioEquipo();
+    cargarEquipo();
+  }
+
+  function editarMiembro(miembro) {
+    setFormEquipo({
+      nombre: miembro.nombre || "",
+      telefono: miembro.telefono || "",
+      rol: miembro.rol || "coordinador",
+      zona: miembro.zona || "",
+    });
+    setEditandoEquipoId(miembro.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function eliminarMiembro(id) {
+    const confirmar = window.confirm("¿Seguro que querés eliminar este miembro del equipo?");
+    if (!confirmar) return;
+
+    const { error } = await supabase.from("equipo").delete().eq("id", id);
+
+    if (error) {
+      alert("Error eliminando miembro: " + error.message);
+      return;
+    }
+
+    if (editandoEquipoId === id) limpiarFormularioEquipo();
+    cargarEquipo();
   }
 
   function exportarExcel() {
@@ -191,12 +286,50 @@ export default function App() {
     ];
   }, [stats]);
 
+  const conteoBarrios = useMemo(() => {
+    const acumulado = {};
+
+    votantes.forEach((v) => {
+      const barrio = (v.barrio || "Sin barrio").trim();
+      if (!acumulado[barrio]) {
+        acumulado[barrio] = {
+          barrio,
+          total: 0,
+          apoya: 0,
+          indeciso: 0,
+          no_apoya: 0,
+        };
+      }
+
+      acumulado[barrio].total += 1;
+
+      if (v.estado === "apoya") acumulado[barrio].apoya += 1;
+      if (v.estado === "indeciso") acumulado[barrio].indeciso += 1;
+      if (v.estado === "no_apoya") acumulado[barrio].no_apoya += 1;
+    });
+
+    return Object.values(acumulado).sort((a, b) => b.total - a.total);
+  }, [votantes]);
+
+  const layoutGrid = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+    gap: 20,
+    marginTop: 20,
+  };
+
+  const statsGrid = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
+    gap: 16,
+  };
+
   return (
-    <div className="container">
+    <div className="container" style={{ paddingBottom: isMobile ? 90 : 24 }}>
       <h1>Campaña Política · Presidente Franco</h1>
       <p className="small">Registro de votantes conectado con Supabase.</p>
 
-      <div className="stats">
+      <div style={statsGrid}>
         <div className="stat">
           <div className="small">Total</div>
           <h2>{stats.total}</h2>
@@ -225,7 +358,7 @@ export default function App() {
             flexWrap: "wrap",
           }}
         >
-          <h2 style={{ margin: 0 }}>Gráfico de apoyos</h2>
+          <h2 style={{ margin: 0 }}>Gráfico automático de apoyo</h2>
 
           <button
             type="button"
@@ -277,9 +410,43 @@ export default function App() {
         </div>
       </div>
 
-      <div className="grid" style={{ marginTop: 20 }}>
+      <div className="card" style={{ marginTop: 20 }}>
+        <h2>Conteo de votantes por barrio</h2>
+
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Barrio</th>
+                <th>Total</th>
+                <th>Apoya</th>
+                <th>Indeciso</th>
+                <th>No apoya</th>
+              </tr>
+            </thead>
+            <tbody>
+              {conteoBarrios.map((item) => (
+                <tr key={item.barrio}>
+                  <td>{item.barrio}</td>
+                  <td>{item.total}</td>
+                  <td>{item.apoya}</td>
+                  <td>{item.indeciso}</td>
+                  <td>{item.no_apoya}</td>
+                </tr>
+              ))}
+              {conteoBarrios.length === 0 && (
+                <tr>
+                  <td colSpan="5">Todavía no hay votantes cargados.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={layoutGrid}>
         <div className="card">
-          <h2>{editandoId ? "Editar votante" : "Cargar votante"}</h2>
+          <h2>{editandoId ? "Editar votante" : "Modo celular · Cargar casa por casa"}</h2>
 
           <form className="form" onSubmit={guardarVotante}>
             <input
@@ -287,25 +454,30 @@ export default function App() {
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
               required
+              style={{ fontSize: isMobile ? 18 : 16 }}
             />
             <input
               placeholder="Teléfono"
               value={form.telefono}
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
             />
             <input
               placeholder="Barrio"
               value={form.barrio}
               onChange={(e) => setForm({ ...form, barrio: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
             />
             <input
               placeholder="Dirección"
               value={form.direccion}
               onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
             />
             <select
               value={form.estado}
               onChange={(e) => setForm({ ...form, estado: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
             >
               <option value="apoya">Apoya</option>
               <option value="indeciso">Indeciso</option>
@@ -315,6 +487,7 @@ export default function App() {
               placeholder="Observación"
               value={form.observacion}
               onChange={(e) => setForm({ ...form, observacion: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
             />
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -441,6 +614,161 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      <div style={layoutGrid}>
+        <div className="card">
+          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Usuarios del equipo de campaña"}</h2>
+
+          <form className="form" onSubmit={guardarMiembro}>
+            <input
+              placeholder="Nombre del miembro"
+              value={formEquipo.nombre}
+              onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Teléfono"
+              value={formEquipo.telefono}
+              onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })}
+            />
+            <input
+              placeholder="Zona o barrio"
+              value={formEquipo.zona}
+              onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })}
+            />
+            <select
+              value={formEquipo.rol}
+              onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })}
+            >
+              <option value="coordinador">Coordinador</option>
+              <option value="brigadista">Brigadista</option>
+              <option value="supervisor">Supervisor</option>
+            </select>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button type="submit" style={{ flex: 1 }}>
+                {guardandoEquipo
+                  ? "Guardando..."
+                  : editandoEquipoId
+                  ? "Actualizar usuario"
+                  : "Guardar usuario"}
+              </button>
+
+              {editandoEquipoId && (
+                <button
+                  type="button"
+                  onClick={limpiarFormularioEquipo}
+                  style={{
+                    flex: 1,
+                    background: "#6b7280",
+                  }}
+                >
+                  Cancelar edición
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        <div className="card">
+          <h2>Lista del equipo</h2>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Zona</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {equipo.map((m) => (
+                  <tr key={m.id}>
+                    <td>
+                      <strong>{m.nombre}</strong>
+                      <div className="small">{m.telefono || "Sin teléfono"}</div>
+                    </td>
+                    <td>{m.rol || "-"}</td>
+                    <td>{m.zona || "-"}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => editarMiembro(m)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#2563eb",
+                            fontSize: 14,
+                          }}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => eliminarMiembro(m.id)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#dc2626",
+                            fontSize: 14,
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {equipo.length === 0 && (
+                  <tr>
+                    <td colSpan="4">Todavía no hay usuarios del equipo cargados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {isMobile && (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "#111827",
+            color: "white",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "space-around",
+            zIndex: 50,
+            boxShadow: "0 -4px 20px rgba(0,0,0,.18)",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Total</div>
+            <strong>{stats.total}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Apoya</div>
+            <strong>{stats.apoya}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Indeciso</div>
+            <strong>{stats.indeciso}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>No apoya</div>
+            <strong>{stats.no_apoya}</strong>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
