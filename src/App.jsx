@@ -1,74 +1,176 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const initialForm = {
+  nombre: "",
+  telefono: "",
+  barrio: "",
+  direccion: "",
+  estado: "indeciso",
+  observacion: "",
+};
 
 export default function App() {
-  const [resultado, setResultado] = useState("Probando conexión...");
-  const [detalle, setDetalle] = useState("");
+  const [form, setForm] = useState(initialForm);
+  const [votantes, setVotantes] = useState([]);
+  const [guardando, setGuardando] = useState(false);
 
-  useEffect(() => {
-    async function probar() {
-      try {
-        if (!supabaseUrl) {
-          setResultado("Falta VITE_SUPABASE_URL");
-          return;
-        }
+  async function cargarVotantes() {
+    const { data, error } = await supabase
+      .from("votantes")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-        if (!supabaseKey) {
-          setResultado("Falta VITE_SUPABASE_ANON_KEY");
-          return;
-        }
-
-        const res = await fetch(`${supabaseUrl}/rest/v1/votantes?select=*`, {
-          method: "GET",
-          headers: {
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const texto = await res.text();
-
-        setResultado(`HTTP ${res.status} ${res.statusText}`);
-        setDetalle(texto);
-      } catch (error) {
-        setResultado("Error real detectado");
-        setDetalle(String(error));
-      }
+    if (error) {
+      alert("Error cargando votantes: " + error.message);
+      return;
     }
 
-    probar();
+    setVotantes(data || []);
+  }
+
+  useEffect(() => {
+    cargarVotantes();
   }, []);
 
+  async function guardarVotante(e) {
+    e.preventDefault();
+    setGuardando(true);
+
+    const { error } = await supabase.from("votantes").insert([form]);
+
+    setGuardando(false);
+
+    if (error) {
+      alert("Error guardando votante: " + error.message);
+      return;
+    }
+
+    setForm(initialForm);
+    cargarVotantes();
+  }
+
+  const stats = useMemo(() => {
+    return {
+      total: votantes.length,
+      apoya: votantes.filter((v) => v.estado === "apoya").length,
+      indeciso: votantes.filter((v) => v.estado === "indeciso").length,
+      no_apoya: votantes.filter((v) => v.estado === "no_apoya").length,
+    };
+  }, [votantes]);
+
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", padding: 30 }}>
-      <h1>Diagnóstico Supabase</h1>
+    <div className="container">
+      <h1>Campaña Política · Presidente Franco</h1>
+      <p className="small">Registro de votantes conectado con Supabase.</p>
 
-      <p><strong>URL detectada:</strong> {supabaseUrl || "NO DEFINIDA"}</p>
-      <p>
-        <strong>Key detectada:</strong>{" "}
-        {supabaseKey ? `${String(supabaseKey).slice(0, 20)}...` : "NO DEFINIDA"}
-      </p>
+      <div className="stats">
+        <div className="stat">
+          <div className="small">Total</div>
+          <h2>{stats.total}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">Apoya</div>
+          <h2>{stats.apoya}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">Indeciso</div>
+          <h2>{stats.indeciso}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">No apoya</div>
+          <h2>{stats.no_apoya}</h2>
+        </div>
+      </div>
 
-      <hr />
+      <div className="grid" style={{ marginTop: 20 }}>
+        <div className="card">
+          <h2>Cargar votante</h2>
+          <form className="form" onSubmit={guardarVotante}>
+            <input
+              placeholder="Nombre completo"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Teléfono"
+              value={form.telefono}
+              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+            />
+            <input
+              placeholder="Barrio"
+              value={form.barrio}
+              onChange={(e) => setForm({ ...form, barrio: e.target.value })}
+            />
+            <input
+              placeholder="Dirección"
+              value={form.direccion}
+              onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+            />
+            <select
+              value={form.estado}
+              onChange={(e) => setForm({ ...form, estado: e.target.value })}
+            >
+              <option value="apoya">Apoya</option>
+              <option value="indeciso">Indeciso</option>
+              <option value="no_apoya">No apoya</option>
+            </select>
+            <textarea
+              placeholder="Observación"
+              value={form.observacion}
+              onChange={(e) => setForm({ ...form, observacion: e.target.value })}
+            />
+            <button type="submit">
+              {guardando ? "Guardando..." : "Guardar votante"}
+            </button>
+          </form>
+        </div>
 
-      <h2>Resultado</h2>
-      <p>{resultado}</p>
-
-      <h2>Detalle</h2>
-      <pre
-        style={{
-          background: "#f4f4f4",
-          padding: 16,
-          borderRadius: 10,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-        }}
-      >
-        {detalle}
-      </pre>
+        <div className="card">
+          <h2>Lista de votantes</h2>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Barrio</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {votantes.map((v) => (
+                  <tr key={v.id}>
+                    <td>
+                      <strong>{v.nombre}</strong>
+                      <div className="small">{v.telefono || "Sin teléfono"}</div>
+                    </td>
+                    <td>{v.barrio || "-"}</td>
+                    <td>
+                      <span className={`badge ${v.estado}`}>
+                        {v.estado === "apoya"
+                          ? "Apoya"
+                          : v.estado === "indeciso"
+                          ? "Indeciso"
+                          : "No apoya"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {votantes.length === 0 && (
+                  <tr>
+                    <td colSpan="3">Todavía no hay votantes cargados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
