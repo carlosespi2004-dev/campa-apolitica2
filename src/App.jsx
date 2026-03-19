@@ -22,7 +22,70 @@ const initialEquipoForm = {
   zona: "",
 };
 
+function LoginScreen({ onLogin, loading }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    await onLogin(email, password);
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        background: "#f3f4f6",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          background: "white",
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: "0 8px 30px rgba(0,0,0,.08)",
+        }}
+      >
+        <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
+        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
+
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+          <input
+            type="email"
+            placeholder="Correo"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit">
+            {loading ? "Ingresando..." : "Iniciar sesión"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [perfil, setPerfil] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [form, setForm] = useState(initialForm);
   const [votantes, setVotantes] = useState([]);
   const [guardando, setGuardando] = useState(false);
@@ -44,6 +107,76 @@ export default function App() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      const currentSession = data.session;
+      setSession(currentSession);
+
+      if (currentSession?.user) {
+        await cargarPerfil(currentSession.user.id);
+        await cargarVotantes();
+        await cargarEquipo();
+      }
+
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      setSession(currentSession);
+
+      if (currentSession?.user) {
+        await cargarPerfil(currentSession.user.id);
+        await cargarVotantes();
+        await cargarEquipo();
+      } else {
+        setPerfil(null);
+      }
+
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function cargarPerfil(userId) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      alert("Error cargando perfil: " + error.message);
+      return;
+    }
+
+    setPerfil(data);
+  }
+
+  async function login(email, password) {
+    setLoginLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setLoginLoading(false);
+
+    if (error) {
+      alert("Error de inicio de sesión: " + error.message);
+    }
+  }
+
+  async function logout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Error cerrando sesión: " + error.message);
+    }
+  }
 
   async function cargarVotantes() {
     const { data, error } = await supabase
@@ -72,11 +205,6 @@ export default function App() {
 
     setEquipo(data || []);
   }
-
-  useEffect(() => {
-    cargarVotantes();
-    cargarEquipo();
-  }, []);
 
   function limpiarFormulario() {
     setForm(initialForm);
@@ -291,6 +419,7 @@ export default function App() {
 
     votantes.forEach((v) => {
       const barrio = (v.barrio || "Sin barrio").trim();
+
       if (!acumulado[barrio]) {
         acumulado[barrio] = {
           barrio,
@@ -324,10 +453,45 @@ export default function App() {
     gap: 16,
   };
 
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+        <h2>Cargando...</h2>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginScreen onLogin={login} loading={loginLoading} />;
+  }
+
   return (
     <div className="container" style={{ paddingBottom: isMobile ? 90 : 24 }}>
-      <h1>Campaña Política · Presidente Franco</h1>
-      <p className="small">Registro de votantes conectado con Supabase.</p>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 16,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h1 style={{ marginBottom: 6 }}>Campaña Política · Presidente Franco</h1>
+          <p className="small" style={{ marginTop: 0 }}>
+            Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
+            {perfil?.rol ? ` · ${perfil.rol}` : ""}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={logout}
+          style={{ width: "auto", padding: "10px 16px", background: "#dc2626" }}
+        >
+          Cerrar sesión
+        </button>
+      </div>
 
       <div style={statsGrid}>
         <div className="stat">
