@@ -108,39 +108,6 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      const currentSession = data.session;
-      setSession(currentSession);
-
-      if (currentSession?.user) {
-        await cargarPerfil(currentSession.user.id);
-        await cargarVotantes();
-        await cargarEquipo();
-      }
-
-      setAuthLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      setSession(currentSession);
-
-      if (currentSession?.user) {
-        await cargarPerfil(currentSession.user.id);
-        await cargarVotantes();
-        await cargarEquipo();
-      } else {
-        setPerfil(null);
-      }
-
-      setAuthLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   async function cargarPerfil(userId) {
     const { data, error } = await supabase
       .from("profiles")
@@ -149,12 +116,95 @@ export default function App() {
       .single();
 
     if (error) {
-      alert("Error cargando perfil: " + error.message);
+      console.error("Error cargando perfil:", error.message);
       return;
     }
 
     setPerfil(data);
   }
+
+  async function cargarVotantes() {
+    const { data, error } = await supabase
+      .from("votantes")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando votantes:", error.message);
+      return;
+    }
+
+    setVotantes(data || []);
+  }
+
+  async function cargarEquipo() {
+    const { data, error } = await supabase
+      .from("equipo")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando equipo:", error.message);
+      return;
+    }
+
+    setEquipo(data || []);
+  }
+
+  useEffect(() => {
+    async function initAuth() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Error obteniendo sesión:", error.message);
+          setAuthLoading(false);
+          return;
+        }
+
+        const currentSession = data.session;
+        setSession(currentSession);
+
+        if (currentSession?.user) {
+          try {
+            await cargarPerfil(currentSession.user.id);
+            await cargarVotantes();
+            await cargarEquipo();
+          } catch (err) {
+            console.error("Error cargando datos iniciales:", err);
+          }
+        }
+      } catch (err) {
+        console.error("Error inicializando auth:", err);
+      } finally {
+        setAuthLoading(false);
+      }
+    }
+
+    initAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      try {
+        setSession(currentSession);
+
+        if (currentSession?.user) {
+          await cargarPerfil(currentSession.user.id);
+          await cargarVotantes();
+          await cargarEquipo();
+        } else {
+          setPerfil(null);
+        }
+      } catch (err) {
+        console.error("Error en onAuthStateChange:", err);
+      } finally {
+        setAuthLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   async function login(email, password) {
     setLoginLoading(true);
@@ -176,34 +226,6 @@ export default function App() {
     if (error) {
       alert("Error cerrando sesión: " + error.message);
     }
-  }
-
-  async function cargarVotantes() {
-    const { data, error } = await supabase
-      .from("votantes")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      alert("Error cargando votantes: " + error.message);
-      return;
-    }
-
-    setVotantes(data || []);
-  }
-
-  async function cargarEquipo() {
-    const { data, error } = await supabase
-      .from("equipo")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      alert("Error cargando equipo: " + error.message);
-      return;
-    }
-
-    setEquipo(data || []);
   }
 
   function limpiarFormulario() {
