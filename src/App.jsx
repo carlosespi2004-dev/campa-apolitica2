@@ -635,7 +635,7 @@ export default function App() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: 6 }}>Campaña Política · Presidente Franco</h1>
+          <h1 style={{ marginBottom: 6 }}>Hagamos que suceda · Presidente Franco</h1>
           <p className="small" style={{ marginTop: 0 }}>
             Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
             {perfil?.rol ? ` · ${perfil.rol}` : ""}
