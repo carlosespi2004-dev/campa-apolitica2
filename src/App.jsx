@@ -4,7 +4,14 @@ import * as XLSX from "xlsx";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 
 function withTimeout(promise, ms = 10000) {
   return Promise.race([
@@ -61,7 +68,7 @@ function LoginScreen({ onLogin, loading }) {
         }}
       >
         <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
-        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
+        <p style={{ color: "#666" }}>Hagamos que suceda · Presidente Franco</p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <input
@@ -133,7 +140,10 @@ export default function App() {
 
   async function cargarVotantes() {
     const { data, error } = await withTimeout(
-      supabase.from("votantes").select("*").order("created_at", { ascending: false })
+      supabase
+        .from("votantes")
+        .select("*")
+        .order("created_at", { ascending: false })
     );
 
     if (error) {
@@ -146,7 +156,10 @@ export default function App() {
 
   async function cargarEquipo() {
     const { data, error } = await withTimeout(
-      supabase.from("equipo").select("*").order("created_at", { ascending: false })
+      supabase
+        .from("equipo")
+        .select("*")
+        .order("created_at", { ascending: false })
     );
 
     if (error) {
@@ -160,18 +173,58 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
+    async function limpiarSesionRota() {
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (err) {
+        console.error("Error limpiando sesión rota:", err);
+      } finally {
+        if (mounted) {
+          setSession(null);
+          setPerfil(null);
+          setVotantes([]);
+          setEquipo([]);
+        }
+      }
+    }
+
     async function initAuth() {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await withTimeout(supabase.auth.getSession());
 
         if (error) {
           console.error("Error obteniendo sesión:", error.message);
+          await limpiarSesionRota();
+          return;
         }
 
         if (!mounted) return;
-        setSession(data?.session || null);
+
+        const currentSession = data?.session ?? null;
+
+        if (currentSession?.user?.id) {
+          const { data: perfilData, error: perfilError } = await withTimeout(
+            supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", currentSession.user.id)
+              .single()
+          );
+
+          if (perfilError) {
+            console.error("Perfil inválido o inexistente:", perfilError.message);
+            await limpiarSesionRota();
+            return;
+          }
+
+          if (!mounted) return;
+          setPerfil(perfilData);
+        }
+
+        setSession(currentSession);
       } catch (err) {
         console.error("Error inicializando auth:", err);
+        await limpiarSesionRota();
       } finally {
         if (mounted) setAuthLoading(false);
       }
@@ -181,10 +234,41 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       if (!mounted) return;
-      setSession(currentSession || null);
-      setAuthLoading(false);
+
+      try {
+        if (currentSession?.user?.id) {
+          const { data: perfilData, error: perfilError } = await withTimeout(
+            supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", currentSession.user.id)
+              .single()
+          );
+
+          if (perfilError) {
+            console.error("Perfil inválido en cambio de sesión:", perfilError.message);
+            await limpiarSesionRota();
+            setAuthLoading(false);
+            return;
+          }
+
+          if (!mounted) return;
+          setPerfil(perfilData);
+          setSession(currentSession);
+        } else {
+          setSession(null);
+          setPerfil(null);
+          setVotantes([]);
+          setEquipo([]);
+        }
+      } catch (err) {
+        console.error("Error en onAuthStateChange:", err);
+        await limpiarSesionRota();
+      } finally {
+        if (mounted) setAuthLoading(false);
+      }
     });
 
     return () => {
@@ -198,27 +282,24 @@ export default function App() {
 
     async function cargarTodo() {
       if (!session?.user?.id) {
-        setPerfil(null);
-        setVotantes([]);
-        setEquipo([]);
+        if (!cancelled) {
+          setPerfil((prev) => prev);
+          setVotantes([]);
+          setEquipo([]);
+          setDataLoading(false);
+        }
         return;
       }
 
-      setDataLoading(true);
+      if (!cancelled) setDataLoading(true);
 
-      const resultados = await Promise.allSettled([
-        cargarPerfil(session.user.id),
-        cargarVotantes(),
-        cargarEquipo(),
-      ]);
-
-      resultados.forEach((r, i) => {
-        if (r.status === "rejected") {
-          console.error("Error cargando bloque", i, r.reason);
-        }
-      });
-
-      if (!cancelled) setDataLoading(false);
+      try {
+        await Promise.allSettled([cargarVotantes(), cargarEquipo()]);
+      } catch (err) {
+        console.error("Error cargando datos:", err);
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
     }
 
     cargarTodo();
@@ -232,16 +313,18 @@ export default function App() {
     setLoginLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+      );
 
       if (error) {
         alert("Error de inicio de sesión: " + error.message);
       }
     } catch (err) {
-      alert("Error de inicio de sesión: " + String(err));
+      alert("Error de inicio de sesión: " + String(err.message || err));
     } finally {
       setLoginLoading(false);
     }
@@ -644,7 +727,7 @@ export default function App() {
 
       <div style={layoutGrid}>
         <div className="card">
-          <h2>{editandoId ? "Editar votante" : "Modo celular · Cargar casa por casa"}</h2>
+          <h2>{editandoId ? "Editar votante" : "Futuro votantes"}</h2>
 
           <form className="form" onSubmit={guardarVotante}>
             <input placeholder="Nombre completo" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required style={{ fontSize: isMobile ? 18 : 16 }} />
@@ -750,16 +833,16 @@ export default function App() {
 
       <div style={layoutGrid}>
         <div className="card">
-          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Usuarios del equipo de campaña"}</h2>
+          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Equipo de hagamos que suceda"}</h2>
 
           <form className="form" onSubmit={guardarMiembro}>
             <input placeholder="Nombre del miembro" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required />
             <input placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} />
             <input placeholder="Zona o barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} />
             <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })}>
-              <option value="coordinador">Coordinador</option>
-              <option value="brigadista">Brigadista</option>
-              <option value="supervisor">Supervisor</option>
+              <option value="Candidato">Coordinador</option>
+              <option value="Jefe de campaña">Coordinador</option>
+              <option value="coordinador">Brigadista</option>
             </select>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
