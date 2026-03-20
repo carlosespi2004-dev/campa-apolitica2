@@ -24,11 +24,14 @@ function withTimeout(promise, ms = 10000) {
 
 const initialForm = {
   nombre: "",
-  telefono: "",
-  barrio: "",
-  direccion: "",
-  estado: "indeciso",
-  observacion: "",
+  apellido: "",
+  cedula: "",
+  orden: "",
+  mesa: "",
+  local_votacion: "",
+  seccional: "",
+  por_parte_de_id: "",
+  por_parte_de_nombre: "",
 };
 
 const initialEquipoForm = {
@@ -68,7 +71,7 @@ function LoginScreen({ onLogin, loading }) {
         }}
       >
         <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
-        <p style={{ color: "#666" }}>Hagamos que suceda · Presidente Franco</p>
+        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <input
@@ -283,7 +286,6 @@ export default function App() {
     async function cargarTodo() {
       if (!session?.user?.id) {
         if (!cancelled) {
-          setPerfil((prev) => prev);
           setVotantes([]);
           setEquipo([]);
           setDataLoading(false);
@@ -360,32 +362,58 @@ export default function App() {
     setEditandoEquipoId(null);
   }
 
+  function seleccionarMiembroEquipo(id) {
+    const miembro = equipo.find((m) => String(m.id) === String(id));
+    setForm((prev) => ({
+      ...prev,
+      por_parte_de_id: id,
+      por_parte_de_nombre: miembro?.nombre || "",
+    }));
+  }
+
   async function guardarVotante(e) {
     e.preventDefault();
     setGuardando(true);
 
     try {
+      if (!form.por_parte_de_id) {
+        alert("Debes seleccionar quién consiguió este futuro votante.");
+        return;
+      }
+
+      const payload = {
+        nombre: form.nombre,
+        apellido: form.apellido,
+        cedula: form.cedula,
+        orden: form.orden,
+        mesa: form.mesa,
+        local_votacion: form.local_votacion,
+        seccional: form.seccional,
+        por_parte_de_id: form.por_parte_de_id,
+        por_parte_de_nombre: form.por_parte_de_nombre,
+      };
+
       let respuesta;
 
       if (editandoId) {
         respuesta = await withTimeout(
-          supabase.from("votantes").update(form).eq("id", editandoId)
+          supabase.from("votantes").update(payload).eq("id", editandoId)
         );
       } else {
         respuesta = await withTimeout(
-          supabase.from("votantes").insert([form])
+          supabase.from("votantes").insert([payload])
         );
       }
 
       if (respuesta.error) {
-        alert("Error guardando votante: " + respuesta.error.message);
+        alert("Error guardando futuro votante: " + respuesta.error.message);
         return;
       }
 
       limpiarFormulario();
       await cargarVotantes();
     } catch (err) {
-      alert("Error guardando votante: " + String(err.message || err));
+      alert("Error guardando futuro votante: " + String(err.message || err));
     } finally {
       setGuardando(false);
     }
@@ -394,18 +422,21 @@ export default function App() {
   function editarVotante(votante) {
     setForm({
       nombre: votante.nombre || "",
-      telefono: votante.telefono || "",
-      barrio: votante.barrio || "",
-      direccion: votante.direccion || "",
-      estado: votante.estado || "indeciso",
-      observacion: votante.observacion || "",
+      apellido: votante.apellido || "",
+      cedula: votante.cedula || "",
+      orden: votante.orden || "",
+      mesa: votante.mesa || "",
+      local_votacion: votante.local_votacion || "",
+      seccional: votante.seccional || "",
+      por_parte_de_id: votante.por_parte_de_id || "",
+      por_parte_de_nombre: votante.por_parte_de_nombre || "",
     });
     setEditandoId(votante.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function eliminarVotante(id) {
-    const confirmar = window.confirm("¿Seguro que querés eliminar este votante?");
+    const confirmar = window.confirm("¿Seguro que querés eliminar este futuro votante?");
     if (!confirmar) return;
 
     try {
@@ -414,14 +445,14 @@ export default function App() {
       );
 
       if (error) {
-        alert("Error eliminando votante: " + error.message);
+        alert("Error eliminando futuro votante: " + error.message);
         return;
       }
 
       if (editandoId === id) limpiarFormulario();
       await cargarVotantes();
     } catch (err) {
-      alert("Error eliminando votante: " + String(err.message || err));
+      alert("Error eliminando futuro votante: " + String(err.message || err));
     }
   }
 
@@ -488,51 +519,107 @@ export default function App() {
     }
   }
 
-  function exportarExcel() {
-    if (votantesFiltrados.length === 0) {
-      alert("No hay votantes para exportar.");
-      return;
-    }
+  function normalizarNombreHoja(nombre) {
+    const limpio = (nombre || "Sin nombre")
+      .replace(/[\\\/\?\*\[\]\:]/g, "")
+      .trim();
 
-    const datos = votantesFiltrados.map((v) => ({
+    return limpio.slice(0, 31) || "Sin nombre";
+  }
+
+  function construirFilasExcel(lista) {
+    return lista.map((v, index) => ({
+      Nro: index + 1,
       Nombre: v.nombre || "",
-      Telefono: v.telefono || "",
-      Barrio: v.barrio || "",
-      Direccion: v.direccion || "",
-      Estado:
-        v.estado === "apoya"
-          ? "Apoya"
-          : v.estado === "indeciso"
-          ? "Indeciso"
-          : "No apoya",
-      Observacion: v.observacion || "",
-      Fecha: v.created_at ? new Date(v.created_at).toLocaleString() : "",
+      Apellido: v.apellido || "",
+      Cédula: v.cedula || "",
+      Orden: v.orden || "",
+      Mesa: v.mesa || "",
+      "Local de votación": v.local_votacion || "",
+      Seccional: v.seccional || "",
+      "Por parte de": v.por_parte_de_nombre || "",
     }));
+  }
 
-    const hoja = XLSX.utils.json_to_sheet(datos);
-    hoja["!cols"] = [
-      { wch: 28 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 24 },
-      { wch: 14 },
-      { wch: 28 },
-      { wch: 22 },
+  function exportarExcel() {
+    const libro = XLSX.utils.book_new();
+
+    const encabezadosBase = [
+      {
+        Nro: "",
+        Nombre: "",
+        Apellido: "",
+        Cédula: "",
+        Orden: "",
+        Mesa: "",
+        "Local de votación": "",
+        Seccional: "",
+        "Por parte de": "",
+      },
     ];
 
-    const libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, "Votantes");
-    XLSX.writeFile(libro, "votantes_presidente_franco.xlsx");
+    const todosOrdenados = [...votantes].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    const hojaGeneralData =
+      todosOrdenados.length > 0 ? construirFilasExcel(todosOrdenados) : encabezadosBase;
+
+    const hojaGeneral = XLSX.utils.json_to_sheet(hojaGeneralData);
+    hojaGeneral["!cols"] = [
+      { wch: 8 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 24 },
+      { wch: 16 },
+      { wch: 20 },
+    ];
+    XLSX.utils.book_append_sheet(libro, hojaGeneral, "General");
+
+    equipo.forEach((miembro) => {
+      const votantesDeEseMiembro = todosOrdenados.filter(
+        (v) => String(v.por_parte_de_id) === String(miembro.id)
+      );
+
+      const dataHoja =
+        votantesDeEseMiembro.length > 0
+          ? construirFilasExcel(votantesDeEseMiembro)
+          : encabezadosBase;
+
+      const hojaMiembro = XLSX.utils.json_to_sheet(dataHoja);
+      hojaMiembro["!cols"] = [
+        { wch: 8 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 20 },
+      ];
+
+      XLSX.utils.book_append_sheet(
+        libro,
+        hojaMiembro,
+        normalizarNombreHoja(miembro.nombre)
+      );
+    });
+
+    XLSX.writeFile(libro, "futuros_votantes_presidente_franco.xlsx");
   }
 
   const stats = useMemo(() => {
     return {
       total: votantes.length,
-      apoya: votantes.filter((v) => v.estado === "apoya").length,
-      indeciso: votantes.filter((v) => v.estado === "indeciso").length,
-      no_apoya: votantes.filter((v) => v.estado === "no_apoya").length,
+      equipo: equipo.length,
+      conCedula: votantes.filter((v) => (v.cedula || "").trim() !== "").length,
+      sinAsignar: votantes.filter((v) => !(v.por_parte_de_id || "").trim()).length,
     };
-  }, [votantes]);
+  }, [votantes, equipo]);
 
   const votantesFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
@@ -542,61 +629,38 @@ export default function App() {
     return votantes.filter((v) => {
       return (
         (v.nombre || "").toLowerCase().includes(texto) ||
-        (v.telefono || "").toLowerCase().includes(texto) ||
-        (v.barrio || "").toLowerCase().includes(texto)
+        (v.apellido || "").toLowerCase().includes(texto) ||
+        (v.cedula || "").toLowerCase().includes(texto) ||
+        (v.local_votacion || "").toLowerCase().includes(texto) ||
+        (v.seccional || "").toLowerCase().includes(texto) ||
+        (v.por_parte_de_nombre || "").toLowerCase().includes(texto)
       );
     });
   }, [votantes, busqueda]);
 
-  const grafico = useMemo(() => {
-    const total = stats.total || 1;
-
-    return [
-      {
-        label: "Apoya",
-        valor: stats.apoya,
-        porcentaje: Math.round((stats.apoya / total) * 100),
-        color: "#16a34a",
-      },
-      {
-        label: "Indeciso",
-        valor: stats.indeciso,
-        porcentaje: Math.round((stats.indeciso / total) * 100),
-        color: "#f59e0b",
-      },
-      {
-        label: "No apoya",
-        valor: stats.no_apoya,
-        porcentaje: Math.round((stats.no_apoya / total) * 100),
-        color: "#dc2626",
-      },
-    ];
-  }, [stats]);
-
-  const conteoBarrios = useMemo(() => {
+  const conteoPorEquipo = useMemo(() => {
     const acumulado = {};
 
-    votantes.forEach((v) => {
-      const barrio = (v.barrio || "Sin barrio").trim();
+    equipo.forEach((m) => {
+      acumulado[m.id] = {
+        nombre: m.nombre,
+        total: 0,
+      };
+    });
 
-      if (!acumulado[barrio]) {
-        acumulado[barrio] = {
-          barrio,
+    votantes.forEach((v) => {
+      const id = v.por_parte_de_id || "sin_asignar";
+      if (!acumulado[id]) {
+        acumulado[id] = {
+          nombre: v.por_parte_de_nombre || "Sin asignar",
           total: 0,
-          apoya: 0,
-          indeciso: 0,
-          no_apoya: 0,
         };
       }
-
-      acumulado[barrio].total += 1;
-      if (v.estado === "apoya") acumulado[barrio].apoya += 1;
-      if (v.estado === "indeciso") acumulado[barrio].indeciso += 1;
-      if (v.estado === "no_apoya") acumulado[barrio].no_apoya += 1;
+      acumulado[id].total += 1;
     });
 
     return Object.values(acumulado).sort((a, b) => b.total - a.total);
-  }, [votantes]);
+  }, [votantes, equipo]);
 
   const layoutGrid = {
     display: "grid",
@@ -635,7 +699,7 @@ export default function App() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: 6 }}>Hagamos que suceda · Presidente Franco</h1>
+          <h1 style={{ marginBottom: 6 }}>Campaña Política · Presidente Franco</h1>
           <p className="small" style={{ marginTop: 0 }}>
             Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
             {perfil?.rol ? ` · ${perfil.rol}` : ""}
@@ -657,97 +721,175 @@ export default function App() {
       </div>
 
       <div style={statsGrid}>
-        <div className="stat"><div className="small">Total</div><h2>{stats.total}</h2></div>
-        <div className="stat"><div className="small">Apoya</div><h2>{stats.apoya}</h2></div>
-        <div className="stat"><div className="small">Indeciso</div><h2>{stats.indeciso}</h2></div>
-        <div className="stat"><div className="small">No apoya</div><h2>{stats.no_apoya}</h2></div>
+        <div className="stat">
+          <div className="small">Total futuros votantes</div>
+          <h2>{stats.total}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">Miembros del equipo</div>
+          <h2>{stats.equipo}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">Con cédula</div>
+          <h2>{stats.conCedula}</h2>
+        </div>
+        <div className="stat">
+          <div className="small">Sin asignar</div>
+          <h2>{stats.sinAsignar}</h2>
+        </div>
       </div>
 
       <div className="card" style={{ marginTop: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-          <h2 style={{ margin: 0 }}>Gráfico automático de apoyo</h2>
-          <button type="button" onClick={exportarExcel} style={{ width: "auto", padding: "10px 16px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 16,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Conteo de futuros votantes por miembro del equipo</h2>
+          <button
+            type="button"
+            onClick={exportarExcel}
+            style={{ width: "auto", padding: "10px 16px" }}
+          >
             Exportar Excel
           </button>
         </div>
 
         <div style={{ marginTop: 20, display: "grid", gap: 16 }}>
-          {grafico.map((item) => (
-            <div key={item.label}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 14 }}>
-                <span>{item.label}</span>
-                <span>{item.valor} ({item.porcentaje}%)</span>
-              </div>
-              <div style={{ width: "100%", height: 16, background: "#e5e7eb", borderRadius: 999, overflow: "hidden" }}>
+          {conteoPorEquipo.map((item) => {
+            const total = stats.total || 1;
+            const porcentaje = Math.round((item.total / total) * 100);
+
+            return (
+              <div key={item.nombre}>
                 <div
                   style={{
-                    width: `${item.porcentaje}%`,
-                    height: "100%",
-                    background: item.color,
-                    borderRadius: 999,
-                    transition: "0.3s",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                    fontSize: 14,
                   }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                >
+                  <span>{item.nombre}</span>
+                  <span>
+                    {item.total} ({porcentaje}%)
+                  </span>
+                </div>
 
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2>Conteo de votantes por barrio</h2>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Barrio</th>
-                <th>Total</th>
-                <th>Apoya</th>
-                <th>Indeciso</th>
-                <th>No apoya</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conteoBarrios.map((item) => (
-                <tr key={item.barrio}>
-                  <td>{item.barrio}</td>
-                  <td>{item.total}</td>
-                  <td>{item.apoya}</td>
-                  <td>{item.indeciso}</td>
-                  <td>{item.no_apoya}</td>
-                </tr>
-              ))}
-              {conteoBarrios.length === 0 && (
-                <tr><td colSpan="5">Todavía no hay votantes cargados.</td></tr>
-              )}
-            </tbody>
-          </table>
+                <div
+                  style={{
+                    width: "100%",
+                    height: 16,
+                    background: "#e5e7eb",
+                    borderRadius: 999,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${porcentaje}%`,
+                      height: "100%",
+                      background: "#2563eb",
+                      borderRadius: 999,
+                      transition: "0.3s",
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div style={layoutGrid}>
         <div className="card">
-          <h2>{editandoId ? "Editar votante" : "Futuro votantes"}</h2>
+          <h2>{editandoId ? "Editar futuro votante" : "Cargar futuros votantes"}</h2>
 
           <form className="form" onSubmit={guardarVotante}>
-            <input placeholder="Nombre completo" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required style={{ fontSize: isMobile ? 18 : 16 }} />
-            <input placeholder="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
-            <input placeholder="Barrio" value={form.barrio} onChange={(e) => setForm({ ...form, barrio: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
-            <input placeholder="Dirección" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
-            <select value={form.estado} onChange={(e) => setForm({ ...form, estado: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }}>
-              <option value="apoya">Apoya</option>
-              <option value="indeciso">Indeciso</option>
-              <option value="no_apoya">No apoya</option>
+            <input
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              required
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Apellido"
+              value={form.apellido}
+              onChange={(e) => setForm({ ...form, apellido: e.target.value })}
+              required
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Cédula"
+              value={form.cedula}
+              onChange={(e) => setForm({ ...form, cedula: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Orden"
+              value={form.orden}
+              onChange={(e) => setForm({ ...form, orden: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Mesa"
+              value={form.mesa}
+              onChange={(e) => setForm({ ...form, mesa: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Local de votación"
+              value={form.local_votacion}
+              onChange={(e) => setForm({ ...form, local_votacion: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <input
+              placeholder="Seccional"
+              value={form.seccional}
+              onChange={(e) => setForm({ ...form, seccional: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
+            <select
+              value={form.por_parte_de_id}
+              onChange={(e) => seleccionarMiembroEquipo(e.target.value)}
+              required
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            >
+              <option value="">Seleccionar miembro del equipo</option>
+              {equipo.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.nombre}
+                </option>
+              ))}
             </select>
-            <textarea placeholder="Observación" value={form.observacion} onChange={(e) => setForm({ ...form, observacion: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button type="submit" style={{ flex: 1 }}>
-                {guardando ? "Guardando..." : editandoId ? "Actualizar votante" : "Guardar votante"}
+                {guardando
+                  ? "Guardando..."
+                  : editandoId
+                  ? "Actualizar futuro votante"
+                  : "Guardar futuro votante"}
               </button>
 
               {editandoId && (
-                <button type="button" onClick={limpiarFormulario} style={{ flex: 1, background: "#6b7280" }}>
+                <button
+                  type="button"
+                  onClick={limpiarFormulario}
+                  style={{ flex: 1, background: "#6b7280" }}
+                >
                   Cancelar edición
                 </button>
               )}
@@ -756,7 +898,7 @@ export default function App() {
         </div>
 
         <div className="card">
-          <h2>Lista de votantes</h2>
+          <h2>Lista de futuros votantes</h2>
 
           <div style={{ position: "relative", marginBottom: 16 }}>
             <span
@@ -774,7 +916,7 @@ export default function App() {
 
             <input
               type="text"
-              placeholder="Buscar por nombre, teléfono o barrio"
+              placeholder="Buscar por nombre, apellido, cédula, local o equipo"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               style={{ paddingLeft: 40, marginBottom: 0 }}
@@ -786,31 +928,48 @@ export default function App() {
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Barrio</th>
-                  <th>Estado</th>
+                  <th>Apellido</th>
+                  <th>Cédula</th>
+                  <th>Mesa</th>
+                  <th>Local</th>
+                  <th>Por parte de</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {votantesFiltrados.map((v) => (
                   <tr key={v.id}>
-                    <td>
-                      <strong>{v.nombre}</strong>
-                      <div className="small">{v.telefono || "Sin teléfono"}</div>
-                    </td>
-                    <td>{v.barrio || "-"}</td>
-                    <td>
-                      <span className={`badge ${v.estado}`}>
-                        {v.estado === "apoya" ? "Apoya" : v.estado === "indeciso" ? "Indeciso" : "No apoya"}
-                      </span>
-                    </td>
+                    <td>{v.nombre || "-"}</td>
+                    <td>{v.apellido || "-"}</td>
+                    <td>{v.cedula || "-"}</td>
+                    <td>{v.mesa || "-"}</td>
+                    <td>{v.local_votacion || "-"}</td>
+                    <td>{v.por_parte_de_nombre || "-"}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button type="button" onClick={() => editarVotante(v)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>
+                        <button
+                          type="button"
+                          onClick={() => editarVotante(v)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#2563eb",
+                            fontSize: 14,
+                          }}
+                        >
                           Editar
                         </button>
 
-                        <button type="button" onClick={() => eliminarVotante(v.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>
+                        <button
+                          type="button"
+                          onClick={() => eliminarVotante(v.id)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#dc2626",
+                            fontSize: 14,
+                          }}
+                        >
                           Eliminar
                         </button>
                       </div>
@@ -820,8 +979,10 @@ export default function App() {
 
                 {votantesFiltrados.length === 0 && (
                   <tr>
-                    <td colSpan="4">
-                      {busqueda ? "No se encontraron votantes con esa búsqueda." : "Todavía no hay votantes cargados."}
+                    <td colSpan="7">
+                      {busqueda
+                        ? "No se encontraron futuros votantes con esa búsqueda."
+                        : "Todavía no hay futuros votantes cargados."}
                     </td>
                   </tr>
                 )}
@@ -833,25 +994,49 @@ export default function App() {
 
       <div style={layoutGrid}>
         <div className="card">
-          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Equipo de hagamos que suceda"}</h2>
+          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Equipo de campaña"}</h2>
 
           <form className="form" onSubmit={guardarMiembro}>
-            <input placeholder="Nombre del miembro" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required />
-            <input placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} />
-            <input placeholder="Zona o barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} />
-            <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })}>
-              <option value="Candidato">Coordinador</option>
-              <option value="Jefe de campaña">Coordinador</option>
-              <option value="coordinador">Brigadista</option>
+            <input
+              placeholder="Nombre del miembro"
+              value={formEquipo.nombre}
+              onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Teléfono"
+              value={formEquipo.telefono}
+              onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })}
+            />
+            <input
+              placeholder="Zona o barrio"
+              value={formEquipo.zona}
+              onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })}
+            />
+            <select
+              value={formEquipo.rol}
+              onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })}
+            >
+              <option value="coordinador">Coordinador</option>
+              <option value="brigadista">Brigadista</option>
+              <option value="supervisor">Supervisor</option>
             </select>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button type="submit" style={{ flex: 1 }}>
-                {guardandoEquipo ? "Guardando..." : editandoEquipoId ? "Actualizar usuario" : "Guardar usuario"}
+                {guardandoEquipo
+                  ? "Guardando..."
+                  : editandoEquipoId
+                  ? "Actualizar usuario"
+                  : "Guardar usuario"}
               </button>
 
               {editandoEquipoId && (
-                <button type="button" onClick={limpiarFormularioEquipo} style={{ flex: 1, background: "#6b7280" }}>
+                <button
+                  type="button"
+                  onClick={limpiarFormularioEquipo}
+                  style={{ flex: 1, background: "#6b7280" }}
+                >
                   Cancelar edición
                 </button>
               )}
@@ -883,11 +1068,29 @@ export default function App() {
                     <td>{m.zona || "-"}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button type="button" onClick={() => editarMiembro(m)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>
+                        <button
+                          type="button"
+                          onClick={() => editarMiembro(m)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#2563eb",
+                            fontSize: 14,
+                          }}
+                        >
                           Editar
                         </button>
 
-                        <button type="button" onClick={() => eliminarMiembro(m.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>
+                        <button
+                          type="button"
+                          onClick={() => eliminarMiembro(m.id)}
+                          style={{
+                            width: "auto",
+                            padding: "8px 12px",
+                            background: "#dc2626",
+                            fontSize: 14,
+                          }}
+                        >
                           Eliminar
                         </button>
                       </div>
@@ -927,16 +1130,16 @@ export default function App() {
             <strong>{stats.total}</strong>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Apoya</div>
-            <strong>{stats.apoya}</strong>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Equipo</div>
+            <strong>{stats.equipo}</strong>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Indeciso</div>
-            <strong>{stats.indeciso}</strong>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Cédula</div>
+            <strong>{stats.conCedula}</strong>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>No apoya</div>
-            <strong>{stats.no_apoya}</strong>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Sin asignar</div>
+            <strong>{stats.sinAsignar}</strong>
           </div>
         </div>
       )}
