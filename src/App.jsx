@@ -30,6 +30,7 @@ const initialForm = {
   mesa: "",
   local_votacion: "",
   seccional: "",
+  barrio: "",
   por_parte_de_id: "",
   por_parte_de_nombre: "",
 };
@@ -392,7 +393,8 @@ export default function App() {
         mesa: form.mesa,
         local_votacion: form.local_votacion,
         seccional: form.seccional,
-        por_parte_de_id: form.por_parte_de_id,
+        barrio: form.barrio,
+        por_parte_de_id: form.por_parte_de_id,  
         por_parte_de_nombre: form.por_parte_de_nombre,
       };
 
@@ -431,6 +433,7 @@ export default function App() {
       mesa: votante.mesa || "",
       local_votacion: votante.local_votacion || "",
       seccional: votante.seccional || "",
+      barrio: votante.barrio || "",
       por_parte_de_id: votante.por_parte_de_id || "",
       por_parte_de_nombre: votante.por_parte_de_nombre || "",
     });
@@ -536,25 +539,26 @@ export default function App() {
     return limpio.slice(0, 31) || "Sin nombre";
   }
 
-  function construirFilasExcel(lista) {
-    return lista.map((v, index) => ({
-      Nro: index + 1,
-      Nombre: v.nombre || "",
-      Apellido: v.apellido || "",
-      Cédula: v.cedula || "",
-      Orden: v.orden || "",
-      Mesa: v.mesa || "",
-      "Local de votación": v.local_votacion || "",
-      Seccional: v.seccional || "",
-      "Por parte de": v.por_parte_de_nombre || "",
-    }));
-  }
+function construirFilasExcel(lista) {
+  return lista.map((v, index) => ({
+    Nro: index + 1,
+    Nombre: v.nombre || "",
+    Apellido: v.apellido || "",
+    Cédula: v.cedula || "",
+    Orden: v.orden || "",
+    Mesa: v.mesa || "",
+    "Local de votación": v.local_votacion || "",
+    Seccional: v.seccional || "",
+    Barrio: v.barrio || "",
+    "Por parte de": v.por_parte_de_nombre || "",
+  }));
+}
 
   function exportarExcel() {
     const libro = XLSX.utils.book_new();
 
-    const encabezadosBase = [
-      {
+  const encabezadosBase = [
+    {
         Nro: "",
         Nombre: "",
         Apellido: "",
@@ -563,9 +567,10 @@ export default function App() {
         Mesa: "",
         "Local de votación": "",
         Seccional: "",
+        Barrio: "",
         "Por parte de": "",
-      },
-    ];
+    },
+  ];
 
     const todosOrdenados = [...votantes].sort(
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
@@ -577,17 +582,18 @@ export default function App() {
         : encabezadosBase;
 
     const hojaGeneral = XLSX.utils.json_to_sheet(hojaGeneralData);
-    hojaGeneral["!cols"] = [
-      { wch: 8 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 24 },
-      { wch: 16 },
-      { wch: 20 },
-    ];
+      hojaGeneral["!cols"] = [
+        { wch: 8 },
+        { wch: 18 },
+        { wch: 18 },
+        { wch: 16 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 20 },
+      ];
     XLSX.utils.book_append_sheet(libro, hojaGeneral, "General");
 
     equipo.forEach((miembro) => {
@@ -610,6 +616,7 @@ export default function App() {
         { wch: 10 },
         { wch: 24 },
         { wch: 16 },
+        { wch: 18 },
         { wch: 20 },
       ];
 
@@ -645,6 +652,7 @@ export default function App() {
         (v.cedula || "").toLowerCase().includes(texto) ||
         (v.local_votacion || "").toLowerCase().includes(texto) ||
         (v.seccional || "").toLowerCase().includes(texto) ||
+        (v.barrio || "").toLowerCase().includes(texto) ||
         (v.por_parte_de_nombre || "").toLowerCase().includes(texto)
       );
     });
@@ -929,6 +937,13 @@ export default function App() {
               style={{ fontSize: isMobile ? 18 : 16 }}
             />
 
+            <input
+              placeholder="Barrio"
+              value={form.barrio}
+              onChange={(e) => setForm({ ...form, barrio: e.target.value })}
+              style={{ fontSize: isMobile ? 18 : 16 }}
+            />
+
             <select
               value={form.por_parte_de_id}
               onChange={(e) => seleccionarMiembroEquipo(e.target.value)}
@@ -1000,6 +1015,7 @@ export default function App() {
                   <th>Cédula</th>
                   <th>Mesa</th>
                   <th>Local</th>
+                  <th>Barrio</th>
                   <th>Por parte de</th>
                   <th>Acciones</th>
                 </tr>
@@ -1012,6 +1028,7 @@ export default function App() {
                     <td>{v.cedula || "-"}</td>
                     <td>{v.mesa || "-"}</td>
                     <td>{v.local_votacion || "-"}</td>
+                    <td>{v.barrio || "-"}</td>
                     <td>{v.por_parte_de_nombre || "-"}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1047,7 +1064,7 @@ export default function App() {
 
                 {votantesFiltrados.length === 0 && (
                   <tr>
-                    <td colSpan="7">
+                    <td colSpan="8">
                       {busqueda
                         ? "No se encontraron futuros votantes con esa búsqueda."
                         : "Todavía no hay futuros votantes cargados."}
