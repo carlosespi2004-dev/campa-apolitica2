@@ -2,17 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error(
-    "❌ Faltan variables de entorno: VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY. " +
-    "Creá el archivo .env en la raíz del proyecto con esas variables y reiniciá el servidor."
-  );
-}
-
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+function withTimeout(promise, ms = 10000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Tiempo de espera agotado")), ms)
+    ),
+  ]);
+}
 
 const initialForm = {
   nombre: "",
@@ -91,9 +92,10 @@ function LoginScreen({ onLogin, loading }) {
 export default function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
+
   const [authLoading, setAuthLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
-  const [authError, setAuthError] = useState(null);
 
   const [form, setForm] = useState(initialForm);
   const [votantes, setVotantes] = useState([]);
@@ -117,11 +119,9 @@ export default function App() {
   }, []);
 
   async function cargarPerfil(userId) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    const { data, error } = await withTimeout(
+      supabase.from("profiles").select("*").eq("id", userId).single()
+    );
 
     if (error) {
       console.error("Error cargando perfil:", error.message);
@@ -132,10 +132,9 @@ export default function App() {
   }
 
   async function cargarVotantes() {
-    const { data, error } = await supabase
-      .from("votantes")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data, error } = await withTimeout(
+      supabase.from("votantes").select("*").order("created_at", { ascending: false })
+    );
 
     if (error) {
       console.error("Error cargando votantes:", error.message);
@@ -146,10 +145,9 @@ export default function App() {
   }
 
   async function cargarEquipo() {
-    const { data, error } = await supabase
-      .from("equipo")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { data, error } = await withTimeout(
+      supabase.from("equipo").select("*").order("created_at", { ascending: false })
+    );
 
     if (error) {
       console.error("Error cargando equipo:", error.message);
@@ -160,34 +158,22 @@ export default function App() {
   }
 
   useEffect(() => {
+    let mounted = true;
+
     async function initAuth() {
       try {
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
           console.error("Error obteniendo sesión:", error.message);
-          setAuthError("No se pudo conectar con el servidor. Verificá tu conexión o las variables de entorno.");
-          setAuthLoading(false);
-          return;
         }
 
-        const currentSession = data.session;
-        setSession(currentSession);
-
-        if (currentSession?.user) {
-          try {
-            await cargarPerfil(currentSession.user.id);
-            await cargarVotantes();
-            await cargarEquipo();
-          } catch (err) {
-            console.error("Error cargando datos iniciales:", err);
-          }
-        }
+        if (!mounted) return;
+        setSession(data?.session || null);
       } catch (err) {
         console.error("Error inicializando auth:", err);
-        setAuthError("Error inesperado al iniciar la aplicación. Revisá la consola para más detalles.");
       } finally {
-        setAuthLoading(false);
+        if (mounted) setAuthLoading(false);
       }
     }
 
@@ -195,46 +181,89 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      try {
-        setSession(currentSession);
-
-        if (currentSession?.user) {
-          await cargarPerfil(currentSession.user.id);
-          await cargarVotantes();
-          await cargarEquipo();
-        } else {
-          setPerfil(null);
-        }
-      } catch (err) {
-        console.error("Error en onAuthStateChange:", err);
-      } finally {
-        setAuthLoading(false);
-      }
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!mounted) return;
+      setSession(currentSession || null);
+      setAuthLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function cargarTodo() {
+      if (!session?.user?.id) {
+        setPerfil(null);
+        setVotantes([]);
+        setEquipo([]);
+        return;
+      }
+
+      setDataLoading(true);
+
+      const resultados = await Promise.allSettled([
+        cargarPerfil(session.user.id),
+        cargarVotantes(),
+        cargarEquipo(),
+      ]);
+
+      resultados.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error("Error cargando bloque", i, r.reason);
+        }
+      });
+
+      if (!cancelled) setDataLoading(false);
+    }
+
+    cargarTodo();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   async function login(email, password) {
     setLoginLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    setLoginLoading(false);
-
-    if (error) {
-      alert("Error de inicio de sesión: " + error.message);
+      if (error) {
+        alert("Error de inicio de sesión: " + error.message);
+      }
+    } catch (err) {
+      alert("Error de inicio de sesión: " + String(err));
+    } finally {
+      setLoginLoading(false);
     }
   }
 
   async function logout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      alert("Error cerrando sesión: " + error.message);
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signOut({ scope: "local" })
+      );
+
+      if (error) {
+        alert("Error cerrando sesión: " + error.message);
+        return;
+      }
+
+      setSession(null);
+      setPerfil(null);
+      setVotantes([]);
+      setEquipo([]);
+    } catch (err) {
+      alert("Error cerrando sesión: " + String(err.message || err));
     }
   }
 
@@ -252,28 +281,31 @@ export default function App() {
     e.preventDefault();
     setGuardando(true);
 
-    let error = null;
+    try {
+      let respuesta;
 
-    if (editandoId) {
-      const respuesta = await supabase
-        .from("votantes")
-        .update(form)
-        .eq("id", editandoId);
-      error = respuesta.error;
-    } else {
-      const respuesta = await supabase.from("votantes").insert([form]);
-      error = respuesta.error;
+      if (editandoId) {
+        respuesta = await withTimeout(
+          supabase.from("votantes").update(form).eq("id", editandoId)
+        );
+      } else {
+        respuesta = await withTimeout(
+          supabase.from("votantes").insert([form])
+        );
+      }
+
+      if (respuesta.error) {
+        alert("Error guardando votante: " + respuesta.error.message);
+        return;
+      }
+
+      limpiarFormulario();
+      await cargarVotantes();
+    } catch (err) {
+      alert("Error guardando votante: " + String(err.message || err));
+    } finally {
+      setGuardando(false);
     }
-
-    setGuardando(false);
-
-    if (error) {
-      alert("Error guardando votante: " + error.message);
-      return;
-    }
-
-    limpiarFormulario();
-    cargarVotantes();
   }
 
   function editarVotante(votante) {
@@ -293,43 +325,52 @@ export default function App() {
     const confirmar = window.confirm("¿Seguro que querés eliminar este votante?");
     if (!confirmar) return;
 
-    const { error } = await supabase.from("votantes").delete().eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("votantes").delete().eq("id", id)
+      );
 
-    if (error) {
-      alert("Error eliminando votante: " + error.message);
-      return;
+      if (error) {
+        alert("Error eliminando votante: " + error.message);
+        return;
+      }
+
+      if (editandoId === id) limpiarFormulario();
+      await cargarVotantes();
+    } catch (err) {
+      alert("Error eliminando votante: " + String(err.message || err));
     }
-
-    if (editandoId === id) limpiarFormulario();
-    cargarVotantes();
   }
 
   async function guardarMiembro(e) {
     e.preventDefault();
     setGuardandoEquipo(true);
 
-    let error = null;
+    try {
+      let respuesta;
 
-    if (editandoEquipoId) {
-      const respuesta = await supabase
-        .from("equipo")
-        .update(formEquipo)
-        .eq("id", editandoEquipoId);
-      error = respuesta.error;
-    } else {
-      const respuesta = await supabase.from("equipo").insert([formEquipo]);
-      error = respuesta.error;
+      if (editandoEquipoId) {
+        respuesta = await withTimeout(
+          supabase.from("equipo").update(formEquipo).eq("id", editandoEquipoId)
+        );
+      } else {
+        respuesta = await withTimeout(
+          supabase.from("equipo").insert([formEquipo])
+        );
+      }
+
+      if (respuesta.error) {
+        alert("Error guardando miembro del equipo: " + respuesta.error.message);
+        return;
+      }
+
+      limpiarFormularioEquipo();
+      await cargarEquipo();
+    } catch (err) {
+      alert("Error guardando miembro del equipo: " + String(err.message || err));
+    } finally {
+      setGuardandoEquipo(false);
     }
-
-    setGuardandoEquipo(false);
-
-    if (error) {
-      alert("Error guardando miembro del equipo: " + error.message);
-      return;
-    }
-
-    limpiarFormularioEquipo();
-    cargarEquipo();
   }
 
   function editarMiembro(miembro) {
@@ -347,15 +388,21 @@ export default function App() {
     const confirmar = window.confirm("¿Seguro que querés eliminar este miembro del equipo?");
     if (!confirmar) return;
 
-    const { error } = await supabase.from("equipo").delete().eq("id", id);
+    try {
+      const { error } = await withTimeout(
+        supabase.from("equipo").delete().eq("id", id)
+      );
 
-    if (error) {
-      alert("Error eliminando miembro: " + error.message);
-      return;
+      if (error) {
+        alert("Error eliminando miembro: " + error.message);
+        return;
+      }
+
+      if (editandoEquipoId === id) limpiarFormularioEquipo();
+      await cargarEquipo();
+    } catch (err) {
+      alert("Error eliminando miembro: " + String(err.message || err));
     }
-
-    if (editandoEquipoId === id) limpiarFormularioEquipo();
-    cargarEquipo();
   }
 
   function exportarExcel() {
@@ -381,8 +428,13 @@ export default function App() {
 
     const hoja = XLSX.utils.json_to_sheet(datos);
     hoja["!cols"] = [
-      { wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 24 },
-      { wch: 14 }, { wch: 28 }, { wch: 22 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 24 },
+      { wch: 14 },
+      { wch: 28 },
+      { wch: 22 },
     ];
 
     const libro = XLSX.utils.book_new();
@@ -390,44 +442,76 @@ export default function App() {
     XLSX.writeFile(libro, "votantes_presidente_franco.xlsx");
   }
 
-  const stats = useMemo(() => ({
-    total: votantes.length,
-    apoya: votantes.filter((v) => v.estado === "apoya").length,
-    indeciso: votantes.filter((v) => v.estado === "indeciso").length,
-    no_apoya: votantes.filter((v) => v.estado === "no_apoya").length,
-  }), [votantes]);
+  const stats = useMemo(() => {
+    return {
+      total: votantes.length,
+      apoya: votantes.filter((v) => v.estado === "apoya").length,
+      indeciso: votantes.filter((v) => v.estado === "indeciso").length,
+      no_apoya: votantes.filter((v) => v.estado === "no_apoya").length,
+    };
+  }, [votantes]);
 
   const votantesFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
+
     if (!texto) return votantes;
-    return votantes.filter((v) =>
-      (v.nombre || "").toLowerCase().includes(texto) ||
-      (v.telefono || "").toLowerCase().includes(texto) ||
-      (v.barrio || "").toLowerCase().includes(texto)
-    );
+
+    return votantes.filter((v) => {
+      return (
+        (v.nombre || "").toLowerCase().includes(texto) ||
+        (v.telefono || "").toLowerCase().includes(texto) ||
+        (v.barrio || "").toLowerCase().includes(texto)
+      );
+    });
   }, [votantes, busqueda]);
 
   const grafico = useMemo(() => {
     const total = stats.total || 1;
+
     return [
-      { label: "Apoya", valor: stats.apoya, porcentaje: Math.round((stats.apoya / total) * 100), color: "#16a34a" },
-      { label: "Indeciso", valor: stats.indeciso, porcentaje: Math.round((stats.indeciso / total) * 100), color: "#f59e0b" },
-      { label: "No apoya", valor: stats.no_apoya, porcentaje: Math.round((stats.no_apoya / total) * 100), color: "#dc2626" },
+      {
+        label: "Apoya",
+        valor: stats.apoya,
+        porcentaje: Math.round((stats.apoya / total) * 100),
+        color: "#16a34a",
+      },
+      {
+        label: "Indeciso",
+        valor: stats.indeciso,
+        porcentaje: Math.round((stats.indeciso / total) * 100),
+        color: "#f59e0b",
+      },
+      {
+        label: "No apoya",
+        valor: stats.no_apoya,
+        porcentaje: Math.round((stats.no_apoya / total) * 100),
+        color: "#dc2626",
+      },
     ];
   }, [stats]);
 
   const conteoBarrios = useMemo(() => {
     const acumulado = {};
+
     votantes.forEach((v) => {
       const barrio = (v.barrio || "Sin barrio").trim();
+
       if (!acumulado[barrio]) {
-        acumulado[barrio] = { barrio, total: 0, apoya: 0, indeciso: 0, no_apoya: 0 };
+        acumulado[barrio] = {
+          barrio,
+          total: 0,
+          apoya: 0,
+          indeciso: 0,
+          no_apoya: 0,
+        };
       }
+
       acumulado[barrio].total += 1;
       if (v.estado === "apoya") acumulado[barrio].apoya += 1;
       if (v.estado === "indeciso") acumulado[barrio].indeciso += 1;
       if (v.estado === "no_apoya") acumulado[barrio].no_apoya += 1;
     });
+
     return Object.values(acumulado).sort((a, b) => b.total - a.total);
   }, [votantes]);
 
@@ -444,29 +528,6 @@ export default function App() {
     gap: 16,
   };
 
-  // ── Pantalla de error de conexión ──────────────────────────────────────────
-  if (authError) {
-    return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f3f4f6", padding: 20 }}>
-        <div style={{ maxWidth: 480, background: "white", borderRadius: 16, padding: 28, boxShadow: "0 8px 30px rgba(0,0,0,.08)", textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
-          <h2 style={{ color: "#dc2626", marginTop: 0 }}>Error de conexión</h2>
-          <p style={{ color: "#555" }}>{authError}</p>
-          <p style={{ fontSize: 13, color: "#888", marginTop: 16 }}>
-            Asegurate de tener el archivo <strong>.env</strong> con:<br />
-            <code>VITE_SUPABASE_URL=...</code><br />
-            <code>VITE_SUPABASE_ANON_KEY=...</code><br /><br />
-            Luego reiniciá el servidor con <strong>npm run dev</strong>.
-          </p>
-          <button onClick={() => window.location.reload()} style={{ marginTop: 12, width: "auto", padding: "10px 20px" }}>
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Pantalla de carga ──────────────────────────────────────────────────────
   if (authLoading) {
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
@@ -475,12 +536,10 @@ export default function App() {
     );
   }
 
-  // ── Login ──────────────────────────────────────────────────────────────────
   if (!session) {
     return <LoginScreen onLogin={login} loading={loginLoading} />;
   }
 
-  // ── App principal ──────────────────────────────────────────────────────────
   return (
     <div className="container" style={{ paddingBottom: isMobile ? 90 : 24 }}>
       <div
@@ -498,6 +557,11 @@ export default function App() {
             Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
             {perfil?.rol ? ` · ${perfil.rol}` : ""}
           </p>
+          {dataLoading && (
+            <p className="small" style={{ marginTop: 6 }}>
+              Actualizando datos...
+            </p>
+          )}
         </div>
 
         <button
@@ -532,7 +596,15 @@ export default function App() {
                 <span>{item.valor} ({item.porcentaje}%)</span>
               </div>
               <div style={{ width: "100%", height: 16, background: "#e5e7eb", borderRadius: 999, overflow: "hidden" }}>
-                <div style={{ width: `${item.porcentaje}%`, height: "100%", background: item.color, borderRadius: 999, transition: "0.3s" }} />
+                <div
+                  style={{
+                    width: `${item.porcentaje}%`,
+                    height: "100%",
+                    background: item.color,
+                    borderRadius: 999,
+                    transition: "0.3s",
+                  }}
+                />
               </div>
             </div>
           ))}
@@ -544,12 +616,22 @@ export default function App() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>Barrio</th><th>Total</th><th>Apoya</th><th>Indeciso</th><th>No apoya</th></tr>
+              <tr>
+                <th>Barrio</th>
+                <th>Total</th>
+                <th>Apoya</th>
+                <th>Indeciso</th>
+                <th>No apoya</th>
+              </tr>
             </thead>
             <tbody>
               {conteoBarrios.map((item) => (
                 <tr key={item.barrio}>
-                  <td>{item.barrio}</td><td>{item.total}</td><td>{item.apoya}</td><td>{item.indeciso}</td><td>{item.no_apoya}</td>
+                  <td>{item.barrio}</td>
+                  <td>{item.total}</td>
+                  <td>{item.apoya}</td>
+                  <td>{item.indeciso}</td>
+                  <td>{item.no_apoya}</td>
                 </tr>
               ))}
               {conteoBarrios.length === 0 && (
@@ -563,6 +645,7 @@ export default function App() {
       <div style={layoutGrid}>
         <div className="card">
           <h2>{editandoId ? "Editar votante" : "Modo celular · Cargar casa por casa"}</h2>
+
           <form className="form" onSubmit={guardarVotante}>
             <input placeholder="Nombre completo" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required style={{ fontSize: isMobile ? 18 : 16 }} />
             <input placeholder="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
@@ -574,10 +657,12 @@ export default function App() {
               <option value="no_apoya">No apoya</option>
             </select>
             <textarea placeholder="Observación" value={form.observacion} onChange={(e) => setForm({ ...form, observacion: e.target.value })} style={{ fontSize: isMobile ? 18 : 16 }} />
+
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button type="submit" style={{ flex: 1 }}>
                 {guardando ? "Guardando..." : editandoId ? "Actualizar votante" : "Guardar votante"}
               </button>
+
               {editandoId && (
                 <button type="button" onClick={limpiarFormulario} style={{ flex: 1, background: "#6b7280" }}>
                   Cancelar edición
@@ -589,19 +674,47 @@ export default function App() {
 
         <div className="card">
           <h2>Lista de votantes</h2>
+
           <div style={{ position: "relative", marginBottom: 16 }}>
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", opacity: 0.6, pointerEvents: "none" }}>🔍</span>
-            <input type="text" placeholder="Buscar por nombre, teléfono o barrio" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} style={{ paddingLeft: 40, marginBottom: 0 }} />
+            <span
+              style={{
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                opacity: 0.6,
+                pointerEvents: "none",
+              }}
+            >
+              🔍
+            </span>
+
+            <input
+              type="text"
+              placeholder="Buscar por nombre, teléfono o barrio"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              style={{ paddingLeft: 40, marginBottom: 0 }}
+            />
           </div>
+
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Nombre</th><th>Barrio</th><th>Estado</th><th>Acciones</th></tr>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Barrio</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
               </thead>
               <tbody>
                 {votantesFiltrados.map((v) => (
                   <tr key={v.id}>
-                    <td><strong>{v.nombre}</strong><div className="small">{v.telefono || "Sin teléfono"}</div></td>
+                    <td>
+                      <strong>{v.nombre}</strong>
+                      <div className="small">{v.telefono || "Sin teléfono"}</div>
+                    </td>
                     <td>{v.barrio || "-"}</td>
                     <td>
                       <span className={`badge ${v.estado}`}>
@@ -610,14 +723,24 @@ export default function App() {
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button type="button" onClick={() => editarVotante(v)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>Editar</button>
-                        <button type="button" onClick={() => eliminarVotante(v.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>Eliminar</button>
+                        <button type="button" onClick={() => editarVotante(v)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>
+                          Editar
+                        </button>
+
+                        <button type="button" onClick={() => eliminarVotante(v.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>
+                          Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
+
                 {votantesFiltrados.length === 0 && (
-                  <tr><td colSpan="4">{busqueda ? "No se encontraron votantes con esa búsqueda." : "Todavía no hay votantes cargados."}</td></tr>
+                  <tr>
+                    <td colSpan="4">
+                      {busqueda ? "No se encontraron votantes con esa búsqueda." : "Todavía no hay votantes cargados."}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -628,6 +751,7 @@ export default function App() {
       <div style={layoutGrid}>
         <div className="card">
           <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Usuarios del equipo de campaña"}</h2>
+
           <form className="form" onSubmit={guardarMiembro}>
             <input placeholder="Nombre del miembro" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required />
             <input placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} />
@@ -637,10 +761,12 @@ export default function App() {
               <option value="brigadista">Brigadista</option>
               <option value="supervisor">Supervisor</option>
             </select>
+
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button type="submit" style={{ flex: 1 }}>
                 {guardandoEquipo ? "Guardando..." : editandoEquipoId ? "Actualizar usuario" : "Guardar usuario"}
               </button>
+
               {editandoEquipoId && (
                 <button type="button" onClick={limpiarFormularioEquipo} style={{ flex: 1, background: "#6b7280" }}>
                   Cancelar edición
@@ -652,27 +778,44 @@ export default function App() {
 
         <div className="card">
           <h2>Lista del equipo</h2>
+
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>Nombre</th><th>Rol</th><th>Zona</th><th>Acciones</th></tr>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Zona</th>
+                  <th>Acciones</th>
+                </tr>
               </thead>
               <tbody>
                 {equipo.map((m) => (
                   <tr key={m.id}>
-                    <td><strong>{m.nombre}</strong><div className="small">{m.telefono || "Sin teléfono"}</div></td>
+                    <td>
+                      <strong>{m.nombre}</strong>
+                      <div className="small">{m.telefono || "Sin teléfono"}</div>
+                    </td>
                     <td>{m.rol || "-"}</td>
                     <td>{m.zona || "-"}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button type="button" onClick={() => editarMiembro(m)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>Editar</button>
-                        <button type="button" onClick={() => eliminarMiembro(m.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>Eliminar</button>
+                        <button type="button" onClick={() => editarMiembro(m)} style={{ width: "auto", padding: "8px 12px", background: "#2563eb", fontSize: 14 }}>
+                          Editar
+                        </button>
+
+                        <button type="button" onClick={() => eliminarMiembro(m.id)} style={{ width: "auto", padding: "8px 12px", background: "#dc2626", fontSize: 14 }}>
+                          Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))}
+
                 {equipo.length === 0 && (
-                  <tr><td colSpan="4">Todavía no hay usuarios del equipo cargados.</td></tr>
+                  <tr>
+                    <td colSpan="4">Todavía no hay usuarios del equipo cargados.</td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -683,17 +826,35 @@ export default function App() {
       {isMobile && (
         <div
           style={{
-            position: "fixed", left: 0, right: 0, bottom: 0,
-            background: "#111827", color: "white",
-            padding: "12px 16px", display: "flex",
-            justifyContent: "space-around", zIndex: 50,
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "#111827",
+            color: "white",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "space-around",
+            zIndex: 50,
             boxShadow: "0 -4px 20px rgba(0,0,0,.18)",
           }}
         >
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, opacity: 0.8 }}>Total</div><strong>{stats.total}</strong></div>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, opacity: 0.8 }}>Apoya</div><strong>{stats.apoya}</strong></div>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, opacity: 0.8 }}>Indeciso</div><strong>{stats.indeciso}</strong></div>
-          <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, opacity: 0.8 }}>No apoya</div><strong>{stats.no_apoya}</strong></div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Total</div>
+            <strong>{stats.total}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Apoya</div>
+            <strong>{stats.apoya}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Indeciso</div>
+            <strong>{stats.indeciso}</strong>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>No apoya</div>
+            <strong>{stats.no_apoya}</strong>
+          </div>
         </div>
       )}
     </div>
