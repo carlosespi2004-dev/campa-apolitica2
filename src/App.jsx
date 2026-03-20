@@ -251,7 +251,10 @@ export default function App() {
           );
 
           if (perfilError) {
-            console.error("Perfil inválido en cambio de sesión:", perfilError.message);
+            console.error(
+              "Perfil inválido en cambio de sesión:",
+              perfilError.message
+            );
             await limpiarSesionRota();
             setAuthLoading(false);
             return;
@@ -436,7 +439,9 @@ export default function App() {
   }
 
   async function eliminarVotante(id) {
-    const confirmar = window.confirm("¿Seguro que querés eliminar este futuro votante?");
+    const confirmar = window.confirm(
+      "¿Seguro que querés eliminar este futuro votante?"
+    );
     if (!confirmar) return;
 
     try {
@@ -481,7 +486,9 @@ export default function App() {
       limpiarFormularioEquipo();
       await cargarEquipo();
     } catch (err) {
-      alert("Error guardando miembro del equipo: " + String(err.message || err));
+      alert(
+        "Error guardando miembro del equipo: " + String(err.message || err)
+      );
     } finally {
       setGuardandoEquipo(false);
     }
@@ -499,7 +506,9 @@ export default function App() {
   }
 
   async function eliminarMiembro(id) {
-    const confirmar = window.confirm("¿Seguro que querés eliminar este miembro del equipo?");
+    const confirmar = window.confirm(
+      "¿Seguro que querés eliminar este miembro del equipo?"
+    );
     if (!confirmar) return;
 
     try {
@@ -563,7 +572,9 @@ export default function App() {
     );
 
     const hojaGeneralData =
-      todosOrdenados.length > 0 ? construirFilasExcel(todosOrdenados) : encabezadosBase;
+      todosOrdenados.length > 0
+        ? construirFilasExcel(todosOrdenados)
+        : encabezadosBase;
 
     const hojaGeneral = XLSX.utils.json_to_sheet(hojaGeneralData);
     hojaGeneral["!cols"] = [
@@ -617,7 +628,8 @@ export default function App() {
       total: votantes.length,
       equipo: equipo.length,
       conCedula: votantes.filter((v) => (v.cedula || "").trim() !== "").length,
-      sinAsignar: votantes.filter((v) => !(v.por_parte_de_id || "").trim()).length,
+      sinAsignar: votantes.filter((v) => !(v.por_parte_de_id || "").trim())
+        .length,
     };
   }, [votantes, equipo]);
 
@@ -661,6 +673,25 @@ export default function App() {
 
     return Object.values(acumulado).sort((a, b) => b.total - a.total);
   }, [votantes, equipo]);
+
+  const conteoBarrios = useMemo(() => {
+    const acumulado = {};
+
+    votantes.forEach((v) => {
+      const barrio = (v.barrio || "Sin barrio").trim();
+
+      if (!acumulado[barrio]) {
+        acumulado[barrio] = {
+          barrio,
+          total: 0,
+        };
+      }
+
+      acumulado[barrio].total += 1;
+    });
+
+    return Object.values(acumulado).sort((a, b) => b.total - a.total);
+  }, [votantes]);
 
   const layoutGrid = {
     display: "grid",
@@ -739,69 +770,104 @@ export default function App() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 20 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 16,
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Conteo de futuros votantes por miembro del equipo</h2>
-          <button
-            type="button"
-            onClick={exportarExcel}
-            style={{ width: "auto", padding: "10px 16px" }}
+      <div style={layoutGrid}>
+        <div className="card" style={{ marginTop: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
           >
-            Exportar Excel
-          </button>
-        </div>
+            <h2 style={{ margin: 0, fontSize: isMobile ? 28 : 22 }}>
+              Conteo de futuros votantes por miembro del equipo
+            </h2>
 
-        <div style={{ marginTop: 20, display: "grid", gap: 16 }}>
-          {conteoPorEquipo.map((item) => {
-            const total = stats.total || 1;
-            const porcentaje = Math.round((item.total / total) * 100);
+            <button
+              type="button"
+              onClick={exportarExcel}
+              style={{ width: "auto", padding: "10px 16px" }}
+            >
+              Exportar Excel
+            </button>
+          </div>
 
-            return (
-              <div key={item.nombre}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 6,
-                    fontSize: 14,
-                  }}
-                >
-                  <span>{item.nombre}</span>
-                  <span>
-                    {item.total} ({porcentaje}%)
-                  </span>
-                </div>
+          <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
+            {conteoPorEquipo.map((item) => {
+              const total = stats.total || 1;
+              const porcentaje = Math.round((item.total / total) * 100);
 
-                <div
-                  style={{
-                    width: "100%",
-                    height: 16,
-                    background: "#e5e7eb",
-                    borderRadius: 999,
-                    overflow: "hidden",
-                  }}
-                >
+              return (
+                <div key={item.nombre}>
                   <div
                     style={{
-                      width: `${porcentaje}%`,
-                      height: "100%",
-                      background: "#2563eb",
-                      borderRadius: 999,
-                      transition: "0.3s",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                      fontSize: 14,
                     }}
-                  />
+                  >
+                    <span>{item.nombre}</span>
+                    <span>
+                      {item.total} ({porcentaje}%)
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 12,
+                      background: "#e5e7eb",
+                      borderRadius: 999,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${porcentaje}%`,
+                        height: "100%",
+                        background: "#2563eb",
+                        borderRadius: 999,
+                        transition: "0.3s",
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="card" style={{ marginTop: 20 }}>
+          <h2 style={{ marginTop: 0, fontSize: isMobile ? 28 : 22 }}>
+            Conteo por barrio
+          </h2>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Barrio</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conteoBarrios.map((item) => (
+                  <tr key={item.barrio}>
+                    <td>{item.barrio}</td>
+                    <td>{item.total}</td>
+                  </tr>
+                ))}
+                {conteoBarrios.length === 0 && (
+                  <tr>
+                    <td colSpan="2">Todavía no hay datos de barrio cargados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -850,7 +916,9 @@ export default function App() {
             <input
               placeholder="Local de votación"
               value={form.local_votacion}
-              onChange={(e) => setForm({ ...form, local_votacion: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, local_votacion: e.target.value })
+              }
               style={{ fontSize: isMobile ? 18 : 16 }}
             />
 
@@ -1000,26 +1068,34 @@ export default function App() {
             <input
               placeholder="Nombre del miembro"
               value={formEquipo.nombre}
-              onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })}
+              onChange={(e) =>
+                setFormEquipo({ ...formEquipo, nombre: e.target.value })
+              }
               required
             />
             <input
               placeholder="Teléfono"
               value={formEquipo.telefono}
-              onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })}
+              onChange={(e) =>
+                setFormEquipo({ ...formEquipo, telefono: e.target.value })
+              }
             />
             <input
               placeholder="Zona o barrio"
               value={formEquipo.zona}
-              onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })}
+              onChange={(e) =>
+                setFormEquipo({ ...formEquipo, zona: e.target.value })
+              }
             />
             <select
               value={formEquipo.rol}
-              onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })}
+              onChange={(e) =>
+                setFormEquipo({ ...formEquipo, rol: e.target.value })
+              }
             >
-              <option value="Candidadto">Candidadto</option>
-              <option value="Jefe de campaña">Jefe de campaña</option>
               <option value="coordinador">Coordinador</option>
+              <option value="brigadista">Brigadista</option>
+              <option value="supervisor">Supervisor</option>
             </select>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
