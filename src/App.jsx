@@ -1110,9 +1110,9 @@ function construirFilasExcel(lista) {
                 setFormEquipo({ ...formEquipo, rol: e.target.value })
               }
             >
+              <option value="candidato">Candidato</option>
+              <option value="Jefe de campaña">Jefe de campaña</option>
               <option value="coordinador">Coordinador</option>
-              <option value="brigadista">Brigadista</option>
-              <option value="supervisor">Supervisor</option>
             </select>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
