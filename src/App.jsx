@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
-function withTimeout(promise, ms = 10000) {
+function withTimeout(promise, ms = 15000) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
@@ -67,174 +67,6 @@ function mapearFilaExcel(fila) {
   };
 }
 
-async function buscarPersonaPorCedula() {
-  setBuscandoCedula(true);
-  setResultadoCedula(null);
-  setMensajeCedula("");
-
-  try {
-    const limpia = normalizarCedula(cedulaBusqueda);
-
-    if (!limpia) {
-      setMensajeCedula("Ingresá una cédula para buscar.");
-      return;
-    }
-
-    const { data, error } = await withTimeout(
-      supabase
-        .from("padron_importado")
-        .select(
-          "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de"
-        )
-        .eq("cedula_limpia", limpia)
-        .maybeSingle()
-    );
-
-    if (error) {
-      setMensajeCedula("Ocurrió un error al buscar la cédula.");
-      return;
-    }
-
-    if (!data) {
-      setMensajeCedula("No se encontró ninguna persona con esa cédula");
-      return;
-    }
-
-    setResultadoCedula(data);
-  } catch (err) {
-    setMensajeCedula("Ocurrió un error al buscar la cédula.");
-  } finally {
-    setBuscandoCedula(false);
-  }
-}
-
-async function importarExcelPadron() {
-  if (!archivoExcelPadron) {
-    alert("Seleccioná un archivo Excel primero.");
-    return;
-  }
-
-  setImportandoPadron(true);
-  setEstadoImportacionPadron("Importando...");
-
-  try {
-    const buffer = await archivoExcelPadron.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const filas = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    if (!filas.length) {
-      setEstadoImportacionPadron("El archivo está vacío.");
-      return;
-    }
-
-    const procesadas = filas.map(mapearFilaExcel);
-
-    const validas = [];
-    let errores = 0;
-
-    for (const fila of procesadas) {
-      const nombre = normalizarTexto(fila.nombre);
-      const apellido = normalizarTexto(fila.apellido);
-      const cedula = normalizarTexto(fila.cedula);
-      const cedulaLimpia = normalizarCedula(cedula);
-
-      if (!cedulaLimpia) {
-        errores += 1;
-        continue;
-      }
-
-      validas.push({
-        nombre,
-        apellido,
-        cedula,
-        cedula_limpia: cedulaLimpia,
-        orden: normalizarTexto(fila.orden),
-        mesa: normalizarTexto(fila.mesa),
-        local_votacion: normalizarTexto(fila.local_votacion),
-        seccional: normalizarTexto(fila.seccional),
-        barrio: normalizarTexto(fila.barrio),
-        por_parte_de: normalizarTexto(fila.por_parte_de),
-      });
-    }
-
-    const cedulas = [...new Set(validas.map((v) => v.cedula_limpia).filter(Boolean))];
-
-    let yaExistentes = [];
-    if (cedulas.length > 0) {
-      const { data: existentes, error: errorExistentes } = await withTimeout(
-        supabase
-          .from("padron_importado")
-          .select("cedula_limpia")
-          .in("cedula_limpia", cedulas)
-      );
-
-      if (errorExistentes) {
-        setEstadoImportacionPadron(
-          "Error consultando duplicados: " + errorExistentes.message
-        );
-        return;
-      }
-
-      yaExistentes = (existentes || []).map((e) => e.cedula_limpia);
-    }
-
-    const setExistentes = new Set(yaExistentes);
-    const setLocal = new Set();
-
-    const aInsertar = [];
-    let duplicados = 0;
-
-    for (const item of validas) {
-      if (
-        setExistentes.has(item.cedula_limpia) ||
-        setLocal.has(item.cedula_limpia)
-      ) {
-        duplicados += 1;
-        continue;
-      }
-
-      setLocal.add(item.cedula_limpia);
-      aInsertar.push(item);
-    }
-
-    let insertados = 0;
-
-    if (aInsertar.length > 0) {
-      const lote = 200;
-
-      for (let i = 0; i < aInsertar.length; i += lote) {
-        const bloque = aInsertar.slice(i, i + lote);
-
-        const { error: errorInsert } = await withTimeout(
-          supabase.from("padron_importado").insert(bloque)
-        );
-
-        if (errorInsert) {
-          setEstadoImportacionPadron(
-            "Error insertando registros: " + errorInsert.message
-          );
-          return;
-        }
-
-        insertados += bloque.length;
-      }
-    }
-
-    setEstadoImportacionPadron(
-      `Importación completada. ${insertados} registros insertados. ${duplicados} registros omitidos por estar duplicados. ${errores} registros con error.`
-    );
-  } catch (err) {
-    setEstadoImportacionPadron(
-      "Ocurrió un error durante la importación: " +
-        String(err.message || err)
-    );
-  } finally {
-    setImportandoPadron(false);
-  }
-}
-
 const initialForm = {
   nombre: "",
   apellido: "",
@@ -286,7 +118,7 @@ function LoginScreen({ onLogin, loading }) {
         }}
       >
         <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
-        <p style={{ color: "#666" }}>Hagamos que suceda · Presidente Franco</p>
+        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <input
@@ -335,19 +167,14 @@ export default function App() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-
-  const [archivoExcel, setArchivoExcel] = useState(null);
-  const [importandoExcel, setImportandoExcel] = useState(false);
-  const [estadoImportacion, setEstadoImportacion] = useState("");
-
-  const [archivoExcelPadron, setArchivoExcelPadron] = useState(null);
-  const [importandoPadron, setImportandoPadron] = useState(false);
-  const [estadoImportacionPadron, setEstadoImportacionPadron] = useState("");
-
   const [cedulaBusqueda, setCedulaBusqueda] = useState("");
   const [buscandoCedula, setBuscandoCedula] = useState(false);
   const [resultadoCedula, setResultadoCedula] = useState(null);
   const [mensajeCedula, setMensajeCedula] = useState("");
+
+  const [archivoExcelPadron, setArchivoExcelPadron] = useState(null);
+  const [importandoPadron, setImportandoPadron] = useState(false);
+  const [estadoImportacionPadron, setEstadoImportacionPadron] = useState("");
 
   useEffect(() => {
     function onResize() {
@@ -778,58 +605,77 @@ export default function App() {
 
     try {
       const limpia = normalizarCedula(cedulaBusqueda);
+      const cruda = normalizarTexto(cedulaBusqueda);
 
       if (!limpia) {
         setMensajeCedula("Ingresá una cédula para buscar.");
         return;
       }
 
-      const { data, error } = await withTimeout(
-        supabase
-          .from("votantes")
-          .select(
-            "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de, por_parte_de_nombre"
-          )
-          .eq("cedula_limpia", limpia)
-          .maybeSingle()
-      );
+      // 1) búsqueda rápida por cedula_limpia
+      let { data, error } = await supabase
+        .from("padron_importado")
+        .select(
+          "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de"
+        )
+        .eq("cedula_limpia", limpia)
+        .limit(1);
 
       if (error) {
-        setMensajeCedula("Ocurrió un error al buscar la cédula.");
+        console.error("Error buscando por cedula_limpia:", error.message);
+      }
+
+      let resultado = data?.[0] || null;
+
+      // 2) fallback por cédula exacta si no encontró
+      if (!resultado) {
+        const respuesta2 = await supabase
+          .from("padron_importado")
+          .select(
+            "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de"
+          )
+          .in("cedula", [cruda, limpia])
+          .limit(1);
+
+        if (respuesta2.error) {
+          console.error("Error buscando por cedula:", respuesta2.error.message);
+        }
+
+        resultado = respuesta2.data?.[0] || null;
+      }
+
+      if (!resultado) {
+        setMensajeCedula("No se encontró ninguna persona con esa cédula");
         return;
       }
 
-      if (!data) {
-        setMensajeCedula("No se encontró ninguna persona con esa cédula.");
-        return;
-      }
-
-      setResultadoCedula(data);
+      setResultadoCedula(resultado);
     } catch (err) {
+      console.error("Error al buscar la cédula:", err);
       setMensajeCedula("Ocurrió un error al buscar la cédula.");
     } finally {
       setBuscandoCedula(false);
     }
   }
 
-  async function importarExcel() {
-    if (!archivoExcel) {
+  async function importarExcelPadron() {
+    if (!archivoExcelPadron) {
       alert("Seleccioná un archivo Excel primero.");
       return;
     }
 
-    setImportandoExcel(true);
-    setEstadoImportacion("Importando...");
+    setImportandoPadron(true);
+    setEstadoImportacionPadron("Importando...");
 
     try {
-      const buffer = await archivoExcel.arrayBuffer();
+      const buffer = await archivoExcelPadron.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const filas = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
       if (!filas.length) {
-        setEstadoImportacion("El archivo está vacío.");
+        setEstadoImportacionPadron("El archivo está vacío.");
         return;
       }
 
@@ -844,16 +690,10 @@ export default function App() {
         const cedula = normalizarTexto(fila.cedula);
         const cedulaLimpia = normalizarCedula(cedula);
 
-        if (!nombre || !apellido || !cedulaLimpia) {
+        if (!cedulaLimpia) {
           errores += 1;
           continue;
         }
-
-        const miembro = equipo.find(
-          (m) =>
-            normalizarTexto(m.nombre).toLowerCase() ===
-            normalizarTexto(fila.por_parte_de).toLowerCase()
-        );
 
         validas.push({
           nombre,
@@ -865,27 +705,25 @@ export default function App() {
           local_votacion: normalizarTexto(fila.local_votacion),
           seccional: normalizarTexto(fila.seccional),
           barrio: normalizarTexto(fila.barrio),
-          por_parte_de_id: miembro?.id || null,
-          por_parte_de_nombre: miembro?.nombre || normalizarTexto(fila.por_parte_de),
-          por_parte_de: miembro?.nombre || normalizarTexto(fila.por_parte_de),
+          por_parte_de: normalizarTexto(fila.por_parte_de),
         });
       }
 
-      const candidatosCedula = [
+      const cedulas = [
         ...new Set(validas.map((v) => v.cedula_limpia).filter(Boolean)),
       ];
 
       let yaExistentes = [];
-      if (candidatosCedula.length > 0) {
+      if (cedulas.length > 0) {
         const { data: existentes, error: errorExistentes } = await withTimeout(
           supabase
-            .from("votantes")
+            .from("padron_importado")
             .select("cedula_limpia")
-            .in("cedula_limpia", candidatosCedula)
+            .in("cedula_limpia", cedulas)
         );
 
         if (errorExistentes) {
-          setEstadoImportacion(
+          setEstadoImportacionPadron(
             "Error consultando duplicados: " + errorExistentes.message
           );
           return;
@@ -920,12 +758,13 @@ export default function App() {
 
         for (let i = 0; i < aInsertar.length; i += lote) {
           const bloque = aInsertar.slice(i, i + lote);
+
           const { error: errorInsert } = await withTimeout(
-            supabase.from("votantes").insert(bloque)
+            supabase.from("padron_importado").insert(bloque)
           );
 
           if (errorInsert) {
-            setEstadoImportacion(
+            setEstadoImportacionPadron(
               "Error insertando registros: " + errorInsert.message
             );
             return;
@@ -935,18 +774,17 @@ export default function App() {
         }
       }
 
-      await cargarVotantes();
-
-      setEstadoImportacion(
+      setEstadoImportacionPadron(
         `Importación completada. ${insertados} registros insertados. ${duplicados} registros omitidos por estar duplicados. ${errores} registros con error.`
       );
     } catch (err) {
-      setEstadoImportacion(
+      console.error("Error importando padrón:", err);
+      setEstadoImportacionPadron(
         "Ocurrió un error durante la importación: " +
           String(err.message || err)
       );
     } finally {
-      setImportandoExcel(false);
+      setImportandoPadron(false);
     }
   }
 
@@ -1156,7 +994,7 @@ export default function App() {
         }}
       >
         <div>
-          <h1 style={{ marginBottom: 6 }}>Hagamos que suceda · Presidente Franco</h1>
+          <h1 style={{ marginBottom: 6 }}>Campaña Política · Presidente Franco</h1>
           <p className="small" style={{ marginTop: 0 }}>
             Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
             {perfil?.rol ? ` · ${perfil.rol}` : ""}
@@ -1188,9 +1026,9 @@ export default function App() {
           <h2>{stats.equipo}</h2>
         </div>
 
-          <div
-            className="card"
-           style={{
+        <div
+          className="card"
+          style={{
             gridColumn: isMobile ? "span 1" : "span 2",
             display: "grid",
             gap: 12,
@@ -1260,47 +1098,48 @@ export default function App() {
         </div>
       </div>
 
-          <div className="card" style={{ marginTop: 20 }}>
-          <h2 style={{ marginTop: 0 }}>Importar padrón Excel a Supabase</h2>
+      <div className="card" style={{ marginTop: 20 }}>
+        <h2 style={{ marginTop: 0 }}>Importar padrón Excel a Supabase</h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-          gap: 12,
-          alignItems: "center",
-        }}
-      >
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={(e) => setArchivoExcelPadron(e.target.files?.[0] || null)}
-          style={{ marginBottom: 0 }}
-        />
-
-        <button
-          type="button"
-          onClick={importarExcelPadron}
-          style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
-        >
-          {importandoPadron ? "Importando..." : "Importar"}
-        </button>
-      </div>
-
-      {estadoImportacionPadron && (
         <div
           style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "#f3f4f6",
-            border: "1px solid #e5e7eb",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+            gap: 12,
+            alignItems: "center",
           }}
         >
-          {estadoImportacionPadron}
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => setArchivoExcelPadron(e.target.files?.[0] || null)}
+            style={{ marginBottom: 0 }}
+          />
+
+          <button
+            type="button"
+            onClick={importarExcelPadron}
+            style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
+          >
+            {importandoPadron ? "Importando..." : "Importar"}
+          </button>
         </div>
-      )}
-</div>
+
+        {estadoImportacionPadron && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              background: "#f3f4f6",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            {estadoImportacionPadron}
+          </div>
+        )}
+      </div>
+
       <div style={layoutGrid}>
         <div className="card" style={{ marginTop: 20 }}>
           <div
