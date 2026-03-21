@@ -22,6 +22,51 @@ function withTimeout(promise, ms = 10000) {
   ]);
 }
 
+function normalizarCedula(valor) {
+  return String(valor || "").replace(/[.\-\s]/g, "").trim();
+}
+
+function normalizarTexto(valor) {
+  return String(valor || "").trim();
+}
+
+function normalizarEncabezado(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function mapearFilaExcel(fila) {
+  const salida = {};
+
+  Object.keys(fila || {}).forEach((key) => {
+    const limpio = normalizarEncabezado(key);
+    salida[limpio] = fila[key];
+  });
+
+  return {
+    nombre: salida.nombre || "",
+    apellido: salida.apellido || "",
+    cedula: salida.cedula || "",
+    orden: salida.orden || "",
+    mesa: salida.mesa || "",
+    local_votacion:
+      salida.localdevotacion ||
+      salida.localvotacion ||
+      salida.local ||
+      "",
+    seccional: salida.seccional || "",
+    barrio: salida.barrio || "",
+    por_parte_de:
+      salida.porpartede ||
+      salida.porparte ||
+      salida.responsable ||
+      "",
+  };
+}
+
 const initialForm = {
   nombre: "",
   apellido: "",
@@ -33,6 +78,7 @@ const initialForm = {
   barrio: "",
   por_parte_de_id: "",
   por_parte_de_nombre: "",
+  por_parte_de: "",
 };
 
 const initialEquipoForm = {
@@ -120,6 +166,15 @@ export default function App() {
   const [editandoEquipoId, setEditandoEquipoId] = useState(null);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const [cedulaBusqueda, setCedulaBusqueda] = useState("");
+  const [buscandoCedula, setBuscandoCedula] = useState(false);
+  const [resultadoCedula, setResultadoCedula] = useState(null);
+  const [mensajeCedula, setMensajeCedula] = useState("");
+
+  const [archivoExcel, setArchivoExcel] = useState(null);
+  const [importandoExcel, setImportandoExcel] = useState(false);
+  const [estadoImportacion, setEstadoImportacion] = useState("");
 
   useEffect(() => {
     function onResize() {
@@ -372,6 +427,7 @@ export default function App() {
       ...prev,
       por_parte_de_id: id,
       por_parte_de_nombre: miembro?.nombre || "",
+      por_parte_de: miembro?.nombre || "",
     }));
   }
 
@@ -385,17 +441,26 @@ export default function App() {
         return;
       }
 
+      const cedulaLimpia = normalizarCedula(form.cedula);
+
+      if (!cedulaLimpia) {
+        alert("La cédula es obligatoria.");
+        return;
+      }
+
       const payload = {
-        nombre: form.nombre,
-        apellido: form.apellido,
-        cedula: form.cedula,
-        orden: form.orden,
-        mesa: form.mesa,
-        local_votacion: form.local_votacion,
-        seccional: form.seccional,
-        barrio: form.barrio,
-        por_parte_de_id: form.por_parte_de_id,  
+        nombre: normalizarTexto(form.nombre),
+        apellido: normalizarTexto(form.apellido),
+        cedula: normalizarTexto(form.cedula),
+        cedula_limpia: cedulaLimpia,
+        orden: normalizarTexto(form.orden),
+        mesa: normalizarTexto(form.mesa),
+        local_votacion: normalizarTexto(form.local_votacion),
+        seccional: normalizarTexto(form.seccional),
+        barrio: normalizarTexto(form.barrio),
+        por_parte_de_id: form.por_parte_de_id,
         por_parte_de_nombre: form.por_parte_de_nombre,
+        por_parte_de: form.por_parte_de_nombre,
       };
 
       let respuesta;
@@ -435,7 +500,9 @@ export default function App() {
       seccional: votante.seccional || "",
       barrio: votante.barrio || "",
       por_parte_de_id: votante.por_parte_de_id || "",
-      por_parte_de_nombre: votante.por_parte_de_nombre || "",
+      por_parte_de_nombre:
+        votante.por_parte_de_nombre || votante.por_parte_de || "",
+      por_parte_de: votante.por_parte_de || "",
     });
     setEditandoId(votante.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -531,6 +598,185 @@ export default function App() {
     }
   }
 
+  async function buscarPersonaPorCedula() {
+    setBuscandoCedula(true);
+    setResultadoCedula(null);
+    setMensajeCedula("");
+
+    try {
+      const limpia = normalizarCedula(cedulaBusqueda);
+
+      if (!limpia) {
+        setMensajeCedula("Ingresá una cédula para buscar.");
+        return;
+      }
+
+      const { data, error } = await withTimeout(
+        supabase
+          .from("votantes")
+          .select(
+            "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de, por_parte_de_nombre"
+          )
+          .eq("cedula_limpia", limpia)
+          .maybeSingle()
+      );
+
+      if (error) {
+        setMensajeCedula("Ocurrió un error al buscar la cédula.");
+        return;
+      }
+
+      if (!data) {
+        setMensajeCedula("No se encontró ninguna persona con esa cédula.");
+        return;
+      }
+
+      setResultadoCedula(data);
+    } catch (err) {
+      setMensajeCedula("Ocurrió un error al buscar la cédula.");
+    } finally {
+      setBuscandoCedula(false);
+    }
+  }
+
+  async function importarExcel() {
+    if (!archivoExcel) {
+      alert("Seleccioná un archivo Excel primero.");
+      return;
+    }
+
+    setImportandoExcel(true);
+    setEstadoImportacion("Importando...");
+
+    try {
+      const buffer = await archivoExcel.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const filas = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+      if (!filas.length) {
+        setEstadoImportacion("El archivo está vacío.");
+        return;
+      }
+
+      const procesadas = filas.map(mapearFilaExcel);
+
+      const validas = [];
+      let errores = 0;
+
+      for (const fila of procesadas) {
+        const nombre = normalizarTexto(fila.nombre);
+        const apellido = normalizarTexto(fila.apellido);
+        const cedula = normalizarTexto(fila.cedula);
+        const cedulaLimpia = normalizarCedula(cedula);
+
+        if (!nombre || !apellido || !cedulaLimpia) {
+          errores += 1;
+          continue;
+        }
+
+        const miembro = equipo.find(
+          (m) =>
+            normalizarTexto(m.nombre).toLowerCase() ===
+            normalizarTexto(fila.por_parte_de).toLowerCase()
+        );
+
+        validas.push({
+          nombre,
+          apellido,
+          cedula,
+          cedula_limpia: cedulaLimpia,
+          orden: normalizarTexto(fila.orden),
+          mesa: normalizarTexto(fila.mesa),
+          local_votacion: normalizarTexto(fila.local_votacion),
+          seccional: normalizarTexto(fila.seccional),
+          barrio: normalizarTexto(fila.barrio),
+          por_parte_de_id: miembro?.id || null,
+          por_parte_de_nombre: miembro?.nombre || normalizarTexto(fila.por_parte_de),
+          por_parte_de: miembro?.nombre || normalizarTexto(fila.por_parte_de),
+        });
+      }
+
+      const candidatosCedula = [
+        ...new Set(validas.map((v) => v.cedula_limpia).filter(Boolean)),
+      ];
+
+      let yaExistentes = [];
+      if (candidatosCedula.length > 0) {
+        const { data: existentes, error: errorExistentes } = await withTimeout(
+          supabase
+            .from("votantes")
+            .select("cedula_limpia")
+            .in("cedula_limpia", candidatosCedula)
+        );
+
+        if (errorExistentes) {
+          setEstadoImportacion(
+            "Error consultando duplicados: " + errorExistentes.message
+          );
+          return;
+        }
+
+        yaExistentes = (existentes || []).map((e) => e.cedula_limpia);
+      }
+
+      const setExistentes = new Set(yaExistentes);
+      const setLocal = new Set();
+
+      const aInsertar = [];
+      let duplicados = 0;
+
+      for (const item of validas) {
+        if (
+          setExistentes.has(item.cedula_limpia) ||
+          setLocal.has(item.cedula_limpia)
+        ) {
+          duplicados += 1;
+          continue;
+        }
+
+        setLocal.add(item.cedula_limpia);
+        aInsertar.push(item);
+      }
+
+      let insertados = 0;
+
+      if (aInsertar.length > 0) {
+        const lote = 200;
+
+        for (let i = 0; i < aInsertar.length; i += lote) {
+          const bloque = aInsertar.slice(i, i + lote);
+          const { error: errorInsert } = await withTimeout(
+            supabase.from("votantes").insert(bloque)
+          );
+
+          if (errorInsert) {
+            setEstadoImportacion(
+              "Error insertando registros: " + errorInsert.message
+            );
+            return;
+          }
+
+          insertados += bloque.length;
+        }
+      }
+
+      await cargarVotantes();
+
+      setEstadoImportacion(
+        `Importación completada. ${insertados} registros insertados. ${duplicados} registros omitidos por estar duplicados. ${errores} registros con error.`
+      );
+    } catch (err) {
+      setEstadoImportacion(
+        "Ocurrió un error durante la importación: " +
+          String(err.message || err)
+      );
+    } finally {
+      setImportandoExcel(false);
+    }
+  }
+
   function normalizarNombreHoja(nombre) {
     const limpio = (nombre || "Sin nombre")
       .replace(/[\\\/\?\*\[\]\:]/g, "")
@@ -539,26 +785,26 @@ export default function App() {
     return limpio.slice(0, 31) || "Sin nombre";
   }
 
-function construirFilasExcel(lista) {
-  return lista.map((v, index) => ({
-    Nro: index + 1,
-    Nombre: v.nombre || "",
-    Apellido: v.apellido || "",
-    Cédula: v.cedula || "",
-    Orden: v.orden || "",
-    Mesa: v.mesa || "",
-    "Local de votación": v.local_votacion || "",
-    Seccional: v.seccional || "",
-    Barrio: v.barrio || "",
-    "Por parte de": v.por_parte_de_nombre || "",
-  }));
-}
+  function construirFilasExcel(lista) {
+    return lista.map((v, index) => ({
+      Nro: index + 1,
+      Nombre: v.nombre || "",
+      Apellido: v.apellido || "",
+      Cédula: v.cedula || "",
+      Orden: v.orden || "",
+      Mesa: v.mesa || "",
+      "Local de votación": v.local_votacion || "",
+      Seccional: v.seccional || "",
+      Barrio: v.barrio || "",
+      "Por parte de": v.por_parte_de_nombre || v.por_parte_de || "",
+    }));
+  }
 
   function exportarExcel() {
     const libro = XLSX.utils.book_new();
 
-  const encabezadosBase = [
-    {
+    const encabezadosBase = [
+      {
         Nro: "",
         Nombre: "",
         Apellido: "",
@@ -569,8 +815,8 @@ function construirFilasExcel(lista) {
         Seccional: "",
         Barrio: "",
         "Por parte de": "",
-    },
-  ];
+      },
+    ];
 
     const todosOrdenados = [...votantes].sort(
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
@@ -582,18 +828,18 @@ function construirFilasExcel(lista) {
         : encabezadosBase;
 
     const hojaGeneral = XLSX.utils.json_to_sheet(hojaGeneralData);
-      hojaGeneral["!cols"] = [
-        { wch: 8 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 16 },
-        { wch: 10 },
-        { wch: 10 },
-        { wch: 24 },
-        { wch: 16 },
-        { wch: 18 },
-        { wch: 20 },
-      ];
+    hojaGeneral["!cols"] = [
+      { wch: 8 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 10 },
+      { wch: 10 },
+      { wch: 24 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 20 },
+    ];
     XLSX.utils.book_append_sheet(libro, hojaGeneral, "General");
 
     equipo.forEach((miembro) => {
@@ -634,9 +880,6 @@ function construirFilasExcel(lista) {
     return {
       total: votantes.length,
       equipo: equipo.length,
-      conCedula: votantes.filter((v) => (v.cedula || "").trim() !== "").length,
-      sinAsignar: votantes.filter((v) => !(v.por_parte_de_id || "").trim())
-        .length,
     };
   }, [votantes, equipo]);
 
@@ -653,7 +896,8 @@ function construirFilasExcel(lista) {
         (v.local_votacion || "").toLowerCase().includes(texto) ||
         (v.seccional || "").toLowerCase().includes(texto) ||
         (v.barrio || "").toLowerCase().includes(texto) ||
-        (v.por_parte_de_nombre || "").toLowerCase().includes(texto)
+        (v.por_parte_de_nombre || "").toLowerCase().includes(texto) ||
+        (v.por_parte_de || "").toLowerCase().includes(texto)
       );
     });
   }, [votantes, busqueda]);
@@ -672,7 +916,7 @@ function construirFilasExcel(lista) {
       const id = v.por_parte_de_id || "sin_asignar";
       if (!acumulado[id]) {
         acumulado[id] = {
-          nombre: v.por_parte_de_nombre || "Sin asignar",
+          nombre: v.por_parte_de_nombre || v.por_parte_de || "Sin asignar",
           total: 0,
         };
       }
@@ -701,17 +945,18 @@ function construirFilasExcel(lista) {
     return Object.values(acumulado).sort((a, b) => b.total - a.total);
   }, [votantes]);
 
+  const statsTopGrid = {
+    display: "grid",
+    gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
+    gap: 16,
+    alignItems: "stretch",
+  };
+
   const layoutGrid = {
     display: "grid",
     gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
     gap: 20,
     marginTop: 20,
-  };
-
-  const statsGrid = {
-    display: "grid",
-    gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
-    gap: 16,
   };
 
   if (authLoading) {
@@ -759,23 +1004,134 @@ function construirFilasExcel(lista) {
         </button>
       </div>
 
-      <div style={statsGrid}>
+      <div style={statsTopGrid}>
         <div className="stat">
           <div className="small">Total futuros votantes</div>
           <h2>{stats.total}</h2>
         </div>
+
         <div className="stat">
           <div className="small">Miembros del equipo</div>
           <h2>{stats.equipo}</h2>
         </div>
-        <div className="stat">
-          <div className="small">Con cédula</div>
-          <h2>{stats.conCedula}</h2>
+
+        <div
+          className="card"
+          style={{
+            gridColumn: isMobile ? "span 1" : "span 2",
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <h2 style={{ margin: 0 }}>Buscar por número de cédula</h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Escribí la cédula"
+              value={cedulaBusqueda}
+              onChange={(e) => setCedulaBusqueda(e.target.value)}
+              style={{ marginBottom: 0 }}
+            />
+
+            <button
+              type="button"
+              onClick={buscarPersonaPorCedula}
+              style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
+            >
+              {buscandoCedula ? "Buscando..." : "Buscar"}
+            </button>
+          </div>
+
+          {mensajeCedula && (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                background: "#f3f4f6",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              {mensajeCedula}
+            </div>
+          )}
+
+          {resultadoCedula && (
+            <div
+              style={{
+                padding: 14,
+                borderRadius: 14,
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+                display: "grid",
+                gap: 6,
+              }}
+            >
+              <div><strong>Nombre:</strong> {resultadoCedula.nombre || "-"}</div>
+              <div><strong>Apellido:</strong> {resultadoCedula.apellido || "-"}</div>
+              <div><strong>Cédula:</strong> {resultadoCedula.cedula || "-"}</div>
+              <div><strong>Orden:</strong> {resultadoCedula.orden || "-"}</div>
+              <div><strong>Mesa:</strong> {resultadoCedula.mesa || "-"}</div>
+              <div><strong>Local de votación:</strong> {resultadoCedula.local_votacion || "-"}</div>
+              <div><strong>Seccional:</strong> {resultadoCedula.seccional || "-"}</div>
+              <div>
+                <strong>Por parte de:</strong>{" "}
+                {resultadoCedula.por_parte_de_nombre ||
+                  resultadoCedula.por_parte_de ||
+                  "-"}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="stat">
-          <div className="small">Sin asignar</div>
-          <h2>{stats.sinAsignar}</h2>
+      </div>
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <h2 style={{ marginTop: 0 }}>Importar Excel a Supabase</h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => setArchivoExcel(e.target.files?.[0] || null)}
+            style={{ marginBottom: 0 }}
+          />
+
+          <button
+            type="button"
+            onClick={importarExcel}
+            style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
+          >
+            {importandoExcel ? "Importando..." : "Importar"}
+          </button>
         </div>
+
+        {estadoImportacion && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              background: "#f3f4f6",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            {estadoImportacion}
+          </div>
+        )}
       </div>
 
       <div style={layoutGrid}>
@@ -1029,7 +1385,7 @@ function construirFilasExcel(lista) {
                     <td>{v.mesa || "-"}</td>
                     <td>{v.local_votacion || "-"}</td>
                     <td>{v.barrio || "-"}</td>
-                    <td>{v.por_parte_de_nombre || "-"}</td>
+                    <td>{v.por_parte_de_nombre || v.por_parte_de || "-"}</td>
                     <td>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <button
@@ -1110,9 +1466,9 @@ function construirFilasExcel(lista) {
                 setFormEquipo({ ...formEquipo, rol: e.target.value })
               }
             >
-              <option value="candidato">Candidato</option>
-              <option value="Jefe de campaña">Jefe de campaña</option>
               <option value="coordinador">Coordinador</option>
+              <option value="brigadista">Brigadista</option>
+              <option value="supervisor">Supervisor</option>
             </select>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1227,12 +1583,12 @@ function construirFilasExcel(lista) {
             <strong>{stats.equipo}</strong>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Cédula</div>
-            <strong>{stats.conCedula}</strong>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Buscar</div>
+            <strong>CI</strong>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Sin asignar</div>
-            <strong>{stats.sinAsignar}</strong>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Excel</div>
+            <strong>Importar</strong>
           </div>
         </div>
       )}
