@@ -67,6 +67,174 @@ function mapearFilaExcel(fila) {
   };
 }
 
+async function buscarPersonaPorCedula() {
+  setBuscandoCedula(true);
+  setResultadoCedula(null);
+  setMensajeCedula("");
+
+  try {
+    const limpia = normalizarCedula(cedulaBusqueda);
+
+    if (!limpia) {
+      setMensajeCedula("Ingresá una cédula para buscar.");
+      return;
+    }
+
+    const { data, error } = await withTimeout(
+      supabase
+        .from("padron_importado")
+        .select(
+          "nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de"
+        )
+        .eq("cedula_limpia", limpia)
+        .maybeSingle()
+    );
+
+    if (error) {
+      setMensajeCedula("Ocurrió un error al buscar la cédula.");
+      return;
+    }
+
+    if (!data) {
+      setMensajeCedula("No se encontró ninguna persona con esa cédula");
+      return;
+    }
+
+    setResultadoCedula(data);
+  } catch (err) {
+    setMensajeCedula("Ocurrió un error al buscar la cédula.");
+  } finally {
+    setBuscandoCedula(false);
+  }
+}
+
+async function importarExcelPadron() {
+  if (!archivoExcelPadron) {
+    alert("Seleccioná un archivo Excel primero.");
+    return;
+  }
+
+  setImportandoPadron(true);
+  setEstadoImportacionPadron("Importando...");
+
+  try {
+    const buffer = await archivoExcelPadron.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const filas = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+    if (!filas.length) {
+      setEstadoImportacionPadron("El archivo está vacío.");
+      return;
+    }
+
+    const procesadas = filas.map(mapearFilaExcel);
+
+    const validas = [];
+    let errores = 0;
+
+    for (const fila of procesadas) {
+      const nombre = normalizarTexto(fila.nombre);
+      const apellido = normalizarTexto(fila.apellido);
+      const cedula = normalizarTexto(fila.cedula);
+      const cedulaLimpia = normalizarCedula(cedula);
+
+      if (!cedulaLimpia) {
+        errores += 1;
+        continue;
+      }
+
+      validas.push({
+        nombre,
+        apellido,
+        cedula,
+        cedula_limpia: cedulaLimpia,
+        orden: normalizarTexto(fila.orden),
+        mesa: normalizarTexto(fila.mesa),
+        local_votacion: normalizarTexto(fila.local_votacion),
+        seccional: normalizarTexto(fila.seccional),
+        barrio: normalizarTexto(fila.barrio),
+        por_parte_de: normalizarTexto(fila.por_parte_de),
+      });
+    }
+
+    const cedulas = [...new Set(validas.map((v) => v.cedula_limpia).filter(Boolean))];
+
+    let yaExistentes = [];
+    if (cedulas.length > 0) {
+      const { data: existentes, error: errorExistentes } = await withTimeout(
+        supabase
+          .from("padron_importado")
+          .select("cedula_limpia")
+          .in("cedula_limpia", cedulas)
+      );
+
+      if (errorExistentes) {
+        setEstadoImportacionPadron(
+          "Error consultando duplicados: " + errorExistentes.message
+        );
+        return;
+      }
+
+      yaExistentes = (existentes || []).map((e) => e.cedula_limpia);
+    }
+
+    const setExistentes = new Set(yaExistentes);
+    const setLocal = new Set();
+
+    const aInsertar = [];
+    let duplicados = 0;
+
+    for (const item of validas) {
+      if (
+        setExistentes.has(item.cedula_limpia) ||
+        setLocal.has(item.cedula_limpia)
+      ) {
+        duplicados += 1;
+        continue;
+      }
+
+      setLocal.add(item.cedula_limpia);
+      aInsertar.push(item);
+    }
+
+    let insertados = 0;
+
+    if (aInsertar.length > 0) {
+      const lote = 200;
+
+      for (let i = 0; i < aInsertar.length; i += lote) {
+        const bloque = aInsertar.slice(i, i + lote);
+
+        const { error: errorInsert } = await withTimeout(
+          supabase.from("padron_importado").insert(bloque)
+        );
+
+        if (errorInsert) {
+          setEstadoImportacionPadron(
+            "Error insertando registros: " + errorInsert.message
+          );
+          return;
+        }
+
+        insertados += bloque.length;
+      }
+    }
+
+    setEstadoImportacionPadron(
+      `Importación completada. ${insertados} registros insertados. ${duplicados} registros omitidos por estar duplicados. ${errores} registros con error.`
+    );
+  } catch (err) {
+    setEstadoImportacionPadron(
+      "Ocurrió un error durante la importación: " +
+        String(err.message || err)
+    );
+  } finally {
+    setImportandoPadron(false);
+  }
+}
+
 const initialForm = {
   nombre: "",
   apellido: "",
@@ -167,14 +335,19 @@ export default function App() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const [cedulaBusqueda, setCedulaBusqueda] = useState("");
-  const [buscandoCedula, setBuscandoCedula] = useState(false);
-  const [resultadoCedula, setResultadoCedula] = useState(null);
-  const [mensajeCedula, setMensajeCedula] = useState("");
 
   const [archivoExcel, setArchivoExcel] = useState(null);
   const [importandoExcel, setImportandoExcel] = useState(false);
   const [estadoImportacion, setEstadoImportacion] = useState("");
+
+  const [archivoExcelPadron, setArchivoExcelPadron] = useState(null);
+  const [importandoPadron, setImportandoPadron] = useState(false);
+  const [estadoImportacionPadron, setEstadoImportacionPadron] = useState("");
+
+  const [cedulaBusqueda, setCedulaBusqueda] = useState("");
+  const [buscandoCedula, setBuscandoCedula] = useState(false);
+  const [resultadoCedula, setResultadoCedula] = useState(null);
+  const [mensajeCedula, setMensajeCedula] = useState("");
 
   useEffect(() => {
     function onResize() {
@@ -1015,9 +1188,9 @@ export default function App() {
           <h2>{stats.equipo}</h2>
         </div>
 
-        <div
-          className="card"
-          style={{
+          <div
+            className="card"
+           style={{
             gridColumn: isMobile ? "span 1" : "span 2",
             display: "grid",
             gap: 12,
@@ -1081,59 +1254,53 @@ export default function App() {
               <div><strong>Mesa:</strong> {resultadoCedula.mesa || "-"}</div>
               <div><strong>Local de votación:</strong> {resultadoCedula.local_votacion || "-"}</div>
               <div><strong>Seccional:</strong> {resultadoCedula.seccional || "-"}</div>
-              <div>
-                <strong>Por parte de:</strong>{" "}
-                {resultadoCedula.por_parte_de_nombre ||
-                  resultadoCedula.por_parte_de ||
-                  "-"}
-              </div>
+              <div><strong>Por parte de:</strong> {resultadoCedula.por_parte_de || "-"}</div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Importar Excel a Supabase</h2>
+          <div className="card" style={{ marginTop: 20 }}>
+          <h2 style={{ marginTop: 0 }}>Importar padrón Excel a Supabase</h2>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-            gap: 12,
-            alignItems: "center",
-          }}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={(e) => setArchivoExcelPadron(e.target.files?.[0] || null)}
+          style={{ marginBottom: 0 }}
+        />
+
+        <button
+          type="button"
+          onClick={importarExcelPadron}
+          style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
         >
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={(e) => setArchivoExcel(e.target.files?.[0] || null)}
-            style={{ marginBottom: 0 }}
-          />
-
-          <button
-            type="button"
-            onClick={importarExcel}
-            style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
-          >
-            {importandoExcel ? "Importando..." : "Importar"}
-          </button>
-        </div>
-
-        {estadoImportacion && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: "#f3f4f6",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            {estadoImportacion}
-          </div>
-        )}
+          {importandoPadron ? "Importando..." : "Importar"}
+        </button>
       </div>
 
+      {estadoImportacionPadron && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            background: "#f3f4f6",
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          {estadoImportacionPadron}
+        </div>
+      )}
+</div>
       <div style={layoutGrid}>
         <div className="card" style={{ marginTop: 20 }}>
           <div
