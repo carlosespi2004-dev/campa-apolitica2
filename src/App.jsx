@@ -118,7 +118,7 @@ function LoginScreen({ onLogin, loading }) {
         }}
       >
         <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
-        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
+        <p style={{ color: "#666" }}>Hagamos que suceda · Presidente Franco</p>
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
           <input
