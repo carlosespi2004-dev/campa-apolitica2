@@ -1,157 +1,204 @@
-/* --- Mejora de Estilos Generales --- */
-* { 
-  box-sizing: border-box; 
-  transition: all 0.2s ease; /* Hace que todo cambie suavemente */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap');
+
+:root {
+  --color-colorado: #C8102E;
+  --color-colorado-dark: #a00d25;
+  --bg-light: #F8FAFC;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius: 12px;
 }
+
+* { box-sizing: border-box; transition: all 0.2s ease; }
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f8fafc; /* Un gris azulado más profesional */
-  color: #1e293b;
-  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-main);
 }
 
-.container {
-  max-width: 1300px; /* Un poco más ancho para las tablas */
-  margin: 0 auto;
+/* --- HEADER & LOGO --- */
+.main-header {
+  background: var(--white);
+  border-bottom: 3px solid var(--color-colorado);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.logo-container img {
+  max-width: 280px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.system-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-colorado);
+  margin: 5px 0;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
+.user-session {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --- DASHBOARD STATS --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.stat-card {
+  background: var(--white);
   padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 6px solid var(--color-colorado);
+  display: flex;
+  flex-direction: column;
 }
 
-/* --- Tarjetas con Estilo Apple/Moderno --- */
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  border: 1px solid rgba(0,0,0,0.05); /* Borde sutil */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  margin-bottom: 24px;
+.stat-number {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1;
 }
 
-h2 { 
-  font-size: 1.25rem;
-  font-weight: 700;
+.stat-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* --- FORMULARIOS --- */
+.card-form {
+  background: var(--white);
+  padding: 30px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px;
   margin-bottom: 20px;
-  color: #0f172a;
+  color: var(--text-main);
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 10px;
 }
 
-/* --- Inputs y Formularios --- */
-input, select, textarea {
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
+
+input, select {
   width: 100%;
   padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background-color: #fdfdfd;
-  font-size: 14px;
-  color: #334155;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 15px;
 }
 
-input:focus, select:focus {
+input:focus {
   outline: none;
-  border-color: #2563eb; /* Azul cuando hacés clic */
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-  background-color: #fff;
+  border-color: var(--color-colorado);
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
 }
 
-/* --- Botones --- */
-button {
-  background: #0f172a;
-  color: white;
+/* --- BOTONES --- */
+.btn-primary {
+  background: var(--color-colorado);
+  color: var(--white);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  padding: 14px;
   border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  text-transform: uppercase;
+  width: 100%;
 }
 
-button:hover {
-  background: #1e293b;
-  transform: translateY(-1px); /* Efecto de levante */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.btn-primary:hover {
+  background: var(--color-colorado-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3);
 }
 
-button:active {
-  transform: translateY(0px);
+.btn-logout {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: auto;
+  padding: 8px 16px;
+  font-size: 13px;
 }
 
-/* --- Tablas Modernas --- */
-.table-wrap { 
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+/* --- TABLAS PROFESIONALES --- */
+.table-container {
+  background: var(--white);
+  border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+}
+
+thead {
+  background: var(--color-colorado);
+  color: var(--white);
 }
 
 th {
-  background: #f8fafc;
-  color: #64748b;
+  padding: 15px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
   text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  padding: 16px;
-  font-weight: 700;
+  text-align: left;
 }
 
 td {
-  padding: 16px;
+  padding: 14px;
   border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
 }
 
-tr:hover td {
-  background-color: #f1f5f9; /* Resalta la fila al pasar el mouse */
-}
+tr:nth-child(even) { background: #fdf2f2; }
+tr:hover { background: #f8e7e9; }
 
-/* --- Widgets de Estadísticas --- */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  border-left: 4px solid #2563eb; /* Detalle de color lateral */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.stat h3 {
-  margin: 0;
-  font-size: 24px;
-  color: #1e293b;
-}
-
-.stat p {
-  margin: 4px 0 0 0;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-/* --- Barras de Progreso (Las Azules) --- */
-.progress-container {
-  background: #f1f5f9;
-  border-radius: 999px;
-  height: 8px;
-  width: 100%;
+/* --- BARRAS DE PROGRESO --- */
+.progress-bg {
+  background: #e2e8f0;
+  height: 10px;
+  border-radius: 10px;
   overflow: hidden;
   margin-top: 8px;
 }
 
-.progress-bar {
-  background: #2563eb;
+.progress-fill {
+  background: var(--color-colorado);
   height: 100%;
-  border-radius: 999px;
 }
