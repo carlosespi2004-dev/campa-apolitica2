@@ -5,132 +5,23 @@ import * as XLSX from "xlsx";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-function normalizarCedula(valor) {
-  return String(valor || "").replace(/[.\-\s]/g, "").trim();
-}
+// --- HELPERS ---
+const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
-function normalizarTexto(valor) {
-  return String(valor || "").trim();
-}
-
-function normalizarEncabezado(texto) {
-  return String(texto || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function mapearFilaExcel(fila) {
-  const salida = {};
-
-  Object.keys(fila || {}).forEach((key) => {
-    const limpio = normalizarEncabezado(key);
-    salida[limpio] = fila[key];
-  });
-
-  return {
-    nombre: salida.nombre || "",
-    apellido: salida.apellido || "",
-    cedula: salida.cedula || "",
-    orden: salida.orden || "",
-    mesa: salida.mesa || "",
-    local_votacion:
-      salida.localdevotacion ||
-      salida.localvotacion ||
-      salida.local ||
-      "",
-    seccional: salida.seccional || "",
-    barrio: salida.barrio || "",
-    por_parte_de:
-      salida.porpartede ||
-      salida.porparte ||
-      salida.responsable ||
-      "",
-  };
-}
-
-const initialForm = {
-  nombre: "",
-  apellido: "",
-  cedula: "",
-  orden: "",
-  mesa: "",
-  local_votacion: "",
-  seccional: "",
-  barrio: "",
-  por_parte_de_id: "",
-  por_parte_de_nombre: "",
-  por_parte_de: "",
-};
-
-const initialEquipoForm = {
-  nombre: "",
-  telefono: "",
-  rol: "coordinador",
-  zona: "",
-};
-
+// --- LOGIN ---
 function LoginScreen({ onLogin, loading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    await onLogin(email, password);
-  }
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        background: "#f3f4f6",
-        padding: 20,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          background: "white",
-          borderRadius: 16,
-          padding: 24,
-          boxShadow: "0 8px 30px rgba(0,0,0,.08)",
-        }}
-      >
-        <h1 style={{ marginTop: 0 }}>Ingreso al sistema</h1>
-        <p style={{ color: "#666" }}>Campaña Política · Presidente Franco</p>
-
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-          <input
-            type="email"
-            placeholder="Correo"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-
-          <button type="submit">
-            {loading ? "Ingresando..." : "Iniciar sesión"}
-          </button>
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f3f4f6", padding: 20 }}>
+      <div className="card" style={{ width: "100%", maxWidth: 400, padding: 30 }}>
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>Acceso al Sistema</h2>
+        <form onSubmit={(e) => { e.preventDefault(); onLogin(email, password); }} style={{ display: "grid", gap: 15 }}>
+          <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+          <button type="submit" disabled={loading} style={{ background: '#000' }}>{loading ? "Iniciando..." : "Ingresar"}</button>
         </form>
       </div>
     </div>
@@ -139,1366 +30,187 @@ function LoginScreen({ onLogin, loading }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [perfil, setPerfil] = useState(null);
-
-  const [authLoading, setAuthLoading] = useState(true);
-  const [dataLoading, setDataLoading] = useState(false);
-  const [loginLoading, setLoginLoading] = useState(false);
-
-  const [form, setForm] = useState(initialForm);
   const [votantes, setVotantes] = useState([]);
-  const [guardando, setGuardando] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
-  const [editandoId, setEditandoId] = useState(null);
-  const [eliminandoId, setEliminandoId] = useState(null);
-
   const [equipo, setEquipo] = useState([]);
-  const [formEquipo, setFormEquipo] = useState(initialEquipoForm);
-  const [guardandoEquipo, setGuardandoEquipo] = useState(false);
-  const [editandoEquipoId, setEditandoEquipoId] = useState(null);
-  const [eliminandoEquipoId, setEliminandoEquipoId] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const [cedulaBusqueda, setCedulaBusqueda] = useState("");
+  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" });
+  const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
+  const [editIdVotante, setEditIdVotante] = useState(null);
+  const [editIdEquipo, setEditIdEquipo] = useState(null);
+
+  const [busquedaVotante, setBusquedaVotante] = useState("");
+  const [verTodosVotantes, setVerTodosVotantes] = useState(false);
+  const [cedulaRapida, setCedulaRapida] = useState("");
   const [buscandoCedula, setBuscandoCedula] = useState(false);
-  const [resultadoCedula, setResultadoCedula] = useState(null);
-  const [mensajeCedula, setMensajeCedula] = useState("");
-
-  const [archivoExcelPadron, setArchivoExcelPadron] = useState(null);
-  const [importandoPadron, setImportandoPadron] = useState(false);
-  const [estadoImportacionPadron, setEstadoImportacionPadron] = useState("");
-
-  const [mensajeSistema, setMensajeSistema] = useState("");
+  const [resultadoPadron, setResultadoPadron] = useState(null);
 
   useEffect(() => {
-    function onResize() {
-      setIsMobile(window.innerWidth < 768);
-    }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    let activo = true;
+  useEffect(() => { if (session) cargarDatos(); }, [session]);
 
-    async function initAuth() {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Error obteniendo sesión:", error.message);
-          if (activo) {
-            setSession(null);
-            setPerfil(null);
-          }
-          return;
-        }
-
-        const currentSession = data?.session || null;
-        if (!activo) return;
-
-        setSession(currentSession);
-
-        if (currentSession?.user?.id) {
-          const { data: perfilData, error: perfilError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", currentSession.user.id)
-            .single();
-
-          if (!perfilError && activo) {
-            setPerfil(perfilData);
-          }
-        }
-      } catch (err) {
-        console.error("Error inicializando auth:", err);
-        if (activo) {
-          setSession(null);
-          setPerfil(null);
-        }
-      } finally {
-        if (activo) setAuthLoading(false);
-      }
-    }
-
-    initAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      if (!activo) return;
-
-      setSession(currentSession || null);
-
-      if (currentSession?.user?.id) {
-        const { data: perfilData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentSession.user.id)
-          .single();
-
-        if (activo) setPerfil(perfilData || null);
-      } else {
-        setPerfil(null);
-        setVotantes([]);
-        setEquipo([]);
-      }
-
-      setAuthLoading(false);
-    });
-
-    return () => {
-      activo = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelado = false;
-
-    async function cargarTodo() {
-      if (!session?.user?.id) {
-        if (!cancelado) {
-          setVotantes([]);
-          setEquipo([]);
-          setDataLoading(false);
-        }
-        return;
-      }
-
-      if (!cancelado) setDataLoading(true);
-
-      try {
-        await Promise.all([cargarVotantes(), cargarEquipo()]);
-      } catch (err) {
-        console.error("Error cargando datos:", err);
-      } finally {
-        if (!cancelado) setDataLoading(false);
-      }
-    }
-
-    cargarTodo();
-
-    return () => {
-      cancelado = true;
-    };
-  }, [session?.user?.id]);
-
-  async function cargarVotantes() {
-    const { data, error } = await supabase
-      .from("votantes")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error cargando votantes:", error.message);
-      return;
-    }
-
-    setVotantes(data || []);
+  async function cargarDatos() {
+    setLoading(true);
+    const [v, e] = await Promise.all([
+      supabase.from("votantes").select("*").order("created_at", { ascending: false }),
+      supabase.from("equipo").select("*").order("created_at", { ascending: false })
+    ]);
+    setVotantes(v.data || []);
+    setEquipo(e.data || []);
+    setLoading(false);
   }
 
-  async function cargarEquipo() {
-    const { data, error } = await supabase
-      .from("equipo")
-      .select("*")
-      .order("created_at", { ascending: false });
+  // --- LÓGICA DE RENDIMIENTO (BARRAS AZULES) ---
+  const rendimientoEquipo = useMemo(() => {
+    const totalVotantes = votantes.length;
+    return equipo.map(miembro => {
+      const cantidad = votantes.filter(v => v.por_parte_de_id === miembro.id).length;
+      const porcentaje = totalVotantes > 0 ? Math.round((cantidad / totalVotantes) * 100) : 0;
+      return { ...miembro, cantidad, porcentaje };
+    }).sort((a, b) => b.cantidad - a.cantidad);
+  }, [votantes, equipo]);
 
-    if (error) {
-      console.error("Error cargando equipo:", error.message);
-      return;
-    }
-
-    setEquipo(data || []);
-  }
-
-  async function login(email, password) {
-    setLoginLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert("Error de inicio de sesión: " + error.message);
-      }
-    } catch (err) {
-      alert("Error de inicio de sesión: " + String(err.message || err));
-    } finally {
-      setLoginLoading(false);
-    }
-  }
-
-  async function logout() {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        alert("Error cerrando sesión: " + error.message);
-        return;
-      }
-
-      setSession(null);
-      setPerfil(null);
-      setVotantes([]);
-      setEquipo([]);
-      setMensajeSistema("Sesión cerrada correctamente.");
-    } catch (err) {
-      alert("Error cerrando sesión: " + String(err.message || err));
-    }
-  }
-
-  function limpiarFormulario() {
-    setForm(initialForm);
-    setEditandoId(null);
-  }
-
-  function limpiarFormularioEquipo() {
-    setFormEquipo(initialEquipoForm);
-    setEditandoEquipoId(null);
-  }
-
-  function seleccionarMiembroEquipo(id) {
-    const miembro = equipo.find((m) => String(m.id) === String(id));
-    setForm((prev) => ({
-      ...prev,
-      por_parte_de_id: id,
-      por_parte_de_nombre: miembro?.nombre || "",
-      por_parte_de: miembro?.nombre || "",
-    }));
+  async function buscarEnPadron() {
+    const limpia = normalizarCedula(cedulaRapida);
+    if (!limpia) return;
+    setBuscandoCedula(true);
+    setResultadoPadron(null);
+    const { data } = await supabase.from("padron_importado").select("*")
+      .or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
+    
+    if (data) setResultadoPadron(data);
+    else alert("No encontrado en el padrón.");
+    setBuscandoCedula(false);
   }
 
   async function guardarVotante(e) {
     e.preventDefault();
-    if (guardando) return;
+    if (!formVotante.por_parte_de_id) return alert("Selecciona quién lo consiguió.");
+    setLoading(true);
+    const responsable = equipo.find(m => m.id === formVotante.por_parte_de_id);
+    const payload = { ...formVotante, cedula_limpia: normalizarCedula(formVotante.cedula), por_parte_de_nombre: responsable?.nombre || "" };
+    
+    const { error } = editIdVotante 
+      ? await supabase.from("votantes").update(payload).eq("id", editIdVotante)
+      : await supabase.from("votantes").insert([payload]);
 
-    setGuardando(true);
-    setMensajeSistema("");
-
-    try {
-      if (!form.por_parte_de_id) {
-        alert("Debes seleccionar quién consiguió este futuro votante.");
-        return;
-      }
-
-      const cedulaLimpia = normalizarCedula(form.cedula);
-      if (!cedulaLimpia) {
-        alert("La cédula es obligatoria.");
-        return;
-      }
-
-      const payload = {
-        nombre: normalizarTexto(form.nombre),
-        apellido: normalizarTexto(form.apellido),
-        cedula: normalizarTexto(form.cedula),
-        cedula_limpia: cedulaLimpia,
-        orden: normalizarTexto(form.orden),
-        mesa: normalizarTexto(form.mesa),
-        local_votacion: normalizarTexto(form.local_votacion),
-        seccional: normalizarTexto(form.seccional),
-        barrio: normalizarTexto(form.barrio),
-        por_parte_de_id: form.por_parte_de_id,
-        por_parte_de_nombre: form.por_parte_de_nombre,
-        por_parte_de: form.por_parte_de_nombre,
-      };
-
-      let respuesta;
-      if (editandoId) {
-        respuesta = await supabase.from("votantes").update(payload).eq("id", editandoId);
-      } else {
-        respuesta = await supabase.from("votantes").insert([payload]);
-      }
-
-      if (respuesta.error) {
-        alert("Error guardando futuro votante: " + respuesta.error.message);
-        return;
-      }
-
-      limpiarFormulario();
-      await cargarVotantes();
-      setMensajeSistema(editandoId ? "Futuro votante actualizado." : "Futuro votante guardado.");
-    } catch (err) {
-      alert("Error guardando futuro votante: " + String(err.message || err));
-    } finally {
-      setGuardando(false);
+    if (!error) { 
+      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" }); 
+      setEditIdVotante(null); 
+      cargarDatos(); 
     }
-  }
-
-  function editarVotante(votante) {
-    setForm({
-      nombre: votante.nombre || "",
-      apellido: votante.apellido || "",
-      cedula: votante.cedula || "",
-      orden: votante.orden || "",
-      mesa: votante.mesa || "",
-      local_votacion: votante.local_votacion || "",
-      seccional: votante.seccional || "",
-      barrio: votante.barrio || "",
-      por_parte_de_id: votante.por_parte_de_id || "",
-      por_parte_de_nombre: votante.por_parte_de_nombre || votante.por_parte_de || "",
-      por_parte_de: votante.por_parte_de || "",
-    });
-    setEditandoId(votante.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function eliminarVotante(id) {
-    if (eliminandoId) return;
-
-    const confirmar = window.confirm("¿Seguro que querés eliminar este futuro votante?");
-    if (!confirmar) return;
-
-    setEliminandoId(id);
-    setMensajeSistema("");
-
-    try {
-      const { error } = await supabase.from("votantes").delete().eq("id", id);
-
-      if (error) {
-        alert("Error eliminando futuro votante: " + error.message);
-        return;
-      }
-
-      if (editandoId === id) limpiarFormulario();
-      await cargarVotantes();
-      setMensajeSistema("Futuro votante eliminado.");
-    } catch (err) {
-      alert("Error eliminando futuro votante: " + String(err.message || err));
-    } finally {
-      setEliminandoId(null);
-    }
-  }
-
-  async function guardarMiembro(e) {
-    e.preventDefault();
-    if (guardandoEquipo) return;
-
-    setGuardandoEquipo(true);
-    setMensajeSistema("");
-
-    try {
-      let respuesta;
-      if (editandoEquipoId) {
-        respuesta = await supabase
-          .from("equipo")
-          .update(formEquipo)
-          .eq("id", editandoEquipoId);
-      } else {
-        respuesta = await supabase.from("equipo").insert([formEquipo]);
-      }
-
-      if (respuesta.error) {
-        alert("Error guardando miembro del equipo: " + respuesta.error.message);
-        return;
-      }
-
-      limpiarFormularioEquipo();
-      await cargarEquipo();
-      setMensajeSistema(editandoEquipoId ? "Usuario del equipo actualizado." : "Usuario del equipo guardado.");
-    } catch (err) {
-      alert("Error guardando miembro del equipo: " + String(err.message || err));
-    } finally {
-      setGuardandoEquipo(false);
-    }
-  }
-
-  function editarMiembro(miembro) {
-    setFormEquipo({
-      nombre: miembro.nombre || "",
-      telefono: miembro.telefono || "",
-      rol: miembro.rol || "coordinador",
-      zona: miembro.zona || "",
-    });
-    setEditandoEquipoId(miembro.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  async function eliminarMiembro(id) {
-    if (eliminandoEquipoId) return;
-
-    const confirmar = window.confirm("¿Seguro que querés eliminar este miembro del equipo?");
-    if (!confirmar) return;
-
-    setEliminandoEquipoId(id);
-    setMensajeSistema("");
-
-    try {
-      const { error } = await supabase.from("equipo").delete().eq("id", id);
-
-      if (error) {
-        alert("Error eliminando miembro: " + error.message);
-        return;
-      }
-
-      if (editandoEquipoId === id) limpiarFormularioEquipo();
-      await cargarEquipo();
-      setMensajeSistema("Usuario del equipo eliminado.");
-    } catch (err) {
-      alert("Error eliminando miembro: " + String(err.message || err));
-    } finally {
-      setEliminandoEquipoId(null);
-    }
-  }
-
-  async function buscarPersonaPorCedula() {
-    if (buscandoCedula) return;
-
-    setBuscandoCedula(true);
-    setResultadoCedula(null);
-    setMensajeCedula("");
-
-    try {
-      const limpia = normalizarCedula(cedulaBusqueda);
-      const cruda = normalizarTexto(cedulaBusqueda);
-
-      if (!limpia) {
-        setMensajeCedula("Ingresá una cédula para buscar.");
-        return;
-      }
-
-      const query1 = await supabase
-        .from("padron_importado")
-        .select("nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de")
-        .eq("cedula_limpia", limpia)
-        .limit(1);
-
-      if (query1.error) {
-        console.error("Error buscando por cedula_limpia:", query1.error.message);
-      }
-
-      let resultado = query1.data?.[0] || null;
-
-      if (!resultado) {
-        const query2 = await supabase
-          .from("padron_importado")
-          .select("nombre, apellido, cedula, orden, mesa, local_votacion, seccional, por_parte_de")
-          .in("cedula", [cruda, limpia])
-          .limit(1);
-
-        if (query2.error) {
-          console.error("Error buscando por cedula:", query2.error.message);
-        }
-
-        resultado = query2.data?.[0] || null;
-      }
-
-      if (!resultado) {
-        setMensajeCedula("No se encontró ninguna persona con esa cédula");
-        return;
-      }
-
-      setResultadoCedula(resultado);
-    } catch (err) {
-      console.error("Error al buscar la cédula:", err);
-      setMensajeCedula("Ocurrió un error al buscar la cédula.");
-    } finally {
-      setBuscandoCedula(false);
-    }
-  }
-
-  async function importarExcelPadron() {
-    if (!archivoExcelPadron || importandoPadron) {
-      if (!archivoExcelPadron) alert("Seleccioná un archivo Excel primero.");
-      return;
-    }
-
-    setImportandoPadron(true);
-    setEstadoImportacionPadron("Importando...");
-
-    try {
-      const buffer = await archivoExcelPadron.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const filas = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-      if (!filas.length) {
-        setEstadoImportacionPadron("El archivo está vacío.");
-        return;
-      }
-
-      const procesadas = filas.map(mapearFilaExcel);
-
-      const validas = [];
-      let errores = 0;
-
-      for (const fila of procesadas) {
-        const nombre = normalizarTexto(fila.nombre);
-        const apellido = normalizarTexto(fila.apellido);
-        const cedula = normalizarTexto(fila.cedula);
-        const cedulaLimpia = normalizarCedula(cedula);
-
-        if (!cedulaLimpia) {
-          errores += 1;
-          continue;
-        }
-
-        validas.push({
-          nombre,
-          apellido,
-          cedula,
-          cedula_limpia: cedulaLimpia,
-          orden: normalizarTexto(fila.orden),
-          mesa: normalizarTexto(fila.mesa),
-          local_votacion: normalizarTexto(fila.local_votacion),
-          seccional: normalizarTexto(fila.seccional),
-          barrio: normalizarTexto(fila.barrio),
-          por_parte_de: normalizarTexto(fila.por_parte_de),
-        });
-      }
-
-      const unicos = [];
-      const seen = new Set();
-      let duplicadosLocales = 0;
-
-      for (const fila of validas) {
-        if (seen.has(fila.cedula_limpia)) {
-          duplicadosLocales += 1;
-          continue;
-        }
-        seen.add(fila.cedula_limpia);
-        unicos.push(fila);
-      }
-
-      const { error } = await supabase.from("padron_importado").upsert(unicos, {
-        onConflict: "cedula_limpia",
-        ignoreDuplicates: true,
-      });
-
-      if (error) {
-        setEstadoImportacionPadron("Error insertando registros: " + error.message);
-        return;
-      }
-
-      setEstadoImportacionPadron(
-        `Importación completada. ${unicos.length - duplicadosLocales} registros procesados. ${duplicadosLocales} registros omitidos por estar duplicados en el archivo. ${errores} registros con error.`
-      );
-    } catch (err) {
-      console.error("Error importando padrón:", err);
-      setEstadoImportacionPadron(
-        "Ocurrió un error durante la importación: " + String(err.message || err)
-      );
-    } finally {
-      setImportandoPadron(false);
-    }
-  }
-
-  function normalizarNombreHoja(nombre) {
-    const limpio = (nombre || "Sin nombre")
-      .replace(/[\\\/\?\*\[\]\:]/g, "")
-      .trim();
-
-    return limpio.slice(0, 31) || "Sin nombre";
-  }
-
-  function construirFilasExcel(lista) {
-    return lista.map((v, index) => ({
-      Nro: index + 1,
-      Nombre: v.nombre || "",
-      Apellido: v.apellido || "",
-      Cédula: v.cedula || "",
-      Orden: v.orden || "",
-      Mesa: v.mesa || "",
-      "Local de votación": v.local_votacion || "",
-      Seccional: v.seccional || "",
-      Barrio: v.barrio || "",
-      "Por parte de": v.por_parte_de_nombre || v.por_parte_de || "",
-    }));
+    setLoading(false);
   }
 
   function exportarExcel() {
-    const libro = XLSX.utils.book_new();
-
-    const encabezadosBase = [
-      {
-        Nro: "",
-        Nombre: "",
-        Apellido: "",
-        Cédula: "",
-        Orden: "",
-        Mesa: "",
-        "Local de votación": "",
-        Seccional: "",
-        Barrio: "",
-        "Por parte de": "",
-      },
-    ];
-
-    const todosOrdenados = [...votantes].sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
-    );
-
-    const hojaGeneralData =
-      todosOrdenados.length > 0
-        ? construirFilasExcel(todosOrdenados)
-        : encabezadosBase;
-
-    const hojaGeneral = XLSX.utils.json_to_sheet(hojaGeneralData);
-    hojaGeneral["!cols"] = [
-      { wch: 8 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 24 },
-      { wch: 16 },
-      { wch: 18 },
-      { wch: 20 },
-    ];
-    XLSX.utils.book_append_sheet(libro, hojaGeneral, "General");
-
-    equipo.forEach((miembro) => {
-      const votantesDeEseMiembro = todosOrdenados.filter(
-        (v) => String(v.por_parte_de_id) === String(miembro.id)
-      );
-
-      const dataHoja =
-        votantesDeEseMiembro.length > 0
-          ? construirFilasExcel(votantesDeEseMiembro)
-          : encabezadosBase;
-
-      const hojaMiembro = XLSX.utils.json_to_sheet(dataHoja);
-      hojaMiembro["!cols"] = [
-        { wch: 8 },
-        { wch: 18 },
-        { wch: 18 },
-        { wch: 16 },
-        { wch: 10 },
-        { wch: 10 },
-        { wch: 24 },
-        { wch: 16 },
-        { wch: 18 },
-        { wch: 20 },
-      ];
-
-      XLSX.utils.book_append_sheet(
-        libro,
-        hojaMiembro,
-        normalizarNombreHoja(miembro.nombre)
-      );
-    });
-
-    XLSX.writeFile(libro, "futuros_votantes_presidente_franco.xlsx");
+    const ws = XLSX.utils.json_to_sheet(votantes);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Votantes");
+    XLSX.writeFile(wb, "Reporte_Campana.xlsx");
   }
 
-  const stats = useMemo(() => {
-    return {
-      total: votantes.length,
-      equipo: equipo.length,
-    };
-  }, [votantes, equipo]);
-
-  const votantesFiltrados = useMemo(() => {
-    const texto = busqueda.toLowerCase().trim();
-
-    if (!texto) return votantes;
-
-    return votantes.filter((v) => {
-      return (
-        (v.nombre || "").toLowerCase().includes(texto) ||
-        (v.apellido || "").toLowerCase().includes(texto) ||
-        (v.cedula || "").toLowerCase().includes(texto) ||
-        (v.local_votacion || "").toLowerCase().includes(texto) ||
-        (v.seccional || "").toLowerCase().includes(texto) ||
-        (v.barrio || "").toLowerCase().includes(texto) ||
-        (v.por_parte_de_nombre || "").toLowerCase().includes(texto) ||
-        (v.por_parte_de || "").toLowerCase().includes(texto)
-      );
-    });
-  }, [votantes, busqueda]);
-
-  const conteoPorEquipo = useMemo(() => {
-    const acumulado = {};
-
-    equipo.forEach((m) => {
-      acumulado[m.id] = {
-        nombre: m.nombre,
-        total: 0,
-      };
-    });
-
-    votantes.forEach((v) => {
-      const id = v.por_parte_de_id || "sin_asignar";
-      if (!acumulado[id]) {
-        acumulado[id] = {
-          nombre: v.por_parte_de_nombre || v.por_parte_de || "Sin asignar",
-          total: 0,
-        };
-      }
-      acumulado[id].total += 1;
-    });
-
-    return Object.values(acumulado).sort((a, b) => b.total - a.total);
-  }, [votantes, equipo]);
-
-  const conteoBarrios = useMemo(() => {
-    const acumulado = {};
-
-    votantes.forEach((v) => {
-      const barrio = (v.barrio || "Sin barrio").trim();
-
-      if (!acumulado[barrio]) {
-        acumulado[barrio] = {
-          barrio,
-          total: 0,
-        };
-      }
-
-      acumulado[barrio].total += 1;
-    });
-
-    return Object.values(acumulado).sort((a, b) => b.total - a.total);
-  }, [votantes]);
-
-  const statsTopGrid = {
-    display: "grid",
-    gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)",
-    gap: 16,
-    alignItems: "stretch",
-  };
-
-  const layoutGrid = {
-    display: "grid",
-    gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-    gap: 20,
-    marginTop: 20,
-  };
-
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <h2>Cargando...</h2>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <LoginScreen onLogin={login} loading={loginLoading} />;
-  }
+  if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
   return (
-    <div className="container" style={{ paddingBottom: isMobile ? 90 : 24 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <h1 style={{ marginBottom: 6 }}>Campaña Política · Presidente Franco</h1>
-          <p className="small" style={{ marginTop: 0 }}>
-            Sesión iniciada como: <strong>{perfil?.nombre || session.user.email}</strong>
-            {perfil?.rol ? ` · ${perfil.rol}` : ""}
-          </p>
-          {dataLoading && (
-            <p className="small" style={{ marginTop: 6 }}>
-              Actualizando datos...
-            </p>
-          )}
-          {mensajeSistema && (
-            <p className="small" style={{ marginTop: 6 }}>
-              {mensajeSistema}
-            </p>
-          )}
-        </div>
+    <div style={{ padding: isMobile ? 10 : 30, maxWidth: 1400, margin: '0 auto' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30, alignItems: 'center' }}>
+        <h1 style={{ fontSize: isMobile ? 20 : 28 }}>Campaña Presidente Franco</h1>
+        <button onClick={() => supabase.auth.signOut()} style={{ width: 'auto', background: '#333' }}>Salir</button>
+      </header>
 
-        <button
-          type="button"
-          onClick={logout}
-          style={{ width: "auto", padding: "10px 16px", background: "#dc2626" }}
-        >
-          Cerrar sesión
-        </button>
-      </div>
-
-      <div style={statsTopGrid}>
-        <div className="stat">
-          <div className="small">Total futuros votantes</div>
-          <h2>{stats.total}</h2>
-        </div>
-
-        <div className="stat">
-          <div className="small">Miembros del equipo</div>
-          <h2>{stats.equipo}</h2>
-        </div>
-
-        <div
-          className="card"
-          style={{
-            gridColumn: isMobile ? "span 1" : "span 2",
-            display: "grid",
-            gap: 12,
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Buscar por número de cédula</h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-              gap: 12,
-              alignItems: "center",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Escribí la cédula"
-              value={cedulaBusqueda}
-              onChange={(e) => setCedulaBusqueda(e.target.value)}
-              style={{ marginBottom: 0 }}
-            />
-
-            <button
-              type="button"
-              onClick={buscarPersonaPorCedula}
-              disabled={buscandoCedula}
-              style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
-            >
-              {buscandoCedula ? "Buscando..." : "Buscar"}
-            </button>
+      {/* DASHBOARD PRINCIPAL */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20, marginBottom: 30 }}>
+        <div className="card"><h3>{votantes.length}</h3><p>Votantes Registrados</p></div>
+        
+        {/* BUSCADOR PADRÓN */}
+        <div className="card">
+          <h4>Buscador de Padrón</h4>
+          <div style={{ display: 'flex', gap: 5 }}>
+            <input type="text" placeholder="Nro de Cédula..." value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} />
+            <button onClick={buscarEnPadron} style={{ width: 'auto' }}>🔍</button>
           </div>
-
-          {mensajeCedula && (
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                background: "#f3f4f6",
-                border: "1px solid #e5e7eb",
-              }}
-            >
-              {mensajeCedula}
-            </div>
-          )}
-
-          {resultadoCedula && (
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 14,
-                background: "#f9fafb",
-                border: "1px solid #e5e7eb",
-                display: "grid",
-                gap: 6,
-              }}
-            >
-              <div><strong>Nombre:</strong> {resultadoCedula.nombre || "-"}</div>
-              <div><strong>Apellido:</strong> {resultadoCedula.apellido || "-"}</div>
-              <div><strong>Cédula:</strong> {resultadoCedula.cedula || "-"}</div>
-              <div><strong>Orden:</strong> {resultadoCedula.orden || "-"}</div>
-              <div><strong>Mesa:</strong> {resultadoCedula.mesa || "-"}</div>
-              <div><strong>Local de votación:</strong> {resultadoCedula.local_votacion || "-"}</div>
-              <div><strong>Seccional:</strong> {resultadoCedula.seccional || "-"}</div>
-              <div><strong>Por parte de:</strong> {resultadoCedula.por_parte_de || "-"}</div>
+          {resultadoPadron && (
+            <div style={{ marginTop: 15, padding: 10, background: '#f0f9ff', borderRadius: 8, border: '1px solid #bae6fd' }}>
+              <p style={{ margin: 0, fontSize: 13 }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
+              <button 
+                onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
+                style={{ background: '#16a34a', padding: '5px 10px', fontSize: 12, marginTop: 5 }}
+              >ASIGNAR</button>
             </div>
           )}
         </div>
-      </div>
 
-      <div className="card" style={{ marginTop: 20 }}>
-        <h2 style={{ marginTop: 0 }}>Importar padrón Excel a Supabase</h2>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr auto",
-            gap: 12,
-            alignItems: "center",
-          }}
-        >
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={(e) => setArchivoExcelPadron(e.target.files?.[0] || null)}
-            style={{ marginBottom: 0 }}
-          />
-
-          <button
-            type="button"
-            onClick={importarExcelPadron}
-            disabled={importandoPadron}
-            style={{ width: isMobile ? "100%" : "auto", padding: "10px 18px" }}
-          >
-            {importandoPadron ? "Importando..." : "Importar"}
-          </button>
-        </div>
-
-        {estadoImportacionPadron && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              background: "#f3f4f6",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            {estadoImportacionPadron}
-          </div>
-        )}
-      </div>
-
-      <div style={layoutGrid}>
-        <div className="card" style={{ marginTop: 20 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 16,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <h2 style={{ margin: 0, fontSize: isMobile ? 28 : 22 }}>
-              Conteo de futuros votantes por miembro del equipo
-            </h2>
-
-            <button
-              type="button"
-              onClick={exportarExcel}
-              style={{ width: "auto", padding: "10px 16px" }}
-            >
-              Exportar Excel
-            </button>
-          </div>
-
-          <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
-            {conteoPorEquipo.map((item) => {
-              const total = stats.total || 1;
-              const porcentaje = Math.round((item.total / total) * 100);
-
-              return (
-                <div key={item.nombre}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: 4,
-                      fontSize: 14,
-                    }}
-                  >
-                    <span>{item.nombre}</span>
-                    <span>
-                      {item.total} ({porcentaje}%)
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      width: "100%",
-                      height: 12,
-                      background: "#e5e7eb",
-                      borderRadius: 999,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${porcentaje}%`,
-                        height: "100%",
-                        background: "#2563eb",
-                        borderRadius: 999,
-                        transition: "0.3s",
-                      }}
-                    />
-                  </div>
+        {/* RENDIMIENTO POR MIEMBRO (NUEVO / REINCORPORADO) */}
+        <div className="card">
+          <h4 style={{ margin: '0 0 15px 0' }}>Conteo por miembro del equipo</h4>
+          <button onClick={exportarExcel} style={{ background: '#000', marginBottom: 15, width: 'auto', padding: '8px 15px', fontSize: 13 }}>Exportar Excel</button>
+          <div style={{ display: 'grid', gap: 15 }}>
+            {rendimientoEquipo.map(miembro => (
+              <div key={miembro.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                  <span>{miembro.nombre}</span>
+                  <strong>{miembro.cantidad} ({miembro.porcentaje}%)</strong>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="card" style={{ marginTop: 20 }}>
-          <h2 style={{ marginTop: 0, fontSize: isMobile ? 28 : 22 }}>
-            Conteo por barrio
-          </h2>
-
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Barrio</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {conteoBarrios.map((item) => (
-                  <tr key={item.barrio}>
-                    <td>{item.barrio}</td>
-                    <td>{item.total}</td>
-                  </tr>
-                ))}
-                {conteoBarrios.length === 0 && (
-                  <tr>
-                    <td colSpan="2">Todavía no hay datos de barrio cargados.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                <div style={{ width: '100%', height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
+                  <div style={{ width: `${miembro.porcentaje}%`, height: '100%', background: '#2563eb', transition: 'width 0.5s ease' }}></div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div style={layoutGrid}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 30 }}>
+        {/* FORMULARIO */}
         <div className="card">
-          <h2>{editandoId ? "Editar futuro votante" : "Cargar futuros votantes"}</h2>
-
-          <form className="form" onSubmit={guardarVotante}>
-            <input
-              placeholder="Nombre"
-              value={form.nombre}
-              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              required
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Apellido"
-              value={form.apellido}
-              onChange={(e) => setForm({ ...form, apellido: e.target.value })}
-              required
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Cédula"
-              value={form.cedula}
-              onChange={(e) => setForm({ ...form, cedula: e.target.value })}
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Orden"
-              value={form.orden}
-              onChange={(e) => setForm({ ...form, orden: e.target.value })}
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Mesa"
-              value={form.mesa}
-              onChange={(e) => setForm({ ...form, mesa: e.target.value })}
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Local de votación"
-              value={form.local_votacion}
-              onChange={(e) =>
-                setForm({ ...form, local_votacion: e.target.value })
-              }
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Seccional"
-              value={form.seccional}
-              onChange={(e) => setForm({ ...form, seccional: e.target.value })}
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <input
-              placeholder="Barrio"
-              value={form.barrio}
-              onChange={(e) => setForm({ ...form, barrio: e.target.value })}
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            />
-
-            <select
-              value={form.por_parte_de_id}
-              onChange={(e) => seleccionarMiembroEquipo(e.target.value)}
-              required
-              style={{ fontSize: isMobile ? 18 : 16 }}
-            >
-              <option value="">Seleccionar miembro del equipo</option>
-              {equipo.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre}
-                </option>
-              ))}
-            </select>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="submit" style={{ flex: 1 }} disabled={guardando}>
-                {guardando
-                  ? "Guardando..."
-                  : editandoId
-                  ? "Actualizar futuro votante"
-                  : "Guardar futuro votante"}
-              </button>
-
-              {editandoId && (
-                <button
-                  type="button"
-                  onClick={limpiarFormulario}
-                  style={{ flex: 1, background: "#6b7280" }}
-                >
-                  Cancelar edición
-                </button>
-              )}
+          <h3>Cargar futuros votantes</h3>
+          <form onSubmit={guardarVotante} style={{ display: 'grid', gap: 10 }}>
+            <input placeholder="Nombre" value={formVotante.nombre} onChange={e => setFormVotante({ ...formVotante, nombre: e.target.value })} required />
+            <input placeholder="Apellido" value={formVotante.apellido} onChange={e => setFormVotante({ ...formVotante, apellido: e.target.value })} required />
+            <input placeholder="Cédula" value={formVotante.cedula} onChange={e => setFormVotante({ ...formVotante, cedula: e.target.value })} required />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <input placeholder="Orden" value={formVotante.orden} onChange={e => setFormVotante({ ...formVotante, orden: e.target.value })} />
+              <input placeholder="Mesa" value={formVotante.mesa} onChange={e => setFormVotante({ ...formVotante, mesa: e.target.value })} />
             </div>
+            <input placeholder="Local" value={formVotante.local_votacion} onChange={e => setFormVotante({ ...formVotante, local_votacion: e.target.value })} />
+            <input placeholder="Barrio" value={formVotante.barrio} onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} />
+            <select value={formVotante.por_parte_de_id} onChange={e => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required>
+              <option value="">Seleccionar miembro...</option>
+              {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+            </select>
+            <button type="submit" style={{ background: '#000' }}>Guardar Registro</button>
           </form>
         </div>
 
+        {/* LISTADO */}
         <div className="card">
-          <h2>Lista de futuros votantes</h2>
-
-          <div style={{ position: "relative", marginBottom: 16 }}>
-            <span
-              style={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                opacity: 0.6,
-                pointerEvents: "none",
-              }}
-            >
-              🔍
-            </span>
-
-            <input
-              type="text"
-              placeholder="Buscar por nombre, apellido, cédula, local o equipo"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              style={{ paddingLeft: 40, marginBottom: 0 }}
-            />
-          </div>
-
-          <div className="table-wrap">
-            <table>
+          <input placeholder="🔍 Buscar votante..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ marginBottom: 15 }} />
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Apellido</th>
-                  <th>Cédula</th>
-                  <th>Mesa</th>
-                  <th>Local</th>
-                  <th>Barrio</th>
-                  <th>Por parte de</th>
-                  <th>Acciones</th>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+                  <th>Nombre</th><th>Cédula</th><th>Mesa</th><th>Local</th><th>Barrio</th><th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {votantesFiltrados.map((v) => (
-                  <tr key={v.id}>
-                    <td>{v.nombre || "-"}</td>
-                    <td>{v.apellido || "-"}</td>
-                    <td>{v.cedula || "-"}</td>
-                    <td>{v.mesa || "-"}</td>
-                    <td>{v.local_votacion || "-"}</td>
-                    <td>{v.barrio || "-"}</td>
-                    <td>{v.por_parte_de_nombre || v.por_parte_de || "-"}</td>
+                {votantes.filter(v => v.nombre.toLowerCase().includes(busquedaVotante.toLowerCase())).slice(0, 10).map(v => (
+                  <tr key={v.id} style={{ borderBottom: '1px solid #eee' }}>
+                    <td>{v.nombre} {v.apellido}</td><td>{v.cedula}</td><td>{v.mesa}</td><td>{v.local_votacion}</td><td>{v.barrio}</td>
                     <td>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          onClick={() => editarVotante(v)}
-                          style={{
-                            width: "auto",
-                            padding: "8px 12px",
-                            background: "#2563eb",
-                            fontSize: 14,
-                          }}
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => eliminarVotante(v.id)}
-                          disabled={eliminandoId === v.id}
-                          style={{
-                            width: "auto",
-                            padding: "8px 12px",
-                            background: "#dc2626",
-                            fontSize: 14,
-                          }}
-                        >
-                          {eliminandoId === v.id ? "Eliminando..." : "Eliminar"}
-                        </button>
-                      </div>
+                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '3px 7px', background: '#2563eb', fontSize: 11, marginRight: 5 }}>Editar</button>
                     </td>
                   </tr>
                 ))}
-
-                {votantesFiltrados.length === 0 && (
-                  <tr>
-                    <td colSpan="8">
-                      {busqueda
-                        ? "No se encontraron futuros votantes con esa búsqueda."
-                        : "Todavía no hay futuros votantes cargados."}
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-
-      <div style={layoutGrid}>
-        <div className="card">
-          <h2>{editandoEquipoId ? "Editar usuario del equipo" : "Equipo de campaña"}</h2>
-
-          <form className="form" onSubmit={guardarMiembro}>
-            <input
-              placeholder="Nombre del miembro"
-              value={formEquipo.nombre}
-              onChange={(e) =>
-                setFormEquipo({ ...formEquipo, nombre: e.target.value })
-              }
-              required
-            />
-            <input
-              placeholder="Teléfono"
-              value={formEquipo.telefono}
-              onChange={(e) =>
-                setFormEquipo({ ...formEquipo, telefono: e.target.value })
-              }
-            />
-            <input
-              placeholder="Zona o barrio"
-              value={formEquipo.zona}
-              onChange={(e) =>
-                setFormEquipo({ ...formEquipo, zona: e.target.value })
-              }
-            />
-            <select
-              value={formEquipo.rol}
-              onChange={(e) =>
-                setFormEquipo({ ...formEquipo, rol: e.target.value })
-              }
-            >
-              <option value="coordinador">Coordinador</option>
-              <option value="brigadista">Brigadista</option>
-              <option value="supervisor">Supervisor</option>
-            </select>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button type="submit" style={{ flex: 1 }} disabled={guardandoEquipo}>
-                {guardandoEquipo
-                  ? "Guardando..."
-                  : editandoEquipoId
-                  ? "Actualizar usuario"
-                  : "Guardar usuario"}
-              </button>
-
-              {editandoEquipoId && (
-                <button
-                  type="button"
-                  onClick={limpiarFormularioEquipo}
-                  style={{ flex: 1, background: "#6b7280" }}
-                >
-                  Cancelar edición
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-
-        <div className="card">
-          <h2>Lista del equipo</h2>
-
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Rol</th>
-                  <th>Zona</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipo.map((m) => (
-                  <tr key={m.id}>
-                    <td>
-                      <strong>{m.nombre}</strong>
-                      <div className="small">{m.telefono || "Sin teléfono"}</div>
-                    </td>
-                    <td>{m.rol || "-"}</td>
-                    <td>{m.zona || "-"}</td>
-                    <td>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          onClick={() => editarMiembro(m)}
-                          style={{
-                            width: "auto",
-                            padding: "8px 12px",
-                            background: "#2563eb",
-                            fontSize: 14,
-                          }}
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => eliminarMiembro(m.id)}
-                          disabled={eliminandoEquipoId === m.id}
-                          style={{
-                            width: "auto",
-                            padding: "8px 12px",
-                            background: "#dc2626",
-                            fontSize: 14,
-                          }}
-                        >
-                          {eliminandoEquipoId === m.id ? "Eliminando..." : "Eliminar"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {equipo.length === 0 && (
-                  <tr>
-                    <td colSpan="4">Todavía no hay usuarios del equipo cargados.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {isMobile && (
-        <div
-          style={{
-            position: "fixed",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "#111827",
-            color: "white",
-            padding: "12px 16px",
-            display: "flex",
-            justifyContent: "space-around",
-            zIndex: 50,
-            boxShadow: "0 -4px 20px rgba(0,0,0,.18)",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Total</div>
-            <strong>{stats.total}</strong>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Equipo</div>
-            <strong>{stats.equipo}</strong>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Buscar</div>
-            <strong>CI</strong>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Excel</div>
-            <strong>Importar</strong>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
