@@ -7,21 +7,21 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// --- HELPERS DE LIMPIEZA ---
+// --- HELPERS ---
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
-// --- COMPONENTE LOGIN ---
+// --- LOGIN ---
 function LoginScreen({ onLogin, loading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f3f4f6" }}>
-      <div className="card" style={{ width: 400, padding: 30 }}>
-        <h2 style={{ textAlign: 'center' }}>Sistema de Campaña</h2>
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f3f4f6", padding: 20 }}>
+      <div className="card" style={{ width: "100%", maxWidth: 400, padding: 30 }}>
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>Acceso al Sistema</h2>
         <form onSubmit={(e) => { e.preventDefault(); onLogin(email, password); }} style={{ display: "grid", gap: 15 }}>
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
-          <button type="submit" disabled={loading}>{loading ? "Cargando..." : "Entrar"}</button>
+          <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+          <button type="submit" disabled={loading} style={{ background: '#000' }}>{loading ? "Iniciando..." : "Ingresar"}</button>
         </form>
       </div>
     </div>
@@ -35,17 +35,16 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Estados Formularios
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
 
-  // Buscadores y Vistas
   const [busquedaVotante, setBusquedaVotante] = useState("");
   const [verTodosVotantes, setVerTodosVotantes] = useState(false);
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [buscandoCedula, setBuscandoCedula] = useState(false);
+  const [resultadoPadron, setResultadoPadron] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -66,9 +65,22 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- ACCIONES VOTANTES ---
+  async function buscarEnPadron() {
+    const limpia = normalizarCedula(cedulaRapida);
+    if (!limpia) return;
+    setBuscandoCedula(true);
+    setResultadoPadron(null);
+    const { data } = await supabase.from("padron_importado").select("*")
+      .or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
+    
+    if (data) setResultadoPadron(data);
+    else alert("No encontrado en el padrón.");
+    setBuscandoCedula(false);
+  }
+
   async function guardarVotante(e) {
     e.preventDefault();
+    if (!formVotante.por_parte_de_id) return alert("Selecciona quién lo consiguió.");
     setLoading(true);
     const responsable = equipo.find(m => m.id === formVotante.por_parte_de_id);
     const payload = { ...formVotante, cedula_limpia: normalizarCedula(formVotante.cedula), por_parte_de_nombre: responsable?.nombre || "" };
@@ -77,8 +89,11 @@ export default function App() {
       ? await supabase.from("votantes").update(payload).eq("id", editIdVotante)
       : await supabase.from("votantes").insert([payload]);
 
-    if (!error) { setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" }); setEditIdVotante(null); cargarDatos(); }
-    else alert("Error al guardar");
+    if (!error) { 
+      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" }); 
+      setEditIdVotante(null); 
+      cargarDatos(); 
+    }
     setLoading(false);
   }
 
@@ -89,7 +104,6 @@ export default function App() {
     }
   }
 
-  // --- ACCIONES EQUIPO ---
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
@@ -108,22 +122,6 @@ export default function App() {
     }
   }
 
-  // --- BUSQUEDA RÁPIDA PADRÓN ---
-  async function buscarEnPadron() {
-    const limpia = normalizarCedula(cedulaRapida);
-    if (!limpia) return;
-    setBuscandoCedula(true);
-    const { data } = await supabase.from("padron_importado").select("*").or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
-    if (data) {
-      setFormVotante({ ...formVotante, nombre: data.nombre, apellido: data.apellido, cedula: data.cedula, mesa: data.mesa, local_votacion: data.local_votacion, orden: data.orden, barrio: data.barrio, seccional: data.seccional });
-      alert("¡Datos encontrados y cargados!");
-    } else {
-      alert("No se encontró en el padrón.");
-    }
-    setBuscandoCedula(false);
-  }
-
-  // --- EXPORTAR EXCEL ---
   function exportarExcel() {
     const ws = XLSX.utils.json_to_sheet(votantes);
     const wb = XLSX.utils.book_new();
@@ -131,7 +129,6 @@ export default function App() {
     XLSX.writeFile(wb, "Reporte_Campana.xlsx");
   }
 
-  // --- LÓGICA DE FILTRADO Y TABLAS ---
   const votantesFiltrados = votantes.filter(v => 
     Object.values(v).some(val => String(val).toLowerCase().includes(busquedaVotante.toLowerCase()))
   );
@@ -151,28 +148,48 @@ export default function App() {
 
   return (
     <div style={{ padding: isMobile ? 10 : 30, maxWidth: 1400, margin: '0 auto' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30 }}>
-        <h2>Campaña Presidente Franco</h2>
-        <button onClick={() => supabase.auth.signOut()} style={{ width: 'auto', background: '#333' }}>Salir</button>
+      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30, alignItems: 'center' }}>
+        <h1 style={{ fontSize: isMobile ? 20 : 28 }}>Campaña Presidente Franco</h1>
+        <button onClick={() => supabase.auth.signOut()} style={{ width: 'auto', padding: '10px 20px', background: '#333' }}>Salir</button>
       </header>
 
       {/* DASHBOARD STATS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 20, marginBottom: 30 }}>
-        <div className="card"><h3>{votantes.length}</h3><p>Total Votantes</p></div>
+        <div className="card"><h3>{votantes.length}</h3><p>Votantes Registrados</p></div>
+        
+        {/* BUSCADOR PADRÓN CON BOTÓN ASIGNAR */}
         <div className="card">
-          <h4>Buscador Padrón</h4>
+          <h4>Buscador de Padrón</h4>
           <div style={{ display: 'flex', gap: 5 }}>
-            <input type="text" placeholder="Cédula..." value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} />
+            <input type="text" placeholder="Nro de Cédula..." value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} />
             <button onClick={buscarEnPadron} style={{ width: 'auto' }}>{buscandoCedula ? "..." : "🔍"}</button>
           </div>
+          {resultadoPadron && (
+            <div style={{ marginTop: 15, padding: 10, background: '#f0f9ff', borderRadius: 8, border: '1px solid #bae6fd' }}>
+              <p style={{ margin: 0, fontSize: 13 }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
+              <p style={{ margin: '4px 0', fontSize: 12 }}>Loc: {resultadoPadron.local_votacion} | Mesa: {resultadoPadron.mesa}</p>
+              <button 
+                onClick={() => {
+                  setFormVotante({ ...formVotante, ...resultadoPadron });
+                  setResultadoPadron(null);
+                }} 
+                style={{ background: '#16a34a', padding: '5px 10px', fontSize: 12, marginTop: 5 }}
+              >
+                ASIGNAR A FORMULARIO
+              </button>
+            </div>
+          )}
         </div>
+
         <div className="card">
           <h4>Conteo por Barrio</h4>
-          {conteoBarrio.map(b => <div key={b.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span>{b.name}:</span> <strong>{b.total}</strong></div>)}
+          <div style={{ maxHeight: 100, overflowY: 'auto' }}>
+            {conteoBarrio.map(b => <div key={b.name} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span>{b.name}:</span> <strong>{b.total}</strong></div>)}
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '350px 1fr', gap: 30 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 30 }}>
         {/* FORMULARIO VOTANTE */}
         <div className="card">
           <h3>Cargar futuros votantes</h3>
@@ -191,36 +208,35 @@ export default function App() {
               <option value="">Seleccionar miembro del equipo</option>
               {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
             </select>
-            <button type="submit" style={{ background: '#000', color: '#fff' }}>Guardar futuro votante</button>
+            <button type="submit" style={{ background: '#000', color: '#fff' }}>
+              {editIdVotante ? "Actualizar votante" : "Guardar futuro votante"}
+            </button>
+            {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "" }); }} style={{ background: '#64748b' }}>Cancelar Edición</button>}
           </form>
         </div>
 
         {/* LISTA VOTANTES */}
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15, flexWrap: 'wrap', gap: 10 }}>
             <h3>Lista de futuros votantes</h3>
             <button onClick={exportarExcel} style={{ width: 'auto', background: '#16a34a' }}>Exportar Excel</button>
           </div>
-          <input placeholder="🔍 Buscar por nombre, apellido, cédula..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ margin: '15px 0' }} />
+          <input placeholder="🔍 Buscar por nombre, apellido, cédula, local o equipo..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ marginBottom: 20 }} />
           
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-                  <th>Nombre</th><th>Cédula</th><th>Mesa</th><th>Local</th><th>Barrio</th><th>Acciones</th>
+                  <th>Nombre</th><th>Apellido</th><th>Cédula</th><th>Mesa</th><th>Local</th><th>Barrio</th><th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {votantesVisibles.map(v => (
                   <tr key={v.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td>{v.nombre} {v.apellido}</td>
-                    <td>{v.cedula}</td>
-                    <td>{v.mesa}</td>
-                    <td>{v.local_votacion}</td>
-                    <td>{v.barrio}</td>
-                    <td>
-                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '4px 8px', marginRight: 5, background: '#2563eb' }}>Editar</button>
-                      <button onClick={() => eliminarVotante(v.id)} style={{ padding: '4px 8px', background: '#dc2626' }}>Borrar</button>
+                    <td>{v.nombre}</td><td>{v.apellido}</td><td>{v.cedula}</td><td>{v.mesa}</td><td>{v.local_votacion}</td><td>{v.barrio}</td>
+                    <td style={{ display: 'flex', gap: 5, padding: '10px 0' }}>
+                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '4px 8px', background: '#2563eb', fontSize: 12 }}>Editar</button>
+                      <button onClick={() => eliminarVotante(v.id)} style={{ padding: '4px 8px', background: '#dc2626', fontSize: 12 }}>Eliminar</button>
                     </td>
                   </tr>
                 ))}
@@ -228,13 +244,13 @@ export default function App() {
             </table>
           </div>
           {!verTodosVotantes && votantesFiltrados.length > 10 && (
-            <button onClick={() => setVerTodosVotantes(true)} style={{ marginTop: 15, background: '#64748b' }}>Mostrar todos</button>
+            <button onClick={() => setVerTodosVotantes(true)} style={{ marginTop: 20, background: '#64748b' }}>Mostrar todos</button>
           )}
         </div>
       </div>
 
       {/* SECCIÓN EQUIPO */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '350px 1fr', gap: 30, marginTop: 40 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 30, marginTop: 40 }}>
         <div className="card">
           <h3>Equipo de campaña</h3>
           <form onSubmit={guardarEquipo} style={{ display: 'grid', gap: 10 }}>
@@ -245,7 +261,7 @@ export default function App() {
               <option value="coordinador">Coordinador</option>
               <option value="jefe_de_campana">Jefe de Campaña</option>
             </select>
-            <button type="submit" style={{ background: '#000' }}>{editIdEquipo ? "Actualizar" : "Guardar usuario"}</button>
+            <button type="submit" style={{ background: '#000' }}>{editIdEquipo ? "Actualizar usuario" : "Guardar usuario"}</button>
           </form>
         </div>
 
@@ -264,8 +280,8 @@ export default function App() {
                   <td>{m.rol}</td>
                   <td>{m.zona}</td>
                   <td>
-                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '4px 8px', marginRight: 5, background: '#2563eb' }}>Editar</button>
-                    <button onClick={() => eliminarEquipo(m.id)} style={{ padding: '4px 8px', background: '#dc2626' }}>Borrar</button>
+                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '4px 8px', background: '#2563eb', marginRight: 5 }}>Editar</button>
+                    <button onClick={() => eliminarEquipo(m.id)} style={{ padding: '4px 8px', background: '#dc2626' }}>Eliminar</button>
                   </td>
                 </tr>
               ))}
