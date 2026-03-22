@@ -136,7 +136,7 @@ export default function App() {
         <p style={{ fontWeight: '600', color: '#444' }}>Usuario: <strong>{session.user.email}</strong></p>
       </header>
 
-      {/* DASHBOARD INDICADORES - DISEÑO ACHICADO */}
+      {/* DASHBOARD INDICADORES */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
         <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
@@ -167,7 +167,6 @@ export default function App() {
       </div>
 
       <div className="grid">
-        {/* RENDIMIENTO POR EQUIPO */}
         <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>RENDIMIENTO POR EQUIPO</h4>
           <button onClick={exportarExcel} style={{ background: '#444', color: 'white', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px' }}>EXPORTAR A EXCEL</button>
@@ -185,13 +184,18 @@ export default function App() {
           </div>
         </div>
 
-        {/* CONTEO POR BARRIO */}
+        {/* --- CORRECCIÓN DE COLOR EN CABECERA DE BARRIOS --- */}
         <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>CONTEO POR BARRIO</h4>
-          <table>
-            <thead style={{ background: '#f8f8f8' }}><tr><th style={{ padding: '15px' }}>BARRIO</th><th style={{ padding: '15px' }}>TOTAL</th></tr></thead>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ background: '#f8f8f8' }}>
+              <tr>
+                <th style={{ padding: '15px', color: '#222', textAlign: 'left' }}>BARRIO</th>
+                <th style={{ padding: '15px', color: '#222', textAlign: 'right' }}>TOTAL</th>
+              </tr>
+            </thead>
             <tbody>
-              {conteoBarrio.map(b => <tr key={b.name}><td style={{ fontWeight: '700', padding: '12px' }}>{b.name}</td><td style={{ padding: '12px', fontWeight: '800', color: '#C8102E' }}>{b.total}</td></tr>)}
+              {conteoBarrio.map(b => <tr key={b.name}><td style={{ fontWeight: '700', padding: '12px' }}>{b.name}</td><td style={{ padding: '12px', fontWeight: '800', color: '#C8102E', textAlign: 'right' }}>{b.total}</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -225,7 +229,6 @@ export default function App() {
           </form>
         </div>
 
-        {/* LISTA VOTANTES */}
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>LISTA DE VOTANTES</h3>
           <input placeholder="🔍 Filtrar lista..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ margin: '20px 0', padding: '12px' }} />
@@ -251,9 +254,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 40 }}>
-        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
+        <div className="card">
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>REGISTRAR EQUIPO</h3>
           <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20 }}>
             <input placeholder="Nombre Completo" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px' }} />
@@ -267,7 +269,7 @@ export default function App() {
             <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none' }}>GUARDAR MIEMBRO</button>
           </form>
         </div>
-        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
+        <div className="card">
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>LISTA DEL EQUIPO</h3>
           <table style={{ marginTop: 20 }}>
             <thead style={{ background: '#444', color: 'white' }}><tr><th style={{ padding: '12px' }}>NOMBRE</th><th style={{ padding: '12px' }}>ACCIONES</th></tr></thead>
