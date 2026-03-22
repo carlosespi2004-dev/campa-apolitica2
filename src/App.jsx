@@ -27,14 +27,21 @@ const ANRLogo = () => (
   </div>
 );
 
+// NUEVA BANDERA DE PARAGUAY DETALLADA (image_120f87.png)
 const ParaguayFlag = () => (
-  <svg width="30" height="20" viewBox="0 0 3 2">
-    <rect width="3" height="2" fill="#d52b1e"/><rect width="3" height="1.333" y="0.667" fill="#fff"/><rect width="3" height="0.667" y="1.333" fill="#0033a0"/>
+  <svg width="35" height="24" viewBox="0 0 3 2">
+    <rect width="3" height="2" fill="#d52b1e"/>
+    <rect width="3" height="1.333" y="0.667" fill="#fff"/>
+    <rect width="3" height="0.667" y="1.333" fill="#0033a0"/>
     <circle cx="1.5" cy="1" r="0.25" fill="#fff"/>
+    {/* Escudo Nacional Detallado */}
+    <circle cx="1.5" cy="1" r="0.22" fill="none" stroke="#edcb15" strokeWidth="0.015"/>
+    <path d="M1.5 0.8 a0.2 0.2 0 0 1 0 0.4 a0.2 0.2 0 0 1 0 -0.4 z" fill="none" stroke="#007a33" strokeWidth="0.01"/>
+    <text x="1.5" y="1.1" textAnchor="middle" fill="#edcb15" fontSize="0.1" fontWeight="700">PAX</text>
   </svg>
 );
 
-// --- COMPONENTE LOGIN (CORREGIDO) ---
+// --- COMPONENTE LOGIN ---
 function LoginScreen({ onLogin, loading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -147,19 +154,80 @@ export default function App() {
     const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombre, lista) => {
       const sheet = workbook.addWorksheet(nombre);
-      sheet.columns = [{key:'nro',width:8},{key:'nom',width:25},{key:'ape',width:25},{key:'ci',width:15},{key:'ord',width:10},{key:'mes',width:10},{key:'sec',width:12},{key:'loc',width:25},{key:'cap',width:25}];
-      sheet.addRow(["HAGAMOS QUE SUCEDA"]); sheet.mergeCells('A1:I1');
-      const r1 = sheet.getRow(1); r1.height = 35; r1.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC8102E'}}; r1.getCell(1).font={color:{argb:'FFFFFFFF'},size:20,bold:true}; r1.getCell(1).alignment={vertical:'middle',horizontal:'center'};
-      sheet.addRow(["Darío Carmona Concejal 2026"]); sheet.mergeCells('A2:I2');
-      const r2 = sheet.getRow(2); r2.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEE2E2'}}; r2.getCell(1).font={color:{argb:'FF000000'},size:12,italic:true}; r2.getCell(1).alignment={vertical:'middle',horizontal:'center'};
-      sheet.addRow([]);
-      const header = sheet.addRow(["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Local", "Captado por"]);
-      header.eachCell(c => { c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC8102E'}}; c.font={color:{argb:'FFFFFFFF'},bold:true}; });
-      lista.forEach((v, i) => sheet.addRow([i+1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]));
+      
+      // Título Principal
+      sheet.addRow(["HAGAMOS QUE SUCEDA"]);
+      sheet.mergeCells('A1:I1');
+      const rowTitulo = sheet.getRow(1);
+      rowTitulo.height = 30;
+      rowTitulo.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
+      rowTitulo.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 20, bold: true };
+      rowTitulo.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // Subtítulo
+      sheet.addRow(["Darío Carmona Concejal 2026"]);
+      sheet.mergeCells('A2:I2');
+      const rowSubtitulo = sheet.getRow(2);
+      rowSubtitulo.height = 20;
+      rowSubtitulo.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
+      rowSubtitulo.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 14, bold: true };
+      rowSubtitulo.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+      sheet.addRow([]); // Fila vacía
+
+      // Definición de columnas y encabezados
+      const columnsDef = [
+        { header: "Nro", key: 'nro' },
+        { header: "Nombre", key: 'nom' },
+        { header: "Apellido", key: 'ape' },
+        { header: "Cedula", key: 'ci' },
+        { header: "Orden", key: 'ord' },
+        { header: "Mesa", key: 'mes' },
+        { header: "Seccional", key: 'sec' },
+        { header: "Local", key: 'loc' },
+        { header: "Captado por", key: 'cap' }
+      ];
+      
+      const headerRow = sheet.addRow(columnsDef.map(col => col.header));
+      headerRow.height = 20;
+      
+      // Estilo de encabezados (Fondo rojo, letras blancas)
+      headerRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
+      // Insertar datos y aplicar estilos de cebra
+      lista.forEach((v, i) => {
+        const rowData = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
+        
+        // Estilo de cebra (Blanco / Rosa claro)
+        const bgColor = i % 2 === 0 ? 'FFFFFFFF' : 'FFFEE2E2';
+        rowData.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+      });
+
+      // AJUSTE EXACTO DE FILAS DEPENDIENDO DE LAS PALABRAS
+      columnsDef.forEach((col, index) => {
+        let maxLen = col.header.length;
+        sheet.getColumn(index + 1).eachCell({ includeEmpty: false }, (cell, rowNumber) => {
+          if (rowNumber > 3) { // Omitir títulos y fila vacía
+            const cellLen = cell.value ? String(cell.value).length : 0;
+            if (cellLen > maxLen) maxLen = cellLen;
+          }
+        });
+        sheet.getColumn(index + 1).width = maxLen + 2; // Añadir un margen
+      });
     };
+
     crearHoja("LISTA GENERAL", votantes);
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Campaña_Dario_Carmona.xlsx`);
+    saveAs(new Blob([buffer]), `Campana_Dario_Carmona.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
@@ -303,11 +371,11 @@ export default function App() {
               <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, fontSize: '18px' }}>RENDIMIENTO</h3>
               {(rendimientoEquipo || []).map(m => (
                 <div key={m?.id} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '900', color: '#475569', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '900', color: '#475569', marginBottom: 8 }}>
                     <span>{m?.nombre}</span> <span>{m?.cantidad} ({m?.porcentaje}%)</span>
                   </div>
                   <div style={{ width: '100%', height: '12px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: `${m?.porcentaje}%`, height: '100%', background: 'linear-gradient(90deg, #C8102E, #ef4444)' }}></div>
+                    <div style={{ width: `${m?.porcentaje}%`, height: '100%', background: '#C8102E' }}></div>
                   </div>
                 </div>
               ))}
@@ -315,12 +383,18 @@ export default function App() {
             <div className="card" style={{ background: 'white', padding: isMobile ? 20 : 35, borderRadius: '25px' }}>
               <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, fontSize: '18px' }}>VOTOS POR BARRIO</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead style={{borderBottom:'2px solid #f1f5f9'}}><tr style={{fontSize:11, color:'#94a3b8'}}><th>BARRIO</th><th style={{textAlign:'right'}}>TOTAL</th></tr></thead>
+                {/* Cabecera con letras blancas */}
+                <thead style={{ background: '#C8102E', borderBottom: '2px solid #f1f5f9' }}>
+                  <tr style={{ fontSize: '12px', color: 'white', fontWeight: '900' }}>
+                    <th style={{ padding: '12px', textAlign: 'left' }}>BARRIO</th>
+                    <th style={{ padding: '12px', textAlign: 'right' }}>TOTAL</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {(conteoBarrio || []).map(b => (
                     <tr key={b?.name} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '12px 0', fontWeight: '700', color: '#334155', fontSize: '14px' }}>{b?.name}</td>
-                      <td style={{ textAlign: 'right', fontWeight: '900', color: '#C8102E', fontSize: '15px' }}>{b?.total}</td>
+                      <td style={{ padding: '12px 12px', fontWeight: '700', color: '#334155', fontSize: '14px' }}>{b?.name}</td>
+                      <td style={{ textAlign: 'right', fontWeight: '900', color: '#C8102E', fontSize: '15px', paddingRight: '12px' }}>{b?.total}</td>
                     </tr>
                   ))}
                 </tbody>
