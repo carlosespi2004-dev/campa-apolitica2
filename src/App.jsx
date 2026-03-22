@@ -52,6 +52,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Estados Formularios
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
@@ -62,14 +63,9 @@ export default function App() {
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => { if (session) cargarDatos(); }, [session]);
@@ -85,26 +81,12 @@ export default function App() {
     setLoading(false);
   }
 
-  const rendimientoEquipo = useMemo(() => {
-    const totalVotantes = votantes.length;
-    return equipo.map(miembro => {
-      const cantidad = votantes.filter(v => v.por_parte_de_id === miembro.id).length;
-      const porcentaje = totalVotantes > 0 ? Math.round((cantidad / totalVotantes) * 100) : 0;
-      return { ...miembro, cantidad, porcentaje };
-    }).sort((a, b) => b.cantidad - a.cantidad);
-  }, [votantes, equipo]);
-
-  const conteoBarrio = useMemo(() => {
-    const counts = {};
-    votantes.forEach(v => { const b = v.barrio || "Sin barrio"; counts[b] = (counts[b] || 0) + 1; });
-    return Object.entries(counts).map(([name, total]) => ({ name, total }));
-  }, [votantes]);
-
+  // Lógica de Búsqueda y Guardado
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
     const { data } = await supabase.from("padron_importado").select("*").or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
-    if (data) setResultadoPadron(data); else alert("No encontrado.");
+    if (data) setResultadoPadron(data); else alert("No encontrado en el padrón.");
   }
 
   async function guardarVotante(e) {
@@ -126,78 +108,28 @@ export default function App() {
     setLoading(false);
   }
 
+  // Función Excel Pro (Mantenida)
   const exportarExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-
     const crearHoja = (nombreHoja, listaVotantes) => {
       const sheet = workbook.addWorksheet(nombreHoja);
-
-      // Seteamos las columnas pero SIN encabezado para evitar el duplicado
-      sheet.columns = [
-        { key: 'nro', width: 8 },
-        { key: 'nombre', width: 25 },
-        { key: 'apellido', width: 25 },
-        { key: 'cedula', width: 15 },
-        { key: 'orden', width: 10 },
-        { key: 'mesa', width: 10 },
-        { key: 'seccional', width: 12 },
-        { key: 'captado', width: 25 }
-      ];
-
-      // Fila 1: Título Grande
-      sheet.addRow(["HAGAMOS QUE SUCEDA"]);
-      sheet.mergeCells('A1:H1');
-      const row1 = sheet.getRow(1);
-      row1.height = 35;
-      row1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
-      row1.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 20, bold: true };
-      row1.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
-
-      // Fila 2: Subtítulo
-      sheet.addRow(["Lista de futuros votantes"]);
-      sheet.mergeCells('A2:H2');
-      const row2 = sheet.getRow(2);
-      row2.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-      row2.getCell(1).font = { color: { argb: 'FF000000' }, size: 12, italic: true };
-      row2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
-
-      // Fila 3: Espacio vacío (como en tu foto)
+      sheet.columns = [{ key: 'nro', width: 8 }, { key: 'nombre', width: 25 }, { key: 'apellido', width: 25 }, { key: 'cedula', width: 15 }, { key: 'orden', width: 10 }, { key: 'mesa', width: 10 }, { key: 'seccional', width: 12 }, { key: 'captado', width: 25 }];
+      sheet.addRow(["HAGAMOS QUE SUCEDA"]); sheet.mergeCells('A1:H1');
+      const r1 = sheet.getRow(1); r1.height = 35; r1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } }; r1.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 20, bold: true }; r1.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+      sheet.addRow(["Lista de futuros votantes"]); sheet.mergeCells('A2:H2');
+      const r2 = sheet.getRow(2); r2.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; r2.getCell(1).font = { color: { argb: 'FF000000' }, size: 12, italic: true }; r2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
       sheet.addRow([]);
-
-      // Fila 4: Encabezados de tabla (SOLO UNA VEZ)
       const tableHeader = sheet.addRow(["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Captado por"]);
-      tableHeader.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
-        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
-      });
-
-      // Filas de datos
+      tableHeader.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } }; cell.font = { color: { argb: 'FFFFFFFF' }, bold: true }; cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }; });
       listaVotantes.forEach((v, index) => {
-        const row = sheet.addRow([
-          index + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.por_parte_de_nombre
-        ]);
-        
-        // Estilo de filas alternas (rosado claro)
-        if (index % 2 !== 0) {
-          row.eachCell((cell) => {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-          });
-        }
+        const row = sheet.addRow([index + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.por_parte_de_nombre]);
+        if (index % 2 !== 0) { row.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; }); }
       });
     };
-
     crearHoja("LISTA GENERAL", votantes);
-
-    equipo.forEach(miembro => {
-      const filtrados = votantes.filter(v => v.por_parte_de_id === miembro.id);
-      if (filtrados.length > 0) {
-        crearHoja(miembro.nombre.substring(0, 25), filtrados);
-      }
-    });
-
+    equipo.forEach(m => { const d = votantes.filter(v => v.por_parte_de_id === m.id); if (d.length > 0) crearHoja(m.nombre.substring(0, 25), d); });
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Campaña_Franco_Reporte.xlsx`);
+    saveAs(new Blob([buffer]), `Reporte_Campana_Franco.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
@@ -209,13 +141,10 @@ export default function App() {
         <div style={{ marginBottom: 10 }}>
           <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '4px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
-        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>
-          Panel de Campaña Franco
-        </h1>
-        <p style={{ fontWeight: '600', color: '#444' }}>Usuario: <strong>{session.user.email}</strong></p>
+        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Panel de Campaña Franco</h1>
       </header>
 
-      {/* DASHBOARD INDICADORES */}
+      {/* INDICADORES COMPACTOS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
         <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
@@ -225,12 +154,13 @@ export default function App() {
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{equipo.length}</h3>
             <p style={{ textTransform: 'uppercase', fontWeight: '800', fontSize: 11, color: '#C8102E', marginTop: 5 }}>Miembros del equipo</p>
         </div>
+
+        {/* BUSCADOR DE PADRÓN (Foto 4) */}
         <div className="card" style={{ padding: '15px 20px', borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>BUSCADOR DE PADRÓN</h4>
           <div style={{ textAlign: 'left', marginBottom: '10px' }}>
-            <label style={{ fontWeight: '700', fontSize: '13px', color: '#333' }}>Número de Cédula</label>
-            <div style={{ display: 'flex', gap: 10, marginTop: '5px' }}>
-              <input type="text" value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} style={{ padding: '10px', width: '100%', borderRadius: '8px', border: '1px solid #ddd' }} />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input type="text" value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} placeholder="Número de Cédula" style={{ padding: '10px', width: '100%', borderRadius: '8px', border: '1px solid #ddd' }} />
               <button onClick={buscarEnPadron} style={{ width: '60px', background: '#C8102E', color: 'white', fontSize: '20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>🔍</button>
             </div>
           </div>
@@ -240,50 +170,17 @@ export default function App() {
               <div style={{ fontSize: '12px', color: '#444', display: 'grid', gap: '4px', marginBottom: '10px' }}>
                 <div><strong>Mesa:</strong> {resultadoPadron.mesa} | <strong>Orden:</strong> {resultadoPadron.orden}</div>
                 <div><strong>Local:</strong> {resultadoPadron.local_votacion}</div>
-                <div><strong>Seccional:</strong> {resultadoPadron.seccional}</div>
               </div>
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
-                style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '13px', fontWeight: '800', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>ASIGNAR</button>
+                style={{ background: '#16a34a', color: 'white', padding: '12px', width: '100%', fontSize: '14px', fontWeight: '900', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                ASIGNAR AL FORMULARIO
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      <div className="grid">
-        <div className="card" style={{ borderRadius: '12px' }}>
-          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>RENDIMIENTO POR EQUIPO</h4>
-          <button onClick={exportarExcel} style={{ background: '#C8102E', color: 'white', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EXPORTAR A EXCEL</button>
-          <div style={{ display: 'grid', gap: 20 }}>
-            {rendimientoEquipo.map(m => (
-              <div key={m.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 8 }}>
-                  <span style={{ fontWeight: '800' }}>{m.nombre}</span> <strong style={{ color: '#C8102E' }}>{m.cantidad} ({m.porcentaje}%)</strong>
-                </div>
-                <div style={{ width: '100%', height: 14, background: '#eee', borderRadius: 7, overflow: 'hidden' }}>
-                  <div style={{ width: `${m.porcentaje}%`, height: '100%', background: '#C8102E' }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card" style={{ borderRadius: '12px' }}>
-          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>CONTEO POR BARRIO</h4>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ background: '#f8f8f8' }}>
-              <tr>
-                <th style={{ padding: '15px', color: '#C8102E', textAlign: 'left', fontWeight: '900' }}>BARRIO</th>
-                <th style={{ padding: '15px', color: '#C8102E', textAlign: 'right', fontWeight: '900' }}>TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conteoBarrio.map(b => <tr key={b.name}><td style={{ fontWeight: '700', padding: '12px', borderBottom: '1px solid #fafafa' }}>{b.name}</td><td style={{ padding: '12px', fontWeight: '800', color: '#C8102E', textAlign: 'right', borderBottom: '1px solid #fafafa' }}>{b.total}</td></tr>)}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* FORMULARIOS */}
+      {/* FORMULARIO REGISTRAR VOTANTE (Foto 3) */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
@@ -313,14 +210,6 @@ export default function App() {
               </div>
             </div>
             <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Local de Votación</label>
-              <input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Seccional</label>
-              <input type="text" value={formVotante.seccional} onChange={e => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
               <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Barrio</label>
               <select value={formVotante.barrio} onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }} required>
                 <option value="">Elegir barrio...</option>
@@ -334,18 +223,16 @@ export default function App() {
                 {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
             </div>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
                 {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
             </button>
           </form>
         </div>
 
+        {/* LISTA DE VOTANTES */}
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DE VOTANTES</h3>
-          <div style={{ textAlign: 'left', margin: '20px 0' }}>
-            <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Filtrar lista</label>
-            <input type="text" placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-          </div>
+          <input type="text" placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', margin: '20px 0', borderRadius: '10px', border: '1px solid #ddd' }} />
           <div className="table-wrap">
             <table style={{ width: '100%' }}>
               <thead style={{ background: '#C8102E', color: 'white' }}>
@@ -367,6 +254,59 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* GESTIÓN EQUIPO (Foto 5 y 6) */}
+      <div className="grid" style={{ marginTop: 40 }}>
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
+          <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
+          <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20, display: 'grid', gap: '15px' }}>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Nombre Completo</label>
+              <input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Teléfono</label>
+              <input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Zona</label>
+              <input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Rol</label>
+              <select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }}>
+                <option value="coordinador">Coordinador</option>
+                <option value="jefe_de_campana">Jefe de Campaña</option>
+                <option value="candidato">Candidato</option>
+              </select>
+            </div>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>GUARDAR MIEMBRO</button>
+          </form>
+        </div>
+
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
+          <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DEL EQUIPO</h3>
+          <table style={{ width: '100%', marginTop: 20 }}>
+            <thead style={{ background: '#444', color: 'white' }}><tr><th style={{ padding: '12px' }}>NOMBRE</th><th style={{ padding: '12px' }}>ACCIONES</th></tr></thead>
+            <tbody>
+              {equipo.map(m => (
+                <tr key={m.id}>
+                  <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
+                  <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
+                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
+                    <button onClick={async () => { if(confirm("¿Borrar miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Botón de Excel flotante o al final */}
+      <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 20, right: 20, background: '#16a34a', color: 'white', padding: '15px 25px', borderRadius: '50px', fontWeight: '800', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', cursor: 'pointer' }}>
+        📥 EXPORTAR EXCEL PRO
+      </button>
     </div>
   );
 }
