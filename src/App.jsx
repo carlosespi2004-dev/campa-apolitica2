@@ -24,7 +24,7 @@ function LoginScreen({ onLogin, loading }) {
   const [password, setPassword] = useState("");
   return (
     <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f4f4f4", padding: 20 }}>
-      <div className="card" style={{ width: "100%", maxWidth: 450, padding: 40, textAlign: 'center', borderRadius: '15px' }}>
+      <div className="card" style={{ width: "100%", maxWidth: 450, padding: 40, textAlign: 'center', borderRadius: '15px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
         <h2 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', marginBottom: 30, fontSize: '28px' }}>ACCESO AL SISTEMA</h2>
         <form onSubmit={(e) => { e.preventDefault(); onLogin(email, password); }} style={{ display: "grid", gap: 20 }}>
           <div style={{ textAlign: 'left' }}>
@@ -35,7 +35,7 @@ function LoginScreen({ onLogin, loading }) {
             <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Contraseña</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }} />
           </div>
-          <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
+          <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>
             {loading ? "INICIANDO..." : "INGRESAR AL PANEL"}
           </button>
         </form>
@@ -125,53 +125,58 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- MEJORA DE EXCEL POR PESTAÑAS Y DATOS ESPECÍFICOS ---
+  // --- FUNCIÓN DE EXPORTACIÓN CON DISEÑO ---
   const exportarExcel = () => {
     const wb = XLSX.utils.book_new();
 
-    // Crear una pestaña para cada integrante del equipo
-    equipo.forEach(miembro => {
-      const votantesDeMiembro = votantes
-        .filter(v => v.por_parte_de_id === miembro.id)
-        .map((v, index) => ({
-          "Número de registro": index + 1,
-          "Nombre": v.nombre,
-          "Apellido": v.apellido,
-          "Cedula": v.cedula,
-          "Orden": v.orden,
-          "Mesa": v.mesa,
-          "Seccional": v.seccional
-        }));
+    const prepararHoja = (datos) => {
+      // Definir los encabezados visuales (Fila 2 y Fila 4)
+      const wsData = [
+        ["HAGAMOS QUE SUCEDA"],           // A1
+        ["Lista de futuros votantes"],     // A2
+        [],                                // A3 (Espacio)
+        ["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Captado por"] // A4
+      ];
 
-      if (votantesDeMiembro.length > 0) {
-        const ws = XLSX.utils.json_to_sheet(votantesDeMiembro);
-        XLSX.utils.book_append_sheet(wb, ws, miembro.nombre.substring(0, 30)); // Máx 31 caracteres para nombre de hoja
+      // Agregar los datos a partir de la fila 5
+      datos.forEach((v, index) => {
+        wsData.push([
+          index + 1,
+          v.nombre,
+          v.apellido,
+          v.cedula,
+          v.orden,
+          v.mesa,
+          v.seccional,
+          v.por_parte_de_nombre || "General"
+        ]);
+      });
+
+      return XLSX.utils.aoa_to_sheet(wsData);
+    };
+
+    // 1. LISTA GENERAL (Siempre primero)
+    const wsGeneral = prepararHoja(votantes);
+    XLSX.utils.book_append_sheet(wb, wsGeneral, "LISTA GENERAL");
+
+    // 2. UNA PESTAÑA POR INTEGRANTE
+    equipo.forEach(miembro => {
+      const filtrados = votantes.filter(v => v.por_parte_de_id === miembro.id);
+      if (filtrados.length > 0) {
+        const wsMiembro = prepararHoja(filtrados);
+        XLSX.utils.book_append_sheet(wb, wsMiembro, miembro.nombre.substring(0, 30));
       }
     });
 
-    // Pestaña General (Todos los votantes)
-    const dataGeneral = votantes.map((v, index) => ({
-      "Número de registro": index + 1,
-      "Nombre": v.nombre,
-      "Apellido": v.apellido,
-      "Cedula": v.cedula,
-      "Orden": v.orden,
-      "Mesa": v.mesa,
-      "Seccional": v.seccional,
-      "Captado por": v.por_parte_de_nombre
-    }));
-    const wsGeneral = XLSX.utils.json_to_sheet(dataGeneral);
-    XLSX.utils.book_append_sheet(wb, wsGeneral, "LISTA GENERAL");
-
-    XLSX.writeFile(wb, `Campaña_Franco_Reporte.xlsx`);
+    XLSX.writeFile(wb, "Reporte_Campana_Franco.xlsx");
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
   return (
     <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '80px' }}>
-      <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
+      <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative', paddingTop: '20px' }}>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '12px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
           <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '4px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
@@ -249,7 +254,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRO VOTANTE */}
+      {/* FORMULARIOS (Mismos que antes) */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
@@ -306,6 +311,7 @@ export default function App() {
           </form>
         </div>
 
+        {/* LISTA DE VOTANTES EN WEB */}
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DE VOTANTES</h3>
           <div style={{ textAlign: 'left', margin: '20px 0' }}>
@@ -331,53 +337,6 @@ export default function App() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-
-      {/* GESTIÓN EQUIPO */}
-      <div className="grid" style={{ marginTop: 40 }}>
-        <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
-          <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
-          <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20, display: 'grid', gap: '15px' }}>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Nombre Completo</label>
-              <input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Teléfono</label>
-              <input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Zona</label>
-              <input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Rol</label>
-              <select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }}>
-                <option value="coordinador">Coordinador</option>
-                <option value="jefe_de_campana">Jefe de Campaña</option>
-                <option value="candidato">Candidato</option>
-              </select>
-            </div>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>GUARDAR MIEMBRO</button>
-          </form>
-        </div>
-        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
-          <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DEL EQUIPO</h3>
-          <table style={{ width: '100%', marginTop: 20 }}>
-            <thead style={{ background: '#444', color: 'white' }}><tr><th style={{ padding: '12px' }}>NOMBRE</th><th style={{ padding: '12px' }}>ACCIONES</th></tr></thead>
-            <tbody>
-              {equipo.map(m => (
-                <tr key={m.id}>
-                  <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
-                  <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
-                    <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
