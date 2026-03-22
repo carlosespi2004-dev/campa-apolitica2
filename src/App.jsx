@@ -8,6 +8,19 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
+// LISTA DE BARRIOS DE PRESIDENTE FRANCO
+const LISTA_BARRIOS = [
+  "Santa Clara", "Sagrado Corazón de Jesús", "San Miguel", "San Lorenzo",
+  "Fátima 1", "Santo Tomás", "Área 5", "San Sebastián", "Centro",
+  "María Auxiliadora", "San José Obrero", "San Juan", "Villa Baja",
+  "Fátima 2", "San Antonio", "San Rafael", "Las Mercedes", "San Roque",
+  "Santa Rosa", "San Francisco", "San Isidro", "Santo Domingo",
+  "Kilómetro 9 Monday", "Kilómetro 10 Monday", "San Jorge",
+  "Fray Luis de Bolaños", "Colonia Alfredo Pla", "Medio Mundo",
+  "Puerto Flores", "Península", "Puerto Barreto", "Joyvy Miri Poty",
+  "8 de Diciembre", "Puerto Giménez", "Puerto Bertoni"
+];
+
 function LoginScreen({ onLogin, loading }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -157,7 +170,6 @@ export default function App() {
       </div>
 
       <div className="grid">
-        {/* RENDIMIENTO */}
         <div className="card" style={{ borderRadius: '15px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 22, borderBottom: '4px solid #f4f4f4', paddingBottom: '20px', marginBottom: '25px' }}>RENDIMIENTO POR EQUIPO</h4>
           <button onClick={exportarExcel} style={{ background: '#444', color: 'white', marginBottom: 30, width: 'auto', fontWeight: '900', padding: '15px 30px', borderRadius: '10px', border: 'none' }}>DESCARGAR EXCEL</button>
@@ -175,7 +187,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* BARRIOS */}
         <div className="card" style={{ borderRadius: '15px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 22, borderBottom: '4px solid #f4f4f4', paddingBottom: '20px', marginBottom: '25px' }}>CONTEO POR BARRIO</h4>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -189,7 +200,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRO VOTANTE */}
+      {/* REGISTRAR VOTANTE - FORMULARIO ACTUALIZADO CON DESPLEGABLE DE BARRIO */}
       <div className="grid" style={{ marginTop: 60 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '5px solid #C8102E', paddingBottom: 20, fontSize: 28 }}>REGISTRAR VOTANTE</h3>
@@ -203,7 +214,20 @@ export default function App() {
                 <input placeholder="Mesa" value={formVotante.mesa} onChange={e => setFormVotante({ ...formVotante, mesa: e.target.value })} style={{ padding: '16px' }} />
                 <input placeholder="Orden" value={formVotante.orden} onChange={e => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ padding: '16px' }} />
             </div>
-            <input placeholder="Barrio" value={formVotante.barrio} onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} style={{ padding: '16px' }} />
+            
+            {/* NUEVO DESPLEGABLE DE BARRIOS */}
+            <label style={{ fontWeight: '800', fontSize: '13px', color: '#666', marginTop: '10px' }}>SELECCIONAR BARRIO</label>
+            <select 
+              value={formVotante.barrio} 
+              onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} 
+              style={{ padding: '16px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '16px' }}
+              required
+            >
+              <option value="">Elegir barrio...</option>
+              {LISTA_BARRIOS.map(barrio => <option key={barrio} value={barrio}>{barrio}</option>)}
+            </select>
+
+            <label style={{ fontWeight: '800', fontSize: '13px', color: '#666', marginTop: '10px' }}>RESPONSABLE DE CAPTACIÓN</label>
             <select value={formVotante.por_parte_de_id} onChange={e => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ padding: '16px', borderRadius: '10px' }}>
               <option value="">Seleccionar responsable...</option>
               {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
@@ -214,7 +238,7 @@ export default function App() {
           </form>
         </div>
 
-        {/* LISTA VOTANTES */}
+        {/* LISTADO VOTANTES */}
         <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '5px solid #C8102E', paddingBottom: 20, fontSize: 28 }}>LISTADO ACTUAL</h3>
           <input placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ margin: '30px 0', padding: '18px', borderRadius: '12px', fontSize: '18px' }} />
@@ -240,7 +264,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* GESTIÓN EQUIPO CON NUEVO CAMPO DESPLEGABLE */}
+      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 60 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '5px solid #C8102E', paddingBottom: 20, fontSize: 28 }}>REGISTRAR EQUIPO</h3>
