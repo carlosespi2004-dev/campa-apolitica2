@@ -8,6 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
+// LISTADO DE BARRIOS ACTUALIZADO
 const LISTA_BARRIOS = [
   "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael", 
   "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián", 
@@ -35,8 +36,8 @@ function LoginScreen({ onLogin, loading }) {
             <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Contraseña</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }} />
           </div>
-          {/* BOTON INGRESAR - Color cambiado a rojo claro con letra negra */}
-          <button type="submit" disabled={loading} style={{ background: '#FEE2E2', color: '#000000', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
+          {/* BOTON INGRESAR - Vuelve a rojo normal con letra blanca */}
+          <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
             {loading ? "INICIANDO..." : "INGRESAR AL PANEL"}
           </button>
         </form>
@@ -138,7 +139,7 @@ export default function App() {
   return (
     <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '60px' }}>
       <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '900', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
           <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '4px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
@@ -185,8 +186,8 @@ export default function App() {
       <div className="grid">
         <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>RENDIMIENTO POR EQUIPO</h4>
-          {/* BOTON EXPORTAR A EXCEL - Color cambiado a rojo claro con letra negra */}
-          <button onClick={exportarExcel} style={{ background: '#FEE2E2', color: '#000000', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EXPORTAR A EXCEL</button>
+          {/* BOTON EXPORTAR A EXCEL - Mantiene rojo normal */}
+          <button onClick={exportarExcel} style={{ background: '#C8102E', color: 'white', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EXPORTAR A EXCEL</button>
           <div style={{ display: 'grid', gap: 20 }}>
             {rendimientoEquipo.map(m => (
               <div key={m.id}>
@@ -217,7 +218,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRO VOTANTE - ETIQUETAS ARRIBA */}
+      {/* FORMULARIO REGISTRO VOTANTE */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
@@ -250,7 +251,6 @@ export default function App() {
               <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Local de Votación</label>
               <input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
             </div>
-            {/* NUEVO CAMPO SECCIONAL CON ETIQUETA ARRIBA */}
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Seccional</label>
               <input type="text" value={formVotante.seccional} onChange={e => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
@@ -269,8 +269,8 @@ export default function App() {
                 {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
             </div>
-            {/* BOTON GUARDAR REGISTRO - Color cambiado a rojo claro con letra negra */}
-            <button type="submit" style={{ background: '#FEE2E2', color: '#000000', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>
+            {/* BOTON GUARDAR REGISTRO - Vuelve a rojo normal con letra blanca */}
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>
                 {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
             </button>
           </form>
@@ -293,8 +293,8 @@ export default function App() {
                     <td style={{ padding: '15px' }}><strong>{v.nombre} {v.apellido}</strong></td>
                     <td style={{ padding: '15px' }}>{v.cedula}</td>
                     <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                      {/* BOTON EDITAR - Color cambiado a rojo claro con letra negra */}
-                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#FEE2E2', color: '#000000', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
+                      {/* BOTON EDITAR - Vuelve a rojo normal con letra blanca */}
+                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
                       <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
                     </td>
                   </tr>
@@ -305,7 +305,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* GESTIÓN EQUIPO - ETIQUETAS ARRIBA */}
+      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
@@ -330,8 +330,8 @@ export default function App() {
                 <option value="candidato">Candidato</option>
               </select>
             </div>
-            {/* BOTON GUARDAR MIEMBRO - Color cambiado a rojo claro con letra negra */}
-            <button type="submit" style={{ background: '#FEE2E2', color: '#000000', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>GUARDAR MIEMBRO</button>
+            {/* BOTON GUARDAR MIEMBRO - Vuelve a rojo normal con letra blanca */}
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>GUARDAR MIEMBRO</button>
           </form>
         </div>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
@@ -343,8 +343,8 @@ export default function App() {
                 <tr key={m.id}>
                   <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
                   <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                    {/* BOTON EDITAR EQUIPO - Color cambiado a rojo claro con letra negra */}
-                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#FEE2E2', color: '#000000', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
+                    {/* BOTON EDITAR EQUIPO - Vuelve a rojo normal con letra blanca */}
+                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
                     <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
                   </td>
                 </tr>
