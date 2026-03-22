@@ -34,7 +34,7 @@ function LoginScreen({ onLogin, loading }) {
           </div>
           <div style={{ textAlign: 'left' }}>
             <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Contraseña</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px', fontSize: '16px' }} />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '15px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px', fontSize: '16px' }} />
           </div>
           <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '18px', fontSize: '16px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
             {loading ? "INICIANDO..." : "INGRESAR AL PANEL"}
@@ -84,6 +84,22 @@ export default function App() {
     setEquipo(e.data || []);
     setLoading(false);
   }
+
+  // --- CÁLCULOS DE RENDIMIENTO Y BARRIOS ---
+  const rendimientoEquipo = useMemo(() => {
+    const totalVotantes = votantes.length;
+    return equipo.map(miembro => {
+      const cantidad = votantes.filter(v => v.por_parte_de_id === miembro.id).length;
+      const porcentaje = totalVotantes > 0 ? Math.round((cantidad / totalVotantes) * 100) : 0;
+      return { ...miembro, cantidad, porcentaje };
+    }).sort((a, b) => b.cantidad - a.cantidad);
+  }, [votantes, equipo]);
+
+  const conteoBarrio = useMemo(() => {
+    const counts = {};
+    votantes.forEach(v => { const b = v.barrio || "Sin barrio"; counts[b] = (counts[b] || 0) + 1; });
+    return Object.entries(counts).map(([name, total]) => ({ name, total }));
+  }, [votantes]);
 
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
@@ -141,11 +157,12 @@ export default function App() {
       <header style={{ textAlign: 'center', marginBottom: 30, position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ position: isMobile ? 'static' : 'absolute', right: 0, top: 0, width: isMobile ? '100%' : 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none', marginBottom: isMobile ? '20px' : '0' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>Darío Carmona Concejal 2026</h2>
+          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
-        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>HAGAMOS QUE SUCEDA</h1>
+        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Campaña Franco</h1>
       </header>
 
+      {/* INDICADORES Y BUSCADOR */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
         <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 28, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
@@ -173,11 +190,53 @@ export default function App() {
         </div>
       </div>
 
+      {/* --- SECCIÓN RENDIMIENTO Y BARRIOS RESTAURADA --- */}
+      <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25, marginBottom: 40 }}>
+        <div className="card" style={{ borderRadius: '15px', padding: '20px' }}>
+          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>RENDIMIENTO POR EQUIPO</h4>
+          <div style={{ display: 'grid', gap: 15 }}>
+            {rendimientoEquipo.map(m => (
+              <div key={m.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                  <span style={{ fontWeight: '800' }}>{m.nombre}</span> <strong>{m.cantidad} ({m.porcentaje}%)</strong>
+                </div>
+                <div style={{ width: '100%', height: 10, background: '#eee', borderRadius: 5, overflow: 'hidden' }}>
+                  <div style={{ width: `${m.porcentaje}%`, height: '100%', background: '#C8102E' }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card" style={{ borderRadius: '15px', padding: '20px' }}>
+          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>CONTEO POR BARRIO</h4>
+          <div style={{ overflowY: 'auto', maxHeight: '250px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ color: '#C8102E', fontSize: '12px' }}>
+                  <th style={{ textAlign: 'left', padding: '10px' }}>BARRIO</th>
+                  <th style={{ textAlign: 'right', padding: '10px' }}>TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conteoBarrio.map(b => (
+                  <tr key={b.name} style={{ borderBottom: '1px solid #fafafa' }}>
+                    <td style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}>{b.name}</td>
+                    <td style={{ padding: '8px', fontSize: '13px', fontWeight: '800', textAlign: 'right', color: '#C8102E' }}>{b.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* FORMULARIOS REGISTRO VOTANTE Y LISTADO */}
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25, marginBottom: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '20px' : '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
-          <form onSubmit={guardarVotante} style={{ display: 'grid', gap: '15px', marginTop: 15 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+          <form onSubmit={guardVotante} style={{ display: 'grid', gap: '15px', marginTop: 15 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Nombre</label><input type="text" value={formVotante.nombre} onChange={e => setFormVotante({...formVotante, nombre: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Apellido</label><input type="text" value={formVotante.apellido} onChange={e => setFormVotante({...formVotante, apellido: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
@@ -186,9 +245,9 @@ export default function App() {
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Mesa</label><input type="text" value={formVotante.mesa} onChange={e => setFormVotante({...formVotante, mesa: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Orden</label><input type="text" value={formVotante.orden} onChange={e => setFormVotante({...formVotante, orden: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Seccional</label><input type="text" value={formVotante.seccional} onChange={e => setFormVotante({...formVotante, seccional: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
-              <div><label style={{fontWeight:'700', fontSize:'12px'}}>Local de Votación</label><input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({...formVotante, local_votacion: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
+              <div><label style={{fontWeight:'700', fontSize:'12px'}}>Local Votación</label><input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({...formVotante, local_votacion: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
             <div>
               <label style={{fontWeight:'700', fontSize:'12px'}}>Barrio</label>
@@ -233,13 +292,14 @@ export default function App() {
         </div>
       </div>
 
+      {/* GESTIÓN DE EQUIPO */}
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25 }}>
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '20px' : '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
           <form onSubmit={guardarEquipo} style={{ display: 'grid', gap: '15px', marginTop: 15 }}>
             <div><label style={{fontWeight:'700', fontSize:'12px'}}>Nombre Completo</label><input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({...formEquipo, nombre: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             <div><label style={{fontWeight:'700', fontSize:'12px'}}>Teléfono</label><input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({...formEquipo, telefono: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
-            <div><label style={{fontWeight:'700', fontSize:'12px'}}>Zona o Barrio Asignado</label><input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({...formEquipo, zona: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
+            <div><label style={{fontWeight:'700', fontSize:'12px'}}>Zona Asignada</label><input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({...formEquipo, zona: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             <div>
               <label style={{fontWeight:'700', fontSize:'12px'}}>Rol</label>
               <select value={formEquipo.rol} onChange={e => setFormEquipo({...formEquipo, rol: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}>
@@ -275,6 +335,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* BOTÓN EXCEL FLOTANTE */}
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '15px 30px', borderRadius: '50px', fontWeight: '800', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', cursor: 'pointer', width: isMobile ? '80%' : 'auto', zIndex: 1000 }}>📥 EXPORTAR EXCEL PRO</button>
     </div>
   );
