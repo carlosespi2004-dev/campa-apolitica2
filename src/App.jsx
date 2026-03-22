@@ -129,7 +129,7 @@ export default function App() {
   return (
     <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '60px' }}>
       <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px' }}>Cerrar Sesión</button>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>
           Panel de Campaña
         </h1>
@@ -158,6 +158,7 @@ export default function App() {
               <div style={{ fontSize: '12px', color: '#444', display: 'grid', gap: '4px', marginBottom: '10px' }}>
                 <div><strong>Mesa:</strong> {resultadoPadron.mesa} | <strong>Orden:</strong> {resultadoPadron.orden}</div>
                 <div><strong>Local:</strong> {resultadoPadron.local_votacion}</div>
+                <div><strong>Seccional:</strong> {resultadoPadron.seccional}</div>
               </div>
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
                 style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '13px', fontWeight: '800', border: 'none', borderRadius: '8px' }}>ASIGNAR</button>
@@ -184,24 +185,23 @@ export default function App() {
           </div>
         </div>
 
-        {/* --- CORRECCIÓN DE COLOR EN CABECERA DE BARRIOS --- */}
+        {/* --- CORRECCIÓN DE COLOR ROJO EN CABECERAS --- */}
         <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>CONTEO POR BARRIO</h4>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: '#f8f8f8' }}>
               <tr>
-                <th style={{ padding: '15px', color: '#222', textAlign: 'left' }}>BARRIO</th>
-                <th style={{ padding: '15px', color: '#222', textAlign: 'right' }}>TOTAL</th>
+                <th style={{ padding: '15px', color: '#C8102E', textAlign: 'left', fontWeight: '900' }}>BARRIO</th>
+                <th style={{ padding: '15px', color: '#C8102E', textAlign: 'right', fontWeight: '900' }}>TOTAL</th>
               </tr>
             </thead>
             <tbody>
-              {conteoBarrio.map(b => <tr key={b.name}><td style={{ fontWeight: '700', padding: '12px' }}>{b.name}</td><td style={{ padding: '12px', fontWeight: '800', color: '#C8102E', textAlign: 'right' }}>{b.total}</td></tr>)}
+              {conteoBarrio.map(b => <tr key={b.name}><td style={{ fontWeight: '700', padding: '12px', borderBottom: '1px solid #fafafa' }}>{b.name}</td><td style={{ padding: '12px', fontWeight: '800', color: '#C8102E', textAlign: 'right', borderBottom: '1px solid #fafafa' }}>{b.total}</td></tr>)}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRO VOTANTE */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>REGISTRAR VOTANTE</h3>
@@ -271,7 +271,7 @@ export default function App() {
         </div>
         <div className="card">
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>LISTA DEL EQUIPO</h3>
-          <table style={{ marginTop: 20 }}>
+          <table style={{ width: '100%', marginTop: 20 }}>
             <thead style={{ background: '#444', color: 'white' }}><tr><th style={{ padding: '12px' }}>NOMBRE</th><th style={{ padding: '12px' }}>ACCIONES</th></tr></thead>
             <tbody>
               {equipo.map(m => (
