@@ -160,15 +160,27 @@ export default function App() {
             <button onClick={buscarEnPadron} style={{ width: '80px', background: '#C8102E', color: 'white', fontSize: '28px', borderRadius: '10px', border: 'none' }}>🔍</button>
           </div>
           {resultadoPadron && (
-            <div style={{ marginTop: 25, padding: 25, background: '#fef2f2', borderRadius: '15px', border: '3px solid #C8102E' }}>
-              <p style={{ fontSize: 20, margin: '0 0 15px 0' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
+            <div style={{ marginTop: 25, padding: 25, background: '#fef2f2', borderRadius: '15px', border: '3px solid #C8102E', textAlign: 'left' }}>
+              <p style={{ fontSize: 18, margin: '0 0 10px 0', color: '#002855' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
+              
+              {/* NUEVOS DATOS VISIBLES EN LA BÚSQUEDA */}
+              <div style={{ fontSize: '14px', color: '#444', display: 'grid', gap: '5px', marginBottom: '15px' }}>
+                <div><strong>Cédula:</strong> {resultadoPadron.cedula}</div>
+                <div><strong>Mesa:</strong> {resultadoPadron.mesa || '-'} | <strong>Orden:</strong> {resultadoPadron.orden || '-'}</div>
+                <div><strong>Local:</strong> {resultadoPadron.local_votacion || '-'}</div>
+                <div><strong>Seccional:</strong> {resultadoPadron.seccional || '-'}</div>
+              </div>
+
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
-                style={{ background: '#16a34a', color: 'white', padding: '18px', width: '100%', fontSize: '16px', fontWeight: '900', borderRadius: '10px', border: 'none' }}>ASIGNAR AL FORMULARIO</button>
+                style={{ background: '#16a34a', color: 'white', padding: '18px', width: '100%', fontSize: '16px', fontWeight: '900', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>
+                ASIGNAR AL FORMULARIO
+              </button>
             </div>
           )}
         </div>
       </div>
 
+      {/* RESTO DEL CÓDIGO (RENDIMIENTO, BARRIOS, FORMULARIOS) SE MANTIENE IGUAL */}
       <div className="grid">
         <div className="card" style={{ borderRadius: '15px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 22, borderBottom: '4px solid #f4f4f4', paddingBottom: '20px', marginBottom: '25px' }}>RENDIMIENTO POR EQUIPO</h4>
@@ -200,7 +212,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* REGISTRAR VOTANTE - FORMULARIO ACTUALIZADO CON DESPLEGABLE DE BARRIO */}
+      {/* FORMULARIO REGISTRO VOTANTE */}
       <div className="grid" style={{ marginTop: 60 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '5px solid #C8102E', paddingBottom: 20, fontSize: 28 }}>REGISTRAR VOTANTE</h3>
@@ -215,7 +227,6 @@ export default function App() {
                 <input placeholder="Orden" value={formVotante.orden} onChange={e => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ padding: '16px' }} />
             </div>
             
-            {/* NUEVO DESPLEGABLE DE BARRIOS */}
             <label style={{ fontWeight: '800', fontSize: '13px', color: '#666', marginTop: '10px' }}>SELECCIONAR BARRIO</label>
             <select 
               value={formVotante.barrio} 
