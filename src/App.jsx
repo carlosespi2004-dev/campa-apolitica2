@@ -8,7 +8,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
-// LISTADO DE BARRIOS ACTUALIZADO
 const LISTA_BARRIOS = [
   "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael", 
   "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián", 
@@ -28,11 +27,9 @@ function LoginScreen({ onLogin, loading }) {
       <div className="card" style={{ width: "100%", maxWidth: 450, padding: 40, textAlign: 'center', borderRadius: '15px' }}>
         <h2 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', marginBottom: 30, fontSize: '28px' }}>ACCESO AL SISTEMA</h2>
         <form onSubmit={(e) => { e.preventDefault(); onLogin(email, password); }} style={{ display: "grid", gap: 20 }}>
-          <input type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd' }} />
+          <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd' }} />
           <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd' }} />
-          <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
-            {loading ? "INICIANDO..." : "INGRESAR AL PANEL"}
-          </button>
+          <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>INGRESAR AL PANEL</button>
         </form>
       </div>
     </div>
@@ -98,7 +95,7 @@ export default function App() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
     const { data } = await supabase.from("padron_importado").select("*").or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
-    if (data) setResultadoPadron(data); else alert("No encontrado en el padrón.");
+    if (data) setResultadoPadron(data); else alert("No encontrado.");
   }
 
   async function guardarVotante(e) {
@@ -130,25 +127,22 @@ export default function App() {
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
   return (
-    <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '80px' }}>
-      <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative', paddingTop: '20px' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '900', padding: '12px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
-        <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '3px' }}>HAGAMOS QUE SUCEDA</h2>
-        </div>
+    <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '60px' }}>
+      <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px' }}>Cerrar Sesión</button>
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>
-          Campaña Política – Presidente Franco
+          Panel de Campaña
         </h1>
-        <p style={{ fontWeight: '600', color: '#444' }}>Sesión: <strong>{session.user.email}</strong></p>
+        <p style={{ fontWeight: '600', color: '#444' }}>Usuario: <strong>{session.user.email}</strong></p>
       </header>
 
-      {/* DASHBOARD INDICADORES - VERSION COMPACTA (ACHICADA) */}
+      {/* DASHBOARD INDICADORES - DISEÑO ACHICADO */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
-        <div className="stat" style={{ borderLeft: '10px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+        <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
             <p style={{ textTransform: 'uppercase', fontWeight: '800', fontSize: 11, color: '#C8102E', marginTop: 5 }}>Total futuros votantes</p>
         </div>
-        <div className="stat" style={{ borderLeft: '10px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+        <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{equipo.length}</h3>
             <p style={{ textTransform: 'uppercase', fontWeight: '800', fontSize: 11, color: '#C8102E', marginTop: 5 }}>Miembros del equipo</p>
         </div>
@@ -160,22 +154,21 @@ export default function App() {
           </div>
           {resultadoPadron && (
             <div style={{ marginTop: 15, padding: 15, background: '#fef2f2', borderRadius: 8, border: '2px solid #C8102E', textAlign: 'left' }}>
-              <p style={{ fontSize: 16, margin: '0 0 10px 0' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
-              <div style={{ fontSize: '13px', color: '#444', display: 'grid', gap: '4px', marginBottom: '10px' }}>
-                <div><strong>Mesa:</strong> {resultadoPadron.mesa || '-'} | <strong>Orden:</strong> {resultadoPadron.orden || '-'}</div>
-                <div><strong>Local:</strong> {resultadoPadron.local_votacion || '-'}</div>
-                <div><strong>Seccional:</strong> {resultadoPadron.seccional || '-'}</div>
+              <p style={{ fontSize: 15, margin: '0 0 10px 0' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
+              <div style={{ fontSize: '12px', color: '#444', display: 'grid', gap: '4px', marginBottom: '10px' }}>
+                <div><strong>Mesa:</strong> {resultadoPadron.mesa} | <strong>Orden:</strong> {resultadoPadron.orden}</div>
+                <div><strong>Local:</strong> {resultadoPadron.local_votacion}</div>
               </div>
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
-                style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '13px', fontWeight: '800', border: 'none', borderRadius: '8px' }}>ASIGNAR AL FORMULARIO</button>
+                style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '13px', fontWeight: '800', border: 'none', borderRadius: '8px' }}>ASIGNAR</button>
             </div>
           )}
         </div>
       </div>
 
-      {/* RESTO DEL CÓDIGO SIN CAMBIOS */}
       <div className="grid">
-        <div className="card">
+        {/* RENDIMIENTO POR EQUIPO */}
+        <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>RENDIMIENTO POR EQUIPO</h4>
           <button onClick={exportarExcel} style={{ background: '#444', color: 'white', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px' }}>EXPORTAR A EXCEL</button>
           <div style={{ display: 'grid', gap: 20 }}>
@@ -192,7 +185,8 @@ export default function App() {
           </div>
         </div>
 
-        <div className="card">
+        {/* CONTEO POR BARRIO */}
+        <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>CONTEO POR BARRIO</h4>
           <table>
             <thead style={{ background: '#f8f8f8' }}><tr><th style={{ padding: '15px' }}>BARRIO</th><th style={{ padding: '15px' }}>TOTAL</th></tr></thead>
@@ -203,8 +197,9 @@ export default function App() {
         </div>
       </div>
 
+      {/* FORMULARIO REGISTRO VOTANTE */}
       <div className="grid" style={{ marginTop: 40 }}>
-        <div className="card">
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>REGISTRAR VOTANTE</h3>
           <form onSubmit={guardarVotante} className="form" style={{ marginTop: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
@@ -224,13 +219,14 @@ export default function App() {
               <option value="">Seleccionar responsable...</option>
               {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
             </select>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px' }}>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none' }}>
                 {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
             </button>
           </form>
         </div>
 
-        <div className="card">
+        {/* LISTA VOTANTES */}
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>LISTA DE VOTANTES</h3>
           <input placeholder="🔍 Filtrar lista..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ margin: '20px 0', padding: '12px' }} />
           <div className="table-wrap">
@@ -244,8 +240,8 @@ export default function App() {
                     <td style={{ padding: '15px' }}><strong>{v.nombre} {v.apellido}</strong></td>
                     <td style={{ padding: '15px' }}>{v.cedula}</td>
                     <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#2563eb', color: 'white', fontWeight: '700', borderRadius: '8px' }}>EDITAR</button>
-                      <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px' }}>BORRAR</button>
+                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#2563eb', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>EDITAR</button>
+                      <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>BORRAR</button>
                     </td>
                   </tr>
                 ))}
@@ -255,22 +251,23 @@ export default function App() {
         </div>
       </div>
 
+      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 40 }}>
-        <div className="card">
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>REGISTRAR EQUIPO</h3>
           <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20 }}>
             <input placeholder="Nombre Completo" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px' }} />
             <input placeholder="Teléfono" value={formEquipo.telefono} onChange={e => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: '14px' }} />
             <input placeholder="Zona" value={formEquipo.zona} onChange={e => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: '14px' }} />
-            <select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px' }}>
+            <select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd' }}>
               <option value="coordinador">Coordinador</option>
               <option value="jefe_de_campana">Jefe de Campaña</option>
               <option value="candidato">Candidato</option>
             </select>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px' }}>GUARDAR MIEMBRO</button>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none' }}>GUARDAR MIEMBRO</button>
           </form>
         </div>
-        <div className="card">
+        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22 }}>LISTA DEL EQUIPO</h3>
           <table style={{ marginTop: 20 }}>
             <thead style={{ background: '#444', color: 'white' }}><tr><th style={{ padding: '12px' }}>NOMBRE</th><th style={{ padding: '12px' }}>ACCIONES</th></tr></thead>
@@ -279,8 +276,8 @@ export default function App() {
                 <tr key={m.id}>
                   <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
                   <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#2563eb', color: 'white', fontWeight: '700', borderRadius: '8px' }}>EDITAR</button>
-                    <button onClick={async () => { if(confirm("¿Eliminar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px' }}>BORRAR</button>
+                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#2563eb', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>EDITAR</button>
+                    <button onClick={async () => { if(confirm("¿Eliminar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>BORRAR</button>
                   </td>
                 </tr>
               ))}
