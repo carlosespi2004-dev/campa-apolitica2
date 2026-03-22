@@ -52,7 +52,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Estados Formularios
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
@@ -81,12 +80,11 @@ export default function App() {
     setLoading(false);
   }
 
-  // Lógica de Búsqueda y Guardado
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
     const { data } = await supabase.from("padron_importado").select("*").or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`).limit(1).maybeSingle();
-    if (data) setResultadoPadron(data); else alert("No encontrado en el padrón.");
+    if (data) setResultadoPadron(data); else alert("No encontrado.");
   }
 
   async function guardarVotante(e) {
@@ -108,7 +106,6 @@ export default function App() {
     setLoading(false);
   }
 
-  // Función Excel Pro (Mantenida)
   const exportarExcel = async () => {
     const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombreHoja, listaVotantes) => {
@@ -129,7 +126,7 @@ export default function App() {
     crearHoja("LISTA GENERAL", votantes);
     equipo.forEach(m => { const d = votantes.filter(v => v.por_parte_de_id === m.id); if (d.length > 0) crearHoja(m.nombre.substring(0, 25), d); });
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Reporte_Campana_Franco.xlsx`);
+    saveAs(new Blob([buffer]), `Campaña_Franco_Reporte.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
@@ -144,7 +141,6 @@ export default function App() {
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Panel de Campaña Franco</h1>
       </header>
 
-      {/* INDICADORES COMPACTOS */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
         <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px 20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 36, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
@@ -155,14 +151,11 @@ export default function App() {
             <p style={{ textTransform: 'uppercase', fontWeight: '800', fontSize: 11, color: '#C8102E', marginTop: 5 }}>Miembros del equipo</p>
         </div>
 
-        {/* BUSCADOR DE PADRÓN (Foto 4) */}
         <div className="card" style={{ padding: '15px 20px', borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 12, marginBottom: 10, textAlign: 'center' }}>BUSCADOR DE PADRÓN</h4>
-          <div style={{ textAlign: 'left', marginBottom: '10px' }}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <input type="text" value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} placeholder="Número de Cédula" style={{ padding: '10px', width: '100%', borderRadius: '8px', border: '1px solid #ddd' }} />
-              <button onClick={buscarEnPadron} style={{ width: '60px', background: '#C8102E', color: 'white', fontSize: '20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>🔍</button>
-            </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <input type="text" value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} placeholder="Número de Cédula" style={{ padding: '10px', width: '100%', borderRadius: '8px', border: '1px solid #ddd' }} />
+            <button onClick={buscarEnPadron} style={{ width: '60px', background: '#C8102E', color: 'white', fontSize: '20px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>🔍</button>
           </div>
           {resultadoPadron && (
             <div style={{ marginTop: 15, padding: 15, background: '#fef2f2', borderRadius: 8, border: '2px solid #C8102E', textAlign: 'left' }}>
@@ -170,17 +163,15 @@ export default function App() {
               <div style={{ fontSize: '12px', color: '#444', display: 'grid', gap: '4px', marginBottom: '10px' }}>
                 <div><strong>Mesa:</strong> {resultadoPadron.mesa} | <strong>Orden:</strong> {resultadoPadron.orden}</div>
                 <div><strong>Local:</strong> {resultadoPadron.local_votacion}</div>
+                <div><strong>Seccional:</strong> {resultadoPadron.seccional || 'N/A'}</div>
               </div>
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
-                style={{ background: '#16a34a', color: 'white', padding: '12px', width: '100%', fontSize: '14px', fontWeight: '900', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                ASIGNAR AL FORMULARIO
-              </button>
+                style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '14px', fontWeight: '900', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>ASIGNAR AL FORMULARIO</button>
             </div>
           )}
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRAR VOTANTE (Foto 3) */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
@@ -209,6 +200,11 @@ export default function App() {
                 <input type="text" value={formVotante.orden} onChange={e => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
               </div>
             </div>
+            {/* CAMPO SECCIONAL RESTAURADO */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Seccional</label>
+              <input type="text" value={formVotante.seccional} onChange={e => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
+            </div>
             <div style={{ textAlign: 'left' }}>
               <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Barrio</label>
               <select value={formVotante.barrio} onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }} required>
@@ -223,13 +219,10 @@ export default function App() {
                 {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
             </div>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
-                {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
-            </button>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer' }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
           </form>
         </div>
 
-        {/* LISTA DE VOTANTES */}
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DE VOTANTES</h3>
           <input type="text" placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', margin: '20px 0', borderRadius: '10px', border: '1px solid #ddd' }} />
@@ -244,8 +237,8 @@ export default function App() {
                     <td style={{ padding: '15px' }}><strong>{v.nombre} {v.apellido}</strong></td>
                     <td style={{ padding: '15px' }}>{v.cedula}</td>
                     <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
-                      <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
+                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>EDITAR</button>
+                      <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>BORRAR</button>
                     </td>
                   </tr>
                 ))}
@@ -255,35 +248,18 @@ export default function App() {
         </div>
       </div>
 
-      {/* GESTIÓN EQUIPO (Foto 5 y 6) */}
+      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
           <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20, display: 'grid', gap: '15px' }}>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Nombre Completo</label>
-              <input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Teléfono</label>
-              <input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Zona</label>
-              <input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Rol</label>
-              <select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }}>
-                <option value="coordinador">Coordinador</option>
-                <option value="jefe_de_campana">Jefe de Campaña</option>
-                <option value="candidato">Candidato</option>
-              </select>
-            </div>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>GUARDAR MIEMBRO</button>
+            <div style={{ textAlign: 'left' }}><label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Nombre Completo</label><input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} /></div>
+            <div style={{ textAlign: 'left' }}><label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Teléfono</label><input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} /></div>
+            <div style={{ textAlign: 'left' }}><label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Zona</label><input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} /></div>
+            <div style={{ textAlign: 'left' }}><label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Rol</label><select value={formEquipo.rol} onChange={e => setFormEquipo({ ...formEquipo, rol: e.target.value })} style={{ padding: '14px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }}><option value="coordinador">Coordinador</option><option value="jefe_de_campana">Jefe de Campaña</option><option value="candidato">Candidato</option></select></div>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none' }}>GUARDAR MIEMBRO</button>
           </form>
         </div>
-
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DEL EQUIPO</h3>
           <table style={{ width: '100%', marginTop: 20 }}>
@@ -293,8 +269,8 @@ export default function App() {
                 <tr key={m.id}>
                   <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
                   <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
-                    <button onClick={async () => { if(confirm("¿Borrar miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
+                    <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>EDITAR</button>
+                    <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none' }}>BORRAR</button>
                   </td>
                 </tr>
               ))}
@@ -302,11 +278,8 @@ export default function App() {
           </table>
         </div>
       </div>
-
-      {/* Botón de Excel flotante o al final */}
-      <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 20, right: 20, background: '#16a34a', color: 'white', padding: '15px 25px', borderRadius: '50px', fontWeight: '800', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', cursor: 'pointer' }}>
-        📥 EXPORTAR EXCEL PRO
-      </button>
+      
+      <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 20, right: 20, background: '#16a34a', color: 'white', padding: '15px 25px', borderRadius: '50px', fontWeight: '800', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', cursor: 'pointer' }}>📥 EXPORTAR EXCEL PRO</button>
     </div>
   );
 }
