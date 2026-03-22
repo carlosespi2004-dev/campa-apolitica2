@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-// Librerías necesarias para el Excel y para evitar la pantalla blanca
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
@@ -155,10 +154,11 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', padding: isMobile ? '10px' : '20px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
+      {/* HEADER ACTUALIZADO */}
       <header style={{ textAlign: 'center', marginBottom: 30, position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ position: isMobile ? 'static' : 'absolute', right: 0, top: 0, width: isMobile ? '100%' : 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none', marginBottom: 20 }}>Cerrar Sesión</button>
-        <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 14, margin: 0, letterSpacing: '2px' }}>HAGAMOS QUE SUCEDA</h2>
-        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Campaña Franco</h1>
+        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>Hagamos que suceda</h1>
+        <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>Darío Carmona Concejal 2026</h2>
       </header>
 
       {/* DASHBOARD INDICADORES */}
@@ -209,7 +209,13 @@ export default function App() {
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: 10, marginBottom: 10 }}>CONTEO POR BARRIO</h4>
           <div style={{ overflowY: 'auto', maxHeight: '250px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead><tr style={{ color: '#C8102E', fontSize: '12px' }}><th style={{ textAlign: 'left', padding: '10px' }}>BARRIO</th><th style={{ textAlign: 'right', padding: '10px' }}>TOTAL</th></tr></thead>
+              {/* CABECERA CORREGIDA Y VISIBLE */}
+              <thead>
+                <tr style={{ color: '#C8102E', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>
+                  <th style={{ textAlign: 'left', padding: '10px' }}>Barrio</th>
+                  <th style={{ textAlign: 'right', padding: '10px' }}>Total</th>
+                </tr>
+              </thead>
               <tbody>
                 {conteoBarrio.map(b => (
                   <tr key={b.name} style={{ borderBottom: '1px solid #fafafa' }}><td style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}>{b.name}</td><td style={{ padding: '8px', fontSize: '13px', fontWeight: '800', textAlign: 'right', color: '#C8102E' }}>{b.total}</td></tr>
