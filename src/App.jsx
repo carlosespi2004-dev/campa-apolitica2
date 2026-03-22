@@ -8,7 +8,6 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
-// LISTADO DE BARRIOS ACTUALIZADO
 const LISTA_BARRIOS = [
   "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael", 
   "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián", 
@@ -36,7 +35,6 @@ function LoginScreen({ onLogin, loading }) {
             <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Contraseña</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '18px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', marginTop: '5px' }} />
           </div>
-          {/* BOTON INGRESAR - Vuelve a rojo normal con letra blanca */}
           <button type="submit" disabled={loading} style={{ background: '#C8102E', color: 'white', fontWeight: '900', fontFamily: 'Montserrat', padding: '20px', fontSize: '18px', borderRadius: '10px', cursor: 'pointer', border: 'none' }}>
             {loading ? "INICIANDO..." : "INGRESAR AL PANEL"}
           </button>
@@ -127,19 +125,53 @@ export default function App() {
     setLoading(false);
   }
 
+  // --- MEJORA DE EXCEL POR PESTAÑAS Y DATOS ESPECÍFICOS ---
   const exportarExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(votantes);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Votantes");
-    XLSX.writeFile(wb, "Reporte_Campana.xlsx");
+
+    // Crear una pestaña para cada integrante del equipo
+    equipo.forEach(miembro => {
+      const votantesDeMiembro = votantes
+        .filter(v => v.por_parte_de_id === miembro.id)
+        .map((v, index) => ({
+          "Número de registro": index + 1,
+          "Nombre": v.nombre,
+          "Apellido": v.apellido,
+          "Cedula": v.cedula,
+          "Orden": v.orden,
+          "Mesa": v.mesa,
+          "Seccional": v.seccional
+        }));
+
+      if (votantesDeMiembro.length > 0) {
+        const ws = XLSX.utils.json_to_sheet(votantesDeMiembro);
+        XLSX.utils.book_append_sheet(wb, ws, miembro.nombre.substring(0, 30)); // Máx 31 caracteres para nombre de hoja
+      }
+    });
+
+    // Pestaña General (Todos los votantes)
+    const dataGeneral = votantes.map((v, index) => ({
+      "Número de registro": index + 1,
+      "Nombre": v.nombre,
+      "Apellido": v.apellido,
+      "Cedula": v.cedula,
+      "Orden": v.orden,
+      "Mesa": v.mesa,
+      "Seccional": v.seccional,
+      "Captado por": v.por_parte_de_nombre
+    }));
+    const wsGeneral = XLSX.utils.json_to_sheet(dataGeneral);
+    XLSX.utils.book_append_sheet(wb, wsGeneral, "LISTA GENERAL");
+
+    XLSX.writeFile(wb, `Campaña_Franco_Reporte.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
   return (
-    <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '60px' }}>
+    <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '80px' }}>
       <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '900', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
           <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '4px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
@@ -186,7 +218,6 @@ export default function App() {
       <div className="grid">
         <div className="card" style={{ borderRadius: '12px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px' }}>RENDIMIENTO POR EQUIPO</h4>
-          {/* BOTON EXPORTAR A EXCEL - Mantiene rojo normal */}
           <button onClick={exportarExcel} style={{ background: '#C8102E', color: 'white', margin: '15px 0', width: 'auto', fontWeight: '800', padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EXPORTAR A EXCEL</button>
           <div style={{ display: 'grid', gap: 20 }}>
             {rendimientoEquipo.map(m => (
@@ -269,7 +300,6 @@ export default function App() {
                 {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
             </div>
-            {/* BOTON GUARDAR REGISTRO - Vuelve a rojo normal con letra blanca */}
             <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', fontSize: 16, borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>
                 {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
             </button>
@@ -293,7 +323,6 @@ export default function App() {
                     <td style={{ padding: '15px' }}><strong>{v.nombre} {v.apellido}</strong></td>
                     <td style={{ padding: '15px' }}>{v.cedula}</td>
                     <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                      {/* BOTON EDITAR - Vuelve a rojo normal con letra blanca */}
                       <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
                       <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
                     </td>
@@ -307,7 +336,7 @@ export default function App() {
 
       {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ marginTop: 40 }}>
-        <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
+        <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
           <form onSubmit={guardarEquipo} className="form" style={{ marginTop: 20, display: 'grid', gap: '15px' }}>
             <div style={{ textAlign: 'left' }}>
@@ -330,7 +359,6 @@ export default function App() {
                 <option value="candidato">Candidato</option>
               </select>
             </div>
-            {/* BOTON GUARDAR MIEMBRO - Vuelve a rojo normal con letra blanca */}
             <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '18px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '10px' }}>GUARDAR MIEMBRO</button>
           </form>
         </div>
@@ -343,7 +371,6 @@ export default function App() {
                 <tr key={m.id}>
                   <td style={{ padding: '15px' }}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
                   <td style={{ padding: '15px', display: 'flex', gap: 10 }}>
-                    {/* BOTON EDITAR EQUIPO - Vuelve a rojo normal con letra blanca */}
                     <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '10px 15px', background: '#C8102E', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>EDITAR</button>
                     <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '10px 15px', background: '#dc2626', color: 'white', fontWeight: '700', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>BORRAR</button>
                   </td>
