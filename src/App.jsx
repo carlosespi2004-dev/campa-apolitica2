@@ -141,9 +141,9 @@ export default function App() {
       <header style={{ textAlign: 'center', marginBottom: 30, position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ position: isMobile ? 'static' : 'absolute', right: 0, top: 0, width: isMobile ? '100%' : 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none', marginBottom: isMobile ? '20px' : '0' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>HAGAMOS QUE SUCEDA</h2>
+          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>Darío Carmona Concejal 2026</h2>
         </div>
-        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Campaña Franco</h1>
+        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>HAGAMOS QUE SUCEDA</h1>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
