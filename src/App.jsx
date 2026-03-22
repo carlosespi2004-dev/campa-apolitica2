@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+// Librerías necesarias para el Excel y para evitar la pantalla blanca
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
@@ -76,22 +77,22 @@ export default function App() {
 
   async function cargarDatos() {
     setLoading(true);
-    const [v, e] = await Promise.all([
-      supabase.from("votantes").select("*").order("created_at", { ascending: false }),
-      supabase.from("equipo").select("*").order("created_at", { ascending: false })
-    ]);
-    setVotantes(v.data || []);
-    setEquipo(e.data || []);
+    try {
+      const [v, e] = await Promise.all([
+        supabase.from("votantes").select("*").order("created_at", { ascending: false }),
+        supabase.from("equipo").select("*").order("created_at", { ascending: false })
+      ]);
+      setVotantes(v.data || []);
+      setEquipo(e.data || []);
+    } catch (err) { console.error(err); }
     setLoading(false);
   }
 
-  // --- CÁLCULOS DE RENDIMIENTO Y BARRIOS ---
   const rendimientoEquipo = useMemo(() => {
-    const totalVotantes = votantes.length;
-    return equipo.map(miembro => {
-      const cantidad = votantes.filter(v => v.por_parte_de_id === miembro.id).length;
-      const porcentaje = totalVotantes > 0 ? Math.round((cantidad / totalVotantes) * 100) : 0;
-      return { ...miembro, cantidad, porcentaje };
+    const total = votantes.length;
+    return equipo.map(m => {
+      const cant = votantes.filter(v => v.por_parte_de_id === m.id).length;
+      return { ...m, cantidad: cant, porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0 };
     }).sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
 
@@ -112,8 +113,8 @@ export default function App() {
     e.preventDefault();
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     setLoading(true);
-    const responsable = equipo.find(m => m.id === formVotante.por_parte_de_id);
-    const payload = { ...formVotante, cedula_limpia: normalizarCedula(formVotante.cedula), por_parte_de_nombre: responsable?.nombre || "" };
+    const resp = equipo.find(m => m.id === formVotante.por_parte_de_id);
+    const payload = { ...formVotante, cedula_limpia: normalizarCedula(formVotante.cedula), por_parte_de_nombre: resp?.nombre || "" };
     const { error } = editIdVotante ? await supabase.from("votantes").update(payload).eq("id", editIdVotante) : await supabase.from("votantes").insert([payload]);
     if (!error) { setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "" }); setEditIdVotante(null); cargarDatos(); }
     setLoading(false);
@@ -129,25 +130,25 @@ export default function App() {
 
   const exportarExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-    const crearHoja = (nombreHoja, listaVotantes) => {
-      const sheet = workbook.addWorksheet(nombreHoja);
-      sheet.columns = [{ key: 'nro', width: 8 }, { key: 'nombre', width: 25 }, { key: 'apellido', width: 25 }, { key: 'cedula', width: 15 }, { key: 'orden', width: 10 }, { key: 'mesa', width: 10 }, { key: 'seccional', width: 12 }, { key: 'local', width: 25 }, { key: 'captado', width: 25 }];
+    const crearHoja = (nombre, lista) => {
+      const sheet = workbook.addWorksheet(nombre);
+      sheet.columns = [{key:'nro',width:8},{key:'nom',width:25},{key:'ape',width:25},{key:'ci',width:15},{key:'ord',width:10},{key:'mes',width:10},{key:'sec',width:12},{key:'loc',width:25},{key:'cap',width:25}];
       sheet.addRow(["HAGAMOS QUE SUCEDA"]); sheet.mergeCells('A1:I1');
-      const r1 = sheet.getRow(1); r1.height = 35; r1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } }; r1.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 20, bold: true }; r1.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+      const r1 = sheet.getRow(1); r1.height = 35; r1.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC8102E'}}; r1.getCell(1).font={color:{argb:'FFFFFFFF'},size:20,bold:true}; r1.getCell(1).alignment={vertical:'middle',horizontal:'center'};
       sheet.addRow(["Lista de futuros votantes"]); sheet.mergeCells('A2:I2');
-      const r2 = sheet.getRow(2); r2.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; r2.getCell(1).font = { color: { argb: 'FF000000' }, size: 12, italic: true }; r2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+      const r2 = sheet.getRow(2); r2.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEE2E2'}}; r2.getCell(1).font={color:{argb:'FF000000'},size:12,italic:true}; r2.getCell(1).alignment={vertical:'middle',horizontal:'center'};
       sheet.addRow([]);
-      const tableHeader = sheet.addRow(["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Local", "Captado por"]);
-      tableHeader.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } }; cell.font = { color: { argb: 'FFFFFFFF' }, bold: true }; cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} }; });
-      listaVotantes.forEach((v, index) => {
-        const row = sheet.addRow([index + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
-        if (index % 2 !== 0) { row.eachCell((cell) => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } }; }); }
+      const header = sheet.addRow(["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Local", "Captado por"]);
+      header.eachCell(c => { c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC8102E'}}; c.font={color:{argb:'FFFFFFFF'},bold:true}; });
+      lista.forEach((v, i) => {
+        const row = sheet.addRow([i+1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
+        if (i%2!==0) row.eachCell(c => c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFEE2E2'}});
       });
     };
     crearHoja("LISTA GENERAL", votantes);
     equipo.forEach(m => { const d = votantes.filter(v => v.por_parte_de_id === m.id); if (d.length > 0) crearHoja(m.nombre.substring(0, 25), d); });
     const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), `Campaña_Franco_Reporte.xlsx`);
+    saveAs(new Blob([buffer]), `Campaña_Franco.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
@@ -155,14 +156,12 @@ export default function App() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', padding: isMobile ? '10px' : '20px', maxWidth: '1200px', margin: '0 auto', paddingBottom: '100px' }}>
       <header style={{ textAlign: 'center', marginBottom: 30, position: 'relative' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: isMobile ? 'static' : 'absolute', right: 0, top: 0, width: isMobile ? '100%' : 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none', marginBottom: isMobile ? '20px' : '0' }}>Cerrar Sesión</button>
-        <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: isMobile ? 14 : 16, margin: 0, letterSpacing: '2px' }}>HAGAMOS QUE SUCEDA</h2>
-        </div>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: isMobile ? 'static' : 'absolute', right: 0, top: 0, width: isMobile ? '100%' : 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none', marginBottom: 20 }}>Cerrar Sesión</button>
+        <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 14, margin: 0, letterSpacing: '2px' }}>HAGAMOS QUE SUCEDA</h2>
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 22 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>Campaña Franco</h1>
       </header>
 
-      {/* INDICADORES Y BUSCADOR */}
+      {/* DASHBOARD INDICADORES */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 15, marginBottom: 30 }}>
         <div className="stat" style={{ borderLeft: '8px solid #C8102E', padding: '15px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
             <h3 style={{ fontSize: 28, fontWeight: '900', margin: 0 }}>{votantes.length}</h3>
@@ -182,7 +181,6 @@ export default function App() {
             <div style={{ marginTop: 10, padding: 10, background: '#fef2f2', borderRadius: 8, border: '1px solid #C8102E', textAlign:'left' }}>
               <p style={{ fontSize: 13, margin: '0 0 5px 0' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
               <div style={{fontSize:'11px', marginBottom:'5px', color: '#444'}}>Mesa: {resultadoPadron.mesa} | Orden: {resultadoPadron.orden} | Sec: {resultadoPadron.seccional}</div>
-              <div style={{fontSize:'11px', marginBottom:'10px', color: '#C8102E', fontWeight: '700'}}>{resultadoPadron.local_votacion}</div>
               <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} 
                 style={{ background: '#16a34a', color: 'white', padding: '10px', width: '100%', fontSize: '12px', fontWeight: '900', border: 'none', borderRadius: '8px' }}>ASIGNAR AL FORMULARIO</button>
             </div>
@@ -190,10 +188,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* --- SECCIÓN RENDIMIENTO Y BARRIOS RESTAURADA --- */}
+      {/* RENDIMIENTO Y BARRIOS */}
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25, marginBottom: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '20px' }}>
-          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>RENDIMIENTO POR EQUIPO</h4>
+          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: 10, marginBottom: 20 }}>RENDIMIENTO POR EQUIPO</h4>
           <div style={{ display: 'grid', gap: 15 }}>
             {rendimientoEquipo.map(m => (
               <div key={m.id}>
@@ -207,23 +205,14 @@ export default function App() {
             ))}
           </div>
         </div>
-
         <div className="card" style={{ borderRadius: '15px', padding: '20px' }}>
-          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>CONTEO POR BARRIO</h4>
+          <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 18, borderBottom: '2px solid #eee', paddingBottom: 10, marginBottom: 10 }}>CONTEO POR BARRIO</h4>
           <div style={{ overflowY: 'auto', maxHeight: '250px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ color: '#C8102E', fontSize: '12px' }}>
-                  <th style={{ textAlign: 'left', padding: '10px' }}>BARRIO</th>
-                  <th style={{ textAlign: 'right', padding: '10px' }}>TOTAL</th>
-                </tr>
-              </thead>
+              <thead><tr style={{ color: '#C8102E', fontSize: '12px' }}><th style={{ textAlign: 'left', padding: '10px' }}>BARRIO</th><th style={{ textAlign: 'right', padding: '10px' }}>TOTAL</th></tr></thead>
               <tbody>
                 {conteoBarrio.map(b => (
-                  <tr key={b.name} style={{ borderBottom: '1px solid #fafafa' }}>
-                    <td style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}>{b.name}</td>
-                    <td style={{ padding: '8px', fontSize: '13px', fontWeight: '800', textAlign: 'right', color: '#C8102E' }}>{b.total}</td>
-                  </tr>
+                  <tr key={b.name} style={{ borderBottom: '1px solid #fafafa' }}><td style={{ padding: '8px', fontSize: '13px', fontWeight: '700' }}>{b.name}</td><td style={{ padding: '8px', fontSize: '13px', fontWeight: '800', textAlign: 'right', color: '#C8102E' }}>{b.total}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -231,12 +220,12 @@ export default function App() {
         </div>
       </div>
 
-      {/* FORMULARIOS REGISTRO VOTANTE Y LISTADO */}
+      {/* FORMULARIO REGISTRO VOTANTE */}
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25, marginBottom: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '20px' : '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
-          <form onSubmit={guardVotante} style={{ display: 'grid', gap: '15px', marginTop: 15 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <form onSubmit={guardarVotante} style={{ display: 'grid', gap: '15px', marginTop: 15 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Nombre</label><input type="text" value={formVotante.nombre} onChange={e => setFormVotante({...formVotante, nombre: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Apellido</label><input type="text" value={formVotante.apellido} onChange={e => setFormVotante({...formVotante, apellido: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
@@ -245,54 +234,30 @@ export default function App() {
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Mesa</label><input type="text" value={formVotante.mesa} onChange={e => setFormVotante({...formVotante, mesa: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Orden</label><input type="text" value={formVotante.orden} onChange={e => setFormVotante({...formVotante, orden: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10 }}>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Seccional</label><input type="text" value={formVotante.seccional} onChange={e => setFormVotante({...formVotante, seccional: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
               <div><label style={{fontWeight:'700', fontSize:'12px'}}>Local Votación</label><input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({...formVotante, local_votacion: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             </div>
-            <div>
-              <label style={{fontWeight:'700', fontSize:'12px'}}>Barrio</label>
-              <select value={formVotante.barrio} onChange={e => setFormVotante({...formVotante, barrio: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}>
-                <option value="">Elegir barrio...</option>
-                {LISTA_BARRIOS.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{fontWeight:'700', fontSize:'12px'}}>Responsable</label>
-              <select value={formVotante.por_parte_de_id} onChange={e => setFormVotante({...formVotante, por_parte_de_id: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}>
-                <option value="">Seleccionar responsable...</option>
-                {equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
-              </select>
-            </div>
+            <div><label style={{fontWeight:'700', fontSize:'12px'}}>Barrio</label><select value={formVotante.barrio} onChange={e => setFormVotante({...formVotante, barrio: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map(b => <option key={b} value={b}>{b}</option>)}</select></div>
+            <div><label style={{fontWeight:'700', fontSize:'12px'}}>Responsable</label><select value={formVotante.por_parte_de_id} onChange={e => setFormVotante({...formVotante, por_parte_de_id: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}><option value="">Seleccionar responsable...</option>{equipo.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
             <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '15px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>{editIdVotante ? "ACTUALIZAR" : "GUARDAR REGISTRO"}</button>
           </form>
         </div>
-
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '15px' : '20px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>LISTA DE VOTANTES</h3>
           <input type="text" placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', margin: '15px 0', borderRadius: '10px', border: '1px solid #ddd' }} />
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', minWidth: '400px' }}>
-              <thead style={{ background: '#C8102E', color: 'white' }}>
-                <tr><th style={{padding:'10px'}}>NOMBRE</th><th style={{padding:'10px'}}>CÉDULA</th><th style={{padding:'10px'}}>ACCIONES</th></tr>
-              </thead>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', minWidth: '400px' }}>
+              <thead style={{ background: '#C8102E', color: 'white' }}><tr><th style={{padding:'10px'}}>NOMBRE</th><th style={{padding:'10px'}}>CÉDULA</th><th style={{padding:'10px'}}>ACCIONES</th></tr></thead>
               <tbody>
                 {votantes.filter(v => (v.nombre + v.apellido).toLowerCase().includes(busquedaVotante.toLowerCase())).slice(0, 10).map(v => (
-                  <tr key={v.id} style={{borderBottom:'1px solid #eee'}}>
-                    <td style={{padding:'10px'}}><strong>{v.nombre}</strong></td>
-                    <td style={{padding:'10px'}}>{v.cedula}</td>
-                    <td style={{padding:'10px', display:'flex', gap:5}}>
-                      <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '5px 10px', background: '#C8102E', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>EDITAR</button>
-                      <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '5px 10px', background: '#444', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>X</button>
-                    </td>
-                  </tr>
+                  <tr key={v.id} style={{borderBottom:'1px solid #eee'}}><td style={{padding:'10px'}}><strong>{v.nombre}</strong></td><td style={{padding:'10px'}}>{v.cedula}</td><td style={{padding:'10px', display:'flex', gap:5}}><button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); }} style={{ padding: '5px 10px', background: '#C8102E', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>EDITAR</button><button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '5px 10px', background: '#444', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>X</button></td></tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+            </table></div>
         </div>
       </div>
 
-      {/* GESTIÓN DE EQUIPO */}
+      {/* GESTIÓN EQUIPO */}
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 25 }}>
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '20px' : '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>REGISTRAR EQUIPO</h3>
@@ -300,42 +265,23 @@ export default function App() {
             <div><label style={{fontWeight:'700', fontSize:'12px'}}>Nombre Completo</label><input type="text" value={formEquipo.nombre} onChange={e => setFormEquipo({...formEquipo, nombre: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             <div><label style={{fontWeight:'700', fontSize:'12px'}}>Teléfono</label><input type="text" value={formEquipo.telefono} onChange={e => setFormEquipo({...formEquipo, telefono: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
             <div><label style={{fontWeight:'700', fontSize:'12px'}}>Zona Asignada</label><input type="text" value={formEquipo.zona} onChange={e => setFormEquipo({...formEquipo, zona: e.target.value})} style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}} /></div>
-            <div>
-              <label style={{fontWeight:'700', fontSize:'12px'}}>Rol</label>
-              <select value={formEquipo.rol} onChange={e => setFormEquipo({...formEquipo, rol: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}>
-                <option value="coordinador">Coordinador</option>
-                <option value="jefe_de_campana">Jefe de Campaña</option>
-                <option value="candidato">Candidato</option>
-              </select>
-            </div>
-            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '15px', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>{editIdEquipo ? "ACTUALIZAR MIEMBRO" : "GUARDAR MIEMBRO"}</button>
+            <div><label style={{fontWeight:'700', fontSize:'12px'}}>Rol</label><select value={formEquipo.rol} onChange={e => setFormEquipo({...formEquipo, rol: e.target.value})} required style={{padding:'12px', width:'100%', borderRadius:'8px', border:'1px solid #ddd', fontSize:'16px'}}><option value="coordinador">Coordinador</option><option value="jefe_de_campana">Jefe de Campaña</option><option value="candidato">Candidato</option></select></div>
+            <button type="submit" style={{ background: '#C8102E', color: 'white', fontWeight: '900', padding: '15px', borderRadius: '10px', border: 'none' }}>{editIdEquipo ? "ACTUALIZAR" : "GUARDAR MIEMBRO"}</button>
           </form>
         </div>
-
         <div className="card" style={{ borderRadius: '15px', padding: isMobile ? '15px' : '20px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 10, fontSize: 18, textAlign: 'center' }}>LISTA DEL EQUIPO</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', minWidth: '400px' }}>
-              <thead style={{ background: '#444', color: 'white' }}>
-                <tr><th style={{padding:'10px'}}>NOMBRE</th><th style={{padding:'10px'}}>ACCIONES</th></tr>
-              </thead>
+          <div style={{ overflowX: 'auto' }}><table style={{ width: '100%', minWidth: '400px' }}>
+              <thead style={{ background: '#444', color: 'white' }}><tr><th style={{padding:'10px'}}>NOMBRE</th><th style={{padding:'10px'}}>ACCIONES</th></tr></thead>
               <tbody>
                 {equipo.map(m => (
-                  <tr key={m.id} style={{borderBottom:'1px solid #eee'}}>
-                    <td style={{padding:'10px'}}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td>
-                    <td style={{padding:'10px', display:'flex', gap:5}}>
-                      <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '5px 10px', background: '#C8102E', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>EDITAR</button>
-                      <button onClick={async () => { if(confirm("¿Eliminar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '5px 10px', background: '#444', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>X</button>
-                    </td>
-                  </tr>
+                  <tr key={m.id} style={{borderBottom:'1px solid #eee'}}><td style={{padding:'10px'}}><strong>{m.nombre}</strong><br/><small>{m.rol} - {m.zona}</small></td><td style={{padding:'10px', display:'flex', gap:5}}><button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); }} style={{ padding: '5px 10px', background: '#C8102E', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>EDITAR</button><button onClick={async () => { if(confirm("¿Eliminar?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: '5px 10px', background: '#444', color: 'white', border: 'none', borderRadius: '5px', fontSize:'10px' }}>X</button></td></tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+            </table></div>
         </div>
       </div>
 
-      {/* BOTÓN EXCEL FLOTANTE */}
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '15px 30px', borderRadius: '50px', fontWeight: '800', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', cursor: 'pointer', width: isMobile ? '80%' : 'auto', zIndex: 1000 }}>📥 EXPORTAR EXCEL PRO</button>
     </div>
   );
