@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
-import * as XLSX from "xlsx";
+// Importamos las nuevas librerías para diseño profesional
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -125,39 +127,82 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- EXPORTACIÓN CON DISEÑO VISUAL ---
-  const exportarExcel = () => {
-    const wb = XLSX.utils.book_new();
+  // --- FUNCIÓN DE EXCEL PROFESIONAL CON COLORES Y TAMAÑOS ---
+  const exportarExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
 
-    const generarEstructura = (lista) => {
-      const header = [
-        ["HAGAMOS QUE SUCEDA"],
-        ["Lista de futuros votantes"],
-        [],
-        ["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Captado por"]
+    const crearHoja = (nombreHoja, listaVotantes) => {
+      const sheet = workbook.addWorksheet(nombreHoja);
+
+      // Configurar columnas y anchos (TAMANIOS)
+      sheet.columns = [
+        { header: 'Nro', key: 'nro', width: 8 },
+        { header: 'Nombre', key: 'nombre', width: 25 },
+        { header: 'Apellido', key: 'apellido', width: 25 },
+        { header: 'Cedula', key: 'cedula', width: 15 },
+        { header: 'Orden', key: 'orden', width: 10 },
+        { header: 'Mesa', key: 'mesa', width: 10 },
+        { header: 'Seccional', key: 'seccional', width: 12 },
+        { header: 'Captado por', key: 'captado', width: 25 }
       ];
-      
-      const rows = lista.map((v, i) => [
-        i + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.por_parte_de_nombre
-      ]);
 
-      return XLSX.utils.aoa_to_sheet([...header, ...rows]);
+      // Insertar Títulos Superiores (Fila 1 y 2)
+      sheet.insertRow(1, ["HAGAMOS QUE SUCEDA"]);
+      sheet.insertRow(2, ["Lista de futuros votantes"]);
+      sheet.mergeCells('A1:H1');
+      sheet.mergeCells('A2:H2');
+
+      // ESTILO: Hagamos que suceda (Fondo Rojo, Letra Blanca)
+      const headerRow1 = sheet.getRow(1);
+      headerRow1.height = 35;
+      headerRow1.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
+      headerRow1.getCell(1).font = { color: { argb: 'FFFFFFFF' }, size: 20, bold: true, name: 'Montserrat' };
+      headerRow1.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // ESTILO: Subtítulo (Fondo Rojo Claro/Rosa, Letra Negra)
+      const headerRow2 = sheet.getRow(2);
+      headerRow2.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      headerRow2.getCell(1).font = { color: { argb: 'FF000000' }, size: 12, italic: true };
+      headerRow2.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+      // ESTILO: Cabecera de Tabla (Fila 4) - Rojo Fuerte
+      const tableHeader = sheet.getRow(4);
+      tableHeader.values = ["Nro", "Nombre", "Apellido", "Cedula", "Orden", "Mesa", "Seccional", "Captado por"];
+      tableHeader.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC8102E' } };
+        cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+        cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+      });
+
+      // Agregar datos y aplicar colores alternos (Rosado claro)
+      listaVotantes.forEach((v, index) => {
+        const row = sheet.addRow([
+          index + 1, v.nombre, v.apellido, v.cedula, v.orden, v.mesa, v.seccional, v.por_parte_de_nombre
+        ]);
+        
+        // Filas pares color rosado suave
+        if (index % 2 !== 0) {
+          row.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+          });
+        }
+      });
     };
 
-    // 1. Pestaña General siempre primero
-    const wsGeneral = generarEstructura(votantes);
-    XLSX.utils.book_append_sheet(wb, wsGeneral, "LISTA GENERAL");
+    // 1. Siempre la LISTA GENERAL primero
+    crearHoja("LISTA GENERAL", votantes);
 
-    // 2. Pestañas por equipo
+    // 2. Una pestaña por miembro del equipo
     equipo.forEach(miembro => {
-      const datosMiembro = votantes.filter(v => v.por_parte_de_id === miembro.id);
-      if (datosMiembro.length > 0) {
-        const wsMiembro = generarEstructura(datosMiembro);
-        XLSX.utils.book_append_sheet(wb, wsMiembro, miembro.nombre.substring(0, 30));
+      const filtrados = votantes.filter(v => v.por_parte_de_id === miembro.id);
+      if (filtrados.length > 0) {
+        crearHoja(miembro.nombre.substring(0, 25), filtrados);
       }
     });
 
-    XLSX.writeFile(wb, "Reporte_Campana_Franco.xlsx");
+    // Descargar el archivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Campaña_Franco_Reporte.xlsx`);
   };
 
   if (!session) return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
@@ -165,9 +210,9 @@ export default function App() {
   return (
     <div className="container" style={{ fontFamily: 'Inter, sans-serif', paddingBottom: '80px' }}>
       <header style={{ textAlign: 'center', marginBottom: 40, position: 'relative', paddingTop: '20px' }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '900', padding: '12px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
+        <button onClick={() => supabase.auth.signOut()} style={{ position: 'absolute', right: 0, top: 0, width: 'auto', background: '#C8102E', color: 'white', fontWeight: '800', padding: '10px 20px', borderRadius: '10px', border: 'none' }}>Cerrar Sesión</button>
         <div style={{ marginBottom: 10 }}>
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '3px' }}>HAGAMOS QUE SUCEDA</h2>
+          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#6B6B6B', fontSize: 16, margin: 0, letterSpacing: '4px' }}>HAGAMOS QUE SUCEDA</h2>
         </div>
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', fontSize: isMobile ? 26 : 42, color: '#C8102E', margin: '5px 0', textTransform: 'uppercase' }}>
           Panel de Campaña Franco
@@ -243,6 +288,7 @@ export default function App() {
         </div>
       </div>
 
+      {/* FORMULARIOS (Igual que antes pero integrando etiquetas arriba) */}
       <div className="grid" style={{ marginTop: 40 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '30px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>REGISTRAR VOTANTE</h3>
@@ -272,10 +318,6 @@ export default function App() {
               </div>
             </div>
             <div style={{ textAlign: 'left' }}>
-              <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Local de Votación</label>
-              <input type="text" value={formVotante.local_votacion} onChange={e => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
               <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Seccional</label>
               <input type="text" value={formVotante.seccional} onChange={e => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ padding: '14px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
             </div>
@@ -303,7 +345,7 @@ export default function App() {
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '3px solid #C8102E', paddingBottom: 15, fontSize: 22, textAlign: 'center' }}>LISTA DE VOTANTES</h3>
           <div style={{ textAlign: 'left', margin: '20px 0' }}>
             <label style={{ fontWeight: '700', fontSize: '14px', color: '#333' }}>Filtrar lista</label>
-            <input type="text" placeholder="🔍 Buscar..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
+            <input type="text" placeholder="🔍 Buscar por nombre o cédula..." value={busquedaVotante} onChange={e => setBusquedaVotante(e.target.value)} style={{ padding: '12px', width: '100%', marginTop: '5px', borderRadius: '10px', border: '1px solid #ddd' }} />
           </div>
           <div className="table-wrap">
             <table style={{ width: '100%' }}>
