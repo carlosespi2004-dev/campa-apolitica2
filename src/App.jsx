@@ -8,17 +8,16 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
-// LISTA DE BARRIOS DE PRESIDENTE FRANCO
+// --- NUEVO LISTADO DE BARRIOS ACTUALIZADO ---
 const LISTA_BARRIOS = [
-  "Santa Clara", "Sagrado Corazón de Jesús", "San Miguel", "San Lorenzo",
-  "Fátima 1", "Santo Tomás", "Área 5", "San Sebastián", "Centro",
-  "María Auxiliadora", "San José Obrero", "San Juan", "Villa Baja",
-  "Fátima 2", "San Antonio", "San Rafael", "Las Mercedes", "San Roque",
-  "Santa Rosa", "San Francisco", "San Isidro", "Santo Domingo",
-  "Kilómetro 9 Monday", "Kilómetro 10 Monday", "San Jorge",
-  "Fray Luis de Bolaños", "Colonia Alfredo Pla", "Medio Mundo",
-  "Puerto Flores", "Península", "Puerto Barreto", "Joyvy Miri Poty",
-  "8 de Diciembre", "Puerto Giménez", "Puerto Bertoni"
+  "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael", 
+  "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián", 
+  "San Francisco", "San Isidro", "Sagrado Corazón de Jesús", "San Miguel", 
+  "San Lorenzo", "San Jorge", "Santo Domingo", "San Pablo", 
+  "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Área 5", "CONAVI", 
+  "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", 
+  "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday", 
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
 ];
 
 function LoginScreen({ onLogin, loading }) {
@@ -163,7 +162,6 @@ export default function App() {
             <div style={{ marginTop: 25, padding: 25, background: '#fef2f2', borderRadius: '15px', border: '3px solid #C8102E', textAlign: 'left' }}>
               <p style={{ fontSize: 18, margin: '0 0 10px 0', color: '#002855' }}><strong>{resultadoPadron.nombre} {resultadoPadron.apellido}</strong></p>
               
-              {/* NUEVOS DATOS VISIBLES EN LA BÚSQUEDA */}
               <div style={{ fontSize: '14px', color: '#444', display: 'grid', gap: '5px', marginBottom: '15px' }}>
                 <div><strong>Cédula:</strong> {resultadoPadron.cedula}</div>
                 <div><strong>Mesa:</strong> {resultadoPadron.mesa || '-'} | <strong>Orden:</strong> {resultadoPadron.orden || '-'}</div>
@@ -180,16 +178,14 @@ export default function App() {
         </div>
       </div>
 
-      {/* RESTO DEL CÓDIGO (RENDIMIENTO, BARRIOS, FORMULARIOS) SE MANTIENE IGUAL */}
       <div className="grid">
         <div className="card" style={{ borderRadius: '15px' }}>
           <h4 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: 22, borderBottom: '4px solid #f4f4f4', paddingBottom: '20px', marginBottom: '25px' }}>RENDIMIENTO POR EQUIPO</h4>
-          <button onClick={exportarExcel} style={{ background: '#444', color: 'white', marginBottom: 30, width: 'auto', fontWeight: '900', padding: '15px 30px', borderRadius: '10px', border: 'none' }}>DESCARGAR EXCEL</button>
           <div style={{ display: 'grid', gap: 30 }}>
             {rendimientoEquipo.map(m => (
               <div key={m.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, marginBottom: 10 }}>
-                  <span style={{ fontWeight: '900' }}>{m.nombre}</span> <strong style={{ color: '#C8102E' }}>{m.cantidad} REGISTROS ({m.porcentaje}%)</strong>
+                  <span style={{ fontWeight: '900' }}>{m.nombre}</span> <strong style={{ color: '#C8102E' }}>{m.cantidad} ({m.porcentaje}%)</strong>
                 </div>
                 <div style={{ width: '100%', height: 20, background: '#eee', borderRadius: '10px', overflow: 'hidden' }}>
                   <div style={{ width: `${m.porcentaje}%`, height: '100%', background: '#C8102E' }}></div>
@@ -212,7 +208,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* FORMULARIO REGISTRO VOTANTE */}
+      {/* REGISTRAR VOTANTE */}
       <div className="grid" style={{ marginTop: 60 }}>
         <div className="card" style={{ borderRadius: '15px', padding: '35px' }}>
           <h3 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', borderBottom: '5px solid #C8102E', paddingBottom: 20, fontSize: 28 }}>REGISTRAR VOTANTE</h3>
@@ -227,11 +223,11 @@ export default function App() {
                 <input placeholder="Orden" value={formVotante.orden} onChange={e => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ padding: '16px' }} />
             </div>
             
-            <label style={{ fontWeight: '800', fontSize: '13px', color: '#666', marginTop: '10px' }}>SELECCIONAR BARRIO</label>
+            <label style={{ fontWeight: '800', fontSize: '13px', color: '#666', marginTop: '10px' }}>SELECCIONAR BARRIO ACTUALIZADO</label>
             <select 
               value={formVotante.barrio} 
               onChange={e => setFormVotante({ ...formVotante, barrio: e.target.value })} 
-              style={{ padding: '16px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '16px' }}
+              style={{ padding: '16px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '16px', width: '100%' }}
               required
             >
               <option value="">Elegir barrio...</option>
@@ -326,6 +322,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
