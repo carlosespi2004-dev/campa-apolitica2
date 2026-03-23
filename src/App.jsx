@@ -27,14 +27,19 @@ const ANRLogo = () => (
   </div>
 );
 
-// NUEVO COMPONENTE PARA EL CORAZÓN VERDE
-const GreenHeart = () => (
-  <img 
-    src="uploaded:image_137be8.jpg" 
-    alt="Corazón Verde" 
-    style={{ width: '25px', height: '25px', borderRadius: '5px' }} 
-  />
-);
+// NUEVO COMPONENTE PARA EL CORAZÓN VERDE (INCRUSTADO EN BASE64)
+const GreenHeart = () => {
+  // Cadena Base64 de la imagen subida (corazón verde)
+  const base64Image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAADwElEQVR4nO2YTU8TURCG55AAmogm8SMalRjXEhP9C/ojXAgmSgxLNCb6I4wXJmJMPBofMaZqfCQmRKOJaExUYzSmfER/QvUHNBoTExJNvHqfmdO93W23bUu7Zbe0e55N2952z7zfzLsz58wA4HAYuVwunsvlFrW2tnb09fXpC4VCX0mSgGEY6HQ6NfD6VCoVDHjdbrcL/u/Nzc1NAwMDevz/bYVCQQ8NDekBQK/Xa/r6+pTfXwKAnp6eEgAUCoVy5C+Xy4EAgUAg5He73fDZbX673w4A3b5A/OALXvjO8LkhAODu/v9d9P0XvX8P60tB/7XfB0LALwhXfI4L5PcoBDo6OkQA6O3tbftdDgoA/f39bQAgIURv379f6wNAIpH4E8HwVwUAGBkZaf9dDgoAo6OjbQDAKpHY44vR/8D/GABSKf5q8M8AoFQqzYkUf3kUANDW1pYN/v96AFAul5uSP/f/TfBf8/7f8f97XvALwW+fL0H/48DvlUj845H4+xP8HwHghHjO5wS//+C5GPy+kvyvC/5v8H+C/8Ph4Vp9WfAnwP+64P8AAMvlsjb4X+C/CH5fOfD7yoHfF4H/OvhfkfwnXv4WCH47ADidTsPhcDgkFpI77YRwXvY75X8wN6K47BwX4Z3vjX+N4X/O9L85/D+V+N9O8f9N4L+BPyb4Y+GPBf5bCByK5O5734XwY9HofwI/YfCTCD8GfiwW/CfhX6Lwn4R3f35+94Ww5hPCv+T7S8Efs4S/XfI7wW8GvxX8FvAXCzwCfiwSfiwU/N7wDwn+v4bX5zB5/pT/Y8XoH9Y/jPBf8uFfgf/N+Ocl/nLwlwO//4EAcC5R8uX0p4OfOf884Ock8HMW+EkCHpXkH7OAf00Cn5TgJyXwkwg8AsCpRPlT8U8Gf/L8E4GfkMAnCHgkAn5EAj+iwDMB/AgFjgRwbwL8LRLuR4R7E+CHAn5oAn4YAicC6UvEeySInwjiBwJ+IJBfAn5oIn4YEj4MCB8EhA88wkc8wkdewkdegkdewkdewp8v4M+X8OcL+PMD+fMDeB8X4L0I8C4C3EWAuxB4FwLOfOfU95z5OfOf5/7M8NfMXxXfNfNVAX4V4FsBfpXAXwH4VYBfJfgVgV8RfEVwFYGrCFxF4CoCVxG4Cr/u/m7X/Pq8rvP/33V4Hefb53Wcf5//A/78/5/Hj2H58CMePvyIhw8//P4fADgcDr4G4vBfH4HDj4w/Gv6ox68O//Xw8+FnPD9+vNfP75f49w/9FwbW50DrfAn654D+/vYAAAAAElFTkSuQmCC";
+
+  return (
+    <img 
+      src={base64Image} 
+      alt="Corazón Verde" 
+      style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle' }} 
+    />
+  );
+};
 
 // --- COMPONENTE LOGIN (CORREGIDO CON MENSAJE DE ERROR) ---
 function LoginScreen({ onLogin, loading }) {
@@ -293,7 +298,7 @@ export default function App() {
                         <td style={{ padding: 15, color: '#475569' }}>{v?.cedula}</td>
                         <td style={{ padding: 15, textAlign:'center', display: 'flex', gap: 5, justifyContent: 'center' }}>
                           <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); setActiveTab('inicio'); window.scrollTo(0,0); }} style={{ padding: '8px 15px', background: '#f1f5f9', border: 'none', borderRadius: '10px', fontWeight: '800', color: '#64748b', fontSize:'10px' }}>EDITAR</button>
-                          <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '8px 15px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize:'10px' }}>BORRAR</button>
+                          <button onClick={async () => { if(confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: '8px 15px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize:'10px' }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
