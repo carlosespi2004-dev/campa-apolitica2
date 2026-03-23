@@ -128,7 +128,6 @@ export default function App() {
       let queryV = supabase.from("votantes").select("*");
       let queryE = supabase.from("equipo").select("*");
 
-      // El administrador ve todo, los integrantes ven solo lo cargado por su user_id
       if (!isAdmin) {
         queryV = queryV.eq("user_id", userId);
         queryE = queryE.eq("user_id", userId);
@@ -187,7 +186,7 @@ export default function App() {
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
     
-    // NUEVA LÓGICA DE DUPLICADOS: Solo bloquea si el MISMO usuario ya registró esa cédula.
+    // Solo bloquea si el MISMO usuario ya registró esa cédula.
     const existeParaEsteUsuario = (votantes || []).some(v => 
       normalizarCedula(v.cedula) === cedulaLimpiaActual && 
       v.id !== editIdVotante && 
@@ -310,15 +309,13 @@ export default function App() {
       });
     };
 
-    // Excel Hoja General: Sin duplicados visuales (tomamos el primer registro de cada cédula)
     const mapaUnicos = new Map();
     votantes.forEach(v => {
       const ci = normalizarCedula(v.cedula);
-      if (!mapaUnicos.has(ci)) mapaUnicos.set(ci, v);
+      if (ci && !mapaUnicos.has(ci)) mapaUnicos.set(ci, v);
     });
     crearHoja("LISTA GENERAL", Array.from(mapaUnicos.values()));
 
-    // Hojas por integrante: Aquí sí pueden repetirse cédulas si pertenecen a integrantes distintos
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) {
@@ -356,22 +353,25 @@ export default function App() {
     margin: "0 2px",
   });
 
-  // Filtrado de lista para la visualización en pestaña "Votantes"
   const votantesFiltrados = useMemo(() => {
-    const term = busquedaLista.toLowerCase();
-    const filtrados = (votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(term));
+    const term = (busquedaLista || "").toLowerCase();
     
-    // Si es administrador, en la tabla general NO mostramos duplicados (por cédula)
+    const filtrados = (votantes || []).filter((v) => {
+      const nombre = String(v?.nombre || "").toLowerCase();
+      const apellido = String(v?.apellido || "").toLowerCase();
+      const cedula = String(v?.cedula || "").toLowerCase();
+      return nombre.includes(term) || apellido.includes(term) || cedula.includes(term);
+    });
+    
     if (isAdmin) {
       const unicos = new Map();
       filtrados.forEach(v => {
         const ci = normalizarCedula(v.cedula);
-        if (!unicos.has(ci)) unicos.set(ci, v);
+        if (ci && !unicos.has(ci)) unicos.set(ci, v);
       });
       return Array.from(unicos.values());
     }
     
-    // Si no es admin, ya vienen filtrados por su propio userId desde la base de datos (cargarDatos)
     return filtrados;
   }, [votantes, busquedaLista, isAdmin]);
 
