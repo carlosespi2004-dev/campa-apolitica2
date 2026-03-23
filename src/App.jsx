@@ -27,9 +27,11 @@ const ANRLogo = () => (
 );
 
 // CORAZÓN VERDE CON ENLACE EXTERNO PARA SEGURIDAD
+
+import logocarmona from "./img/logocarmona.png";
 const GreenHeart = () => (
   <img 
-    src="logocarmona.png" 
+    src={logocarmona} 
     alt="Corazón" 
     style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
   />
