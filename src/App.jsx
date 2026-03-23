@@ -144,7 +144,7 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- Lógica de duplicados para Admin (Visualización única) ---
+  // --- REGLA 3: Lista Única para el Administrador ---
   const votantesUnicos = useMemo(() => {
     const vistos = new Set();
     return (votantes || []).filter(v => {
@@ -167,7 +167,6 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    // Para reportes de barrios, usamos la lista única si es admin
     const listaParaBarrios = isAdmin ? votantesUnicos : votantes;
     (listaParaBarrios || []).forEach((v) => {
       const b = v.barrio || "Sin barrio";
@@ -198,15 +197,15 @@ export default function App() {
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
     
-    // REGLA NUEVA: Solo bloquear si EL MISMO integrante ya registró esa cédula
-    const existePropio = (votantes || []).some(v => 
+    // REGLA 2: Bloqueo solo si el INTEGRANTE ACTUAL ya tiene esa cédula
+    const existeLocal = (votantes || []).some(v => 
       normalizarCedula(v.cedula) === cedulaLimpiaActual && 
       v.user_id === userId && 
       v.id !== editIdVotante
     );
     
-    if (existePropio) {
-      return alert("Tú ya tienes a este votante registrado en tu lista personal.");
+    if (existeLocal) {
+      return alert("Tú ya tienes a este votante registrado en tu lista.");
     }
 
     setLoading(true);
@@ -239,7 +238,12 @@ export default function App() {
       cargarDatos();
       alert("¡Registro exitoso!");
     } else {
-      alert("Error al guardar: " + error.message);
+      // Manejo del error de la base de datos alineado al nuevo SQL
+      if (error.code === "23505") {
+        alert("Ya has registrado esta cédula anteriormente. No se permiten duplicados en tu propia lista.");
+      } else {
+        alert("Error al guardar: " + error.message);
+      }
     }
     setLoading(false);
   }
@@ -263,8 +267,9 @@ export default function App() {
     setLoading(false);
   }
 
+  // REGLAS 4 y 5: Exportación condicionada y hojas configuradas
   const exportarExcel = async () => {
-    if (!isAdmin) return; // Solo admin puede ejecutar esta función
+    if (!isAdmin) return;
     const workbook = new ExcelJS.Workbook();
 
     const crearHoja = (nombreHoja, lista) => {
@@ -321,10 +326,10 @@ export default function App() {
       });
     };
 
-    // HOJA 1: Lista General Única
+    // HOJA 1: Lista General con personas ÚNICAS
     crearHoja("LISTA GENERAL", votantesUnicos);
 
-    // HOJAS POR INTEGRANTE: Lista completa de cada uno
+    // HOJAS SIGUIENTES: Por cada integrante con sus captados propios
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) {
@@ -471,7 +476,7 @@ export default function App() {
 
         {activeTab === "votantes" && (
           <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General (Únicos)" : "Mis Registros"}</h3>
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General (Personas Únicas)" : "Mis Registros"}</h3>
             <input type="text" placeholder="🔍 Buscar por nombre o CI..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
@@ -480,7 +485,6 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {/* SI ES ADMIN: Muestra votantesUnicos. SI ES COORDINADOR: Muestra votantes (que ya vienen filtrados por su user_id) */}
                     {(isAdmin ? votantesUnicos : votantes).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
@@ -498,6 +502,7 @@ export default function App() {
           </div>
         )}
 
+        {/* ... (El resto de las pestañas equipo y reportes se mantienen igual) ... */}
         {activeTab === "equipo" && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
@@ -573,7 +578,6 @@ export default function App() {
         )}
       </main>
 
-      {/* REGLA: El botón solo aparece si el usuario es administrador */}
       {isAdmin && (
         <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
           <span>📥</span> EXPORTAR EXCEL
