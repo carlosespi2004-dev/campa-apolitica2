@@ -170,12 +170,22 @@ export default function App() {
   async function guardarVotante(e) {
     e.preventDefault();
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
+    
+    // --- NUEVA VALIDACIÓN DE DUPLICADOS ---
+    const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
+    const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
+    
+    if (existe) {
+      return alert("Este votante ya fue registrado.");
+    }
+    // --------------------------------------
+
     setLoading(true);
 
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     const payload = {
       ...formVotante,
-      cedula_limpia: normalizarCedula(formVotante.cedula),
+      cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
     };
 
