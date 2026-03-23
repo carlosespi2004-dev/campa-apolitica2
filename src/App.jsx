@@ -30,7 +30,7 @@ const ANRLogo = () => (
 // NUEVO COMPONENTE PARA EL CORAZÓN VERDE
 const GreenHeart = () => (
   <img 
-    src="uploaded:image_137be8.png" 
+    src="uploaded:image_137be8.jpg" 
     alt="Corazón Verde" 
     style={{ width: '25px', height: '25px', borderRadius: '5px' }} 
   />
