@@ -17,7 +17,7 @@ const LISTA_BARRIOS = [
   "San Francisco", "San Isidro", "Sagrado Corazón de Jesús", "San Miguel",
   "San Lorenzo", "San Jorge", "Santo Domingo", "San Pablo",
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Área 5", "CONAVI",
-  "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday",
+  "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
   "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
 ];
@@ -27,7 +27,8 @@ function ANRLogo() {
     <img
       src={anrlogo}
       alt="Logo Oficial"
-      style={{ width: "80px", height: "80px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
+      style={{ width: "100px", borderRadius: "50%" }}
+      
     />
   );
 }
@@ -37,7 +38,7 @@ function GreenHeart() {
     <img
       src={logocarmona}
       alt="Logo Carmona"
-      style={{ width: "50px", height: "25px", borderRadius: "50px", marginRight: "8px" }}
+      style={{ width: "50px", height: "50px", borderRadius: "10px" }}
     />
   );
 }
