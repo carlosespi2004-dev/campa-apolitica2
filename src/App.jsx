@@ -27,11 +27,13 @@ const ANRLogo = () => (
   </div>
 );
 
-const ParaguayFlag = () => (
-  <svg width="30" height="20" viewBox="0 0 3 2">
-    <rect width="3" height="2" fill="#d52b1e"/><rect width="3" height="1.333" y="0.667" fill="#fff"/><rect width="3" height="0.667" y="1.333" fill="#0033a0"/>
-    <circle cx="1.5" cy="1" r="0.25" fill="#fff"/>
-  </svg>
+// NUEVO COMPONENTE PARA EL CORAZÓN VERDE
+const GreenHeart = () => (
+  <img 
+    src="uploaded:image_137be8.png" 
+    alt="Corazón Verde" 
+    style={{ width: '25px', height: '25px', borderRadius: '5px' }} 
+  />
 );
 
 // --- COMPONENTE LOGIN (CORREGIDO CON MENSAJE DE ERROR) ---
@@ -212,7 +214,10 @@ export default function App() {
           <ANRLogo />
           <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: isMobile ? '24px' : '44px', margin: 0, textTransform: 'uppercase', letterSpacing: '-1.5px' }}>HAGAMOS QUE SUCEDA</h1>
           <div style={{ background: '#f1f5f9', padding: '6px 20px', borderRadius: '50px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ParaguayFlag />
+            
+            {/* AQUÍ SE REEMPLAZÓ ParaguayFlag POR GreenHeart */}
+            <GreenHeart />
+
             <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#475569', fontSize: isMobile ? '12px' : '16px', margin: 0 }}>Darío Carmona Concejal 2026</h2>
           </div>
         </div>
