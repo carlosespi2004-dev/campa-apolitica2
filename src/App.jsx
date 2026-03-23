@@ -190,22 +190,30 @@ export default function App() {
   };
 
   const tabStyle = (id) => ({
-    flex: 1, padding: '18px 5px', border: 'none', background: activeTab === id ? '#C8102E' : '#f1f5f9', color: activeTab === id ? 'white' : '#64748b', fontWeight: '900', fontSize: isMobile ? '10px' : '13px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '15px 15px 0 0', transition: '0.3s', margin: '0 2px'
+    flex: 1, padding: '18px 5px', border: 'none', background: activeTab === id ? '#C8102E' : '#f1f5f9', color: activeTab === id ? 'white' : '#64748b', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '15px 15px 0 0', transition: '0.3s', margin: '0 2px'
   });
 
   if (!session) return <LoginScreen onLogin={(e, p) => supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
+  // Estilo común para Lista 2 y Opción 5 (Diferente fuente)
+  const secondaryTextStyle = {
+    color: '#C8102E', 
+    fontSize: isMobile ? '20px' : '40px', 
+    fontWeight: '900', 
+    fontFamily: "'Bebas Neue', 'Oswald', sans-serif", // Fuente diferenciada
+    letterSpacing: '1px'
+  };
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      {/* HEADER REDISEÑADO SEGÚN IMAGEN image_6628c9.png */}
       <header style={{ background: 'white', padding: isMobile ? '20px 10px' : '40px 20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ background: '#f1f5f9', color: '#64748b', padding: '8px 15px', borderRadius: '10px', border: 'none', fontWeight: '800', cursor: 'pointer', position: 'absolute', right: 10, top: 10, fontSize: '10px' }}>SALIR</button>
         
-        {/* FILA DE LISTA 2 - LOGO - OPCION 5 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '15px' : '40px', marginBottom: '10px' }}>
-          <span style={{ color: '#C8102E', fontSize: isMobile ? '24px' : '48px', fontWeight: '900', fontFamily: 'Montserrat' }}>LISTA 2</span>
+        {/* BLOQUE CENTRADO: LISTA 2 - LOGO - OPCIÓN 5 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '10px' : '25px', marginBottom: '5px' }}>
+          <span style={secondaryTextStyle}>LISTA 2</span>
           <ANRLogo />
-          <span style={{ color: '#C8102E', fontSize: isMobile ? '24px' : '48px', fontWeight: '900', fontFamily: 'Montserrat' }}>OPCIÓN 5</span>
+          <span style={secondaryTextStyle}>OPCIÓN 5</span>
         </div>
 
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: isMobile ? '28px' : '52px', margin: '0', textTransform: 'uppercase', letterSpacing: '-1px' }}>HAGAMOS QUE SUCEDA</h1>
@@ -308,7 +316,7 @@ export default function App() {
               <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, textTransform: 'uppercase' }}>RENDIMIENTO</h3>
               {(rendimientoEquipo || []).map(m => (
                 <div key={m?.id} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '900', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '900', color: '#475569', marginBottom: 8 }}>
                     <span>{m?.nombre}</span> <span>{m?.cantidad} ({m?.porcentaje}%)</span>
                   </div>
                   <div style={{ width: '100%', height: '12px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
@@ -333,7 +341,7 @@ export default function App() {
       </main>
 
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '15px 35px', borderRadius: '50px', fontWeight: '900', border: 'none', boxShadow: '0 10px 30px rgba(22,163,74,0.3)', cursor: 'pointer', zIndex: 1000, fontSize: '14px' }}>
-        📥 EXPORTAR EXCEL PRO
+        <span>📥</span> EXPORTAR EXCEL PRO
       </button>
     </div>
   );
