@@ -171,14 +171,12 @@ export default function App() {
     e.preventDefault();
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
-    // --- NUEVA VALIDACIÓN DE DUPLICADOS ---
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
     const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
     if (existe) {
       return alert("Este votante ya fue registrado.");
     }
-    // --------------------------------------
 
     setLoading(true);
 
@@ -461,7 +459,7 @@ export default function App() {
                   <tbody>
                     {(equipo || []).map((m) => (
                       <tr key={m?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small></td>
+                        <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small><br /><small style={{ color: "#64748b" }}>{m?.telefono}</small></td>
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
                           <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
