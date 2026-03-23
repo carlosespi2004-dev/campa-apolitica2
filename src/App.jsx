@@ -156,11 +156,11 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    // CORRECCIÓN PUNTO BLANCO: Se asegura que votantes siempre sea un array antes de iterar
-    const listaSegura = votantes || [];
-    listaSegura.forEach((v) => {
-      const b = v.barrio || "Sin barrio";
-      counts[b] = (counts[b] || 0) + 1;
+    (votantes || []).forEach((v) => {
+      if (v) {
+        const b = v.barrio || "Sin barrio";
+        counts[b] = (counts[b] || 0) + 1;
+      }
     });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [votantes]);
@@ -310,13 +310,13 @@ export default function App() {
     };
 
     const mapaUnicos = new Map();
-    votantes.forEach(v => {
+    (votantes || []).forEach(v => {
       const ci = normalizarCedula(v.cedula);
       if (!mapaUnicos.has(ci)) mapaUnicos.set(ci, v);
     });
     crearHoja("LISTA GENERAL", Array.from(mapaUnicos.values()));
 
-    equipo.forEach((miembro) => {
+    (equipo || []).forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) {
         crearHoja(miembro.nombre, datosMiembro);
@@ -469,7 +469,7 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{equipo.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
+                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{(equipo || []).map((m) => <option key={m?.id} value={m?.id}>{m?.nombre}</option>)}</select></div>
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
               </form>
             </div>
@@ -487,7 +487,7 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {votantesFiltrados.map((v) => (
+                    {(votantesFiltrados || []).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
