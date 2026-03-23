@@ -28,7 +28,7 @@ const ANRLogo = () => (
 
 // CORAZÓN VERDE CON ENLACE EXTERNO PARA SEGURIDAD
 
-import corazon from "./img/logoofi.jpg"; 
+import logoofi from "./img/logoofi.jpg"; 
 
 const GreenHeart = () => (
   <img 
