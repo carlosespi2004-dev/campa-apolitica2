@@ -27,7 +27,8 @@ function ANRLogo() {
     <img
       src={logoofi}
       alt="Logo Oficial"
-      style={{ width: "25px", height: "40px", borderRadius: "5px" }}
+      style={{ width: "100px", borderRadius: "50%" }}
+      
     />
   );
 }
@@ -37,7 +38,7 @@ function GreenHeart() {
     <img
       src={logocarmona}
       alt="Logo Carmona"
-      style={{ width: "100px", borderRadius: "50%" }}
+      style={{ width: "25px", height: "40px", borderRadius: "10px" }}
     />
   );
 }
