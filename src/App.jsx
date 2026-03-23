@@ -312,9 +312,9 @@ export default function App() {
 
         {/* FILA DE TEXTOS LATERALES Y LOGO ANR */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "40px", marginBottom: "10px" }}>
-          <span style={{ color: "#C8102E", fontSize: isMobile ? "24px" : "48px", fontWeight: "900", fontFamily: "Impact, fantasy" }}>LISTA 2</span>
+          <span style={{ color: "#C8102E", fontSize: isMobile ? "24px" : "48px", fontWeight: "900", fontFamily: "Domine" }}>LISTA 2</span>
           <ANRLogo />
-          <span style={{ color: "#C8102E", fontSize: isMobile ? "24px" : "48px", fontWeight: "900", fontFamily: "Impact, fantasy" }}>OPCIÓN 5</span>
+          <span style={{ color: "#C8102E", fontSize: isMobile ? "24px" : "48px", fontWeight: "900", fontFamily: "Domine" }}>OPCIÓN 5</span>
         </div>
 
         <h1 style={{ fontFamily: "Domine", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "28px" : "52px", margin: 0, textTransform: "uppercase", letterSpacing: "-1.5px" }}>
