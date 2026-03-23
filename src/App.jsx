@@ -29,7 +29,7 @@ const ANRLogo = () => (
 // CORAZÓN VERDE CON ENLACE EXTERNO PARA SEGURIDAD
 const GreenHeart = () => (
   <img 
-    src="https://i.ibb.co/mC60YpS/image-137be8.png" 
+    src="logocarmona.png" 
     alt="Corazón" 
     style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
   />
