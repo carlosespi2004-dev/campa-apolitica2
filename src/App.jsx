@@ -28,11 +28,11 @@ const ANRLogo = () => (
 
 // CORAZÓN VERDE CON ENLACE EXTERNO PARA SEGURIDAD
 
-import corazon from "./img/corazon.jpg"; 
+import corazon from "./img/logoofi.jpg"; 
 
 const GreenHeart = () => (
   <img 
-    src={corazon} 
+    src={logoofi} 
     alt="Corazón" 
     style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
   />
