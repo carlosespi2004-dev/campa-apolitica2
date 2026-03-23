@@ -27,7 +27,7 @@ function ANRLogo() {
     <img
       src={logocarmona}
       alt="Logo Carmona"
-      style={{ width: "200px", borderRadius: "50%" }}
+      style={{ width: "100px", borderRadius: "50%" }}
     />
   );
 }
