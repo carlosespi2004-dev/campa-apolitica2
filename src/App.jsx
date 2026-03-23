@@ -25,9 +25,9 @@ const LISTA_BARRIOS = [
 function ANRLogo() {
   return (
     <img
-      src={logocarmona}
-      alt="Logo Carmona"
-      style={{ width: "100px", borderRadius: "50%" }}
+      src={logoofi}
+      alt="Logo Oficial"
+      style={{ width: "25px", height: "40px", borderRadius: "5px" }}
     />
   );
 }
@@ -35,9 +35,9 @@ function ANRLogo() {
 function GreenHeart() {
   return (
     <img
-      src={logoofi}
-      alt="Logo Oficial"
-      style={{ width: "25px", height: "25px", borderRadius: "5px" }}
+      src={logocarmona}
+      alt="Logo Carmona"
+      style={{ width: "100px", borderRadius: "50%" }}
     />
   );
 }
