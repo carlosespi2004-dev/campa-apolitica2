@@ -404,7 +404,7 @@ export default function App() {
       </main>
 
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '18px 40px', borderRadius: '50px', fontWeight: '900', border: 'none', boxShadow: '0 10px 30px rgba(22,163,74,0.3)', cursor: 'pointer', zIndex: 1000, display:'flex', gap:10, alignItems:'center' }}>
-        <span>📥</span> EXPORTAR EXCEL PRO
+        <span>📥</span> EXPORTAR EXCEL 
       </button>
     </div>
   );
