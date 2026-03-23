@@ -20,6 +20,7 @@ const LISTA_BARRIOS = [
   "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
 ];
 
+
 const ANRLogo = () => (
   <div style={{ background: '#C8102E', width: 50, height: 50, borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
     <span style={{ color: 'white', fontWeight: '900', fontSize: '14px', fontFamily: 'Montserrat' }}>ANR</span>
