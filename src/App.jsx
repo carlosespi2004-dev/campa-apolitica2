@@ -91,6 +91,11 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
+  // Permisos y Roles
+  const userRole = session?.user?.user_metadata?.role || "coordinador";
+  const isAdmin = userRole === "administrador";
+  const userId = session?.user?.id;
+
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
@@ -120,9 +125,18 @@ export default function App() {
   async function cargarDatos() {
     setLoading(true);
     try {
+      let queryVotantes = supabase.from("votantes").select("*");
+      let queryEquipo = supabase.from("equipo").select("*");
+
+      // Si no es admin, filtrar solo lo que le pertenece
+      if (!isAdmin) {
+        queryVotantes = queryVotantes.eq("user_id", userId);
+        queryEquipo = queryEquipo.eq("user_id", userId);
+      }
+
       const [v, e] = await Promise.all([
-        supabase.from("votantes").select("*").order("created_at", { ascending: false }),
-        supabase.from("equipo").select("*").order("created_at", { ascending: false }),
+        queryVotantes.order("created_at", { ascending: false }),
+        queryEquipo.order("created_at", { ascending: false }),
       ]);
       setVotantes(v.data || []);
       setEquipo(e.data || []);
@@ -185,6 +199,7 @@ export default function App() {
       ...formVotante,
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
+      user_id: userId // Se guarda quién lo creó
     };
 
     const { error } = editIdVotante
@@ -203,10 +218,12 @@ export default function App() {
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
+    
+    const payload = { ...formEquipo, user_id: userId };
 
     const { error } = editIdEquipo
-      ? await supabase.from("equipo").update(formEquipo).eq("id", editIdEquipo)
-      : await supabase.from("equipo").insert([formEquipo]);
+      ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
+      : await supabase.from("equipo").insert([payload]);
 
     if (!error) {
       setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
@@ -217,6 +234,7 @@ export default function App() {
   }
 
   const exportarExcel = async () => {
+    if (!isAdmin) return; // Seguridad extra
     const workbook = new ExcelJS.Workbook();
 
     const crearHoja = (nombreHoja, lista) => {
@@ -412,7 +430,7 @@ export default function App() {
 
         {activeTab === "votantes" && (
           <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado General</h3>
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General" : "Mis Registros"}</h3>
             <input type="text" placeholder="🔍 Buscar por nombre o CI..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
@@ -447,13 +465,13 @@ export default function App() {
                 <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="coordinador">Coordinador</option><option value="jefe_de_campana">Jefe de Campaña</option><option value="candidato">Candidato</option>
+                  <option value="coordinador">Coordinador</option><option value="administrador">Administrador</option>
                 </select>
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>GUARDAR MIEMBRO</button>
               </form>
             </div>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
+              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>{isAdmin ? "MIEMBROS ACTIVOS" : "MIS MIEMBROS"}</h4>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "400px" }}>
                   <tbody>
@@ -513,9 +531,11 @@ export default function App() {
         )}
       </main>
 
-      <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
-        <span>📥</span> EXPORTAR EXCEL
-      </button>
+      {isAdmin && (
+        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
+          <span>📥</span> EXPORTAR EXCEL
+        </button>
+      )}
     </div>
   );
 }
