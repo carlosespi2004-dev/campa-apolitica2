@@ -11,6 +11,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
+
+
+
+
 const LISTA_BARRIOS = [
   "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael",
   "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián",
