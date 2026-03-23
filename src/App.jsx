@@ -27,7 +27,7 @@ function ANRLogo() {
     <img
       src={logoofi}
       alt="Logo Oficial"
-      style={{ width: "100px", borderRadius: "50%" }}
+      style={{ width: "80px", borderRadius: "50%" }}
       
     />
   );
