@@ -21,26 +21,17 @@ const LISTA_BARRIOS = [
 ];
 
 // --- LOGOS ---
-import logocarmona from "./img/logocarmona.png";
-
-
-const GreenHearta = () => (
-  <img 
-    src={logocarmona} 
-    alt="carmona" 
-    style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
-  />
+const ANRLogo = () => (
+  <div style={{ background: '#C8102E', width: 60, height: 60, borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto', border: '3px solid white', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+    <span style={{ color: 'white', fontWeight: '900', fontSize: '16px', fontFamily: 'Montserrat' }}>ANR</span>
+  </div>
 );
 
-import corazon from "./img/logoofi.jpeg";
-
-
+// CORAZÓN VERDE BLINDADO EN SVG
 const GreenHeart = () => (
-  <img 
-    src={logoofi} 
-    alt="Corazón" 
-    style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
-  />
+  <svg width="22" height="22" viewBox="0 0 24 24" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
+    <path fill="#00a859" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+  </svg>
 );
 
 function LoginScreen({ onLogin, loading }) {
@@ -101,9 +92,11 @@ export default function App() {
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
-    return () => subscription.unsubscribe();
+    return () => { window.removeEventListener('resize', handleResize); subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => { if (session) cargarDatos(); }, [session]);
@@ -200,41 +193,45 @@ export default function App() {
   };
 
   const tabStyle = (id) => ({
-    flex: 1, padding: '18px 5px', border: 'none', background: activeTab === id ? '#C8102E' : '#f1f5f9', color: activeTab === id ? 'white' : '#64748b', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '15px 15px 0 0', transition: '0.3s', margin: '0 2px'
+    flex: 1, padding: '18px 5px', border: 'none', background: activeTab === id ? '#C8102E' : '#f1f5f9', color: activeTab === id ? 'white' : '#64748b', fontWeight: '900', fontSize: isMobile ? '10px' : '13px', textTransform: 'uppercase', cursor: 'pointer', borderRadius: '15px 15px 0 0', transition: '0.3s', margin: '0 2px'
   });
 
   if (!session) return <LoginScreen onLogin={(e, p) => supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
-  // Estilo común para Lista 2 y Opción 5 (Diferente fuente)
-  const secondaryTextStyle = {
+  // Estilo para LISTA 2 y OPCION 5 SEGÚN IMAGEN
+  const sideTextStyle = {
     color: '#C8102E', 
-    fontSize: isMobile ? '20px' : '40px', 
+    fontSize: isMobile ? '22px' : '38px', 
     fontWeight: '900', 
-    fontFamily: "'Bebas Neue', 'Oswald', sans-serif", // Fuente diferenciada
-    letterSpacing: '1px'
+    fontFamily: 'Montserrat', 
+    textTransform: 'uppercase',
+    letterSpacing: '-1px'
   };
 
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      <header style={{ background: 'white', padding: isMobile ? '20px 10px' : '40px 20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', position: 'relative' }}>
+      {/* CABECERA REDISEÑADA SEGÚN LA IMAGEN WhatsApp Image */}
+      <header style={{ background: 'white', padding: isMobile ? '20px 10px' : '30px 20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ background: '#f1f5f9', color: '#64748b', padding: '8px 15px', borderRadius: '10px', border: 'none', fontWeight: '800', cursor: 'pointer', position: 'absolute', right: 10, top: 10, fontSize: '10px' }}>SALIR</button>
         
-        {/* BLOQUE CENTRADO: LISTA 2 - LOGO - OPCIÓN 5 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '10px' : '25px', marginBottom: '5px' }}>
-          <span style={secondaryTextStyle}>LISTA 2</span>
+        {/* FILA DE LOGO Y TEXTOS LATERALES COMPACTOS */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '15px' : '30px', marginBottom: '10px' }}>
+          <span style={sideTextStyle}>LISTA 2</span>
           <ANRLogo />
-          <span style={secondaryTextStyle}>OPCIÓN 5</span>
+          <span style={sideTextStyle}>OPCIÓN 5</span>
         </div>
 
-        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: isMobile ? '28px' : '52px', margin: '0', textTransform: 'uppercase', letterSpacing: '-1px' }}>HAGAMOS QUE SUCEDA</h1>
+        {/* TÍTULO PRINCIPAL GRANDE Y ROJO */}
+        <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: isMobile ? '28px' : '48px', margin: '0', textTransform: 'uppercase', letterSpacing: '-1.5px' }}>HAGAMOS QUE SUCEDA</h1>
         
-        <div style={{ background: '#f1f5f9', padding: '8px 25px', borderRadius: '50px', display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 15 }}>
+        {/* SUBTÍTULO EN PÍLDORA ROJA CON CORAZÓN VERDE Y TEXTO BLANCO (CAMBIO CRÍTICO) */}
+        <div style={{ background: '#C8102E', padding: '10px 30px', borderRadius: '50px', display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 15, boxShadow: '0 4px 10px rgba(200,16,46,0.3)' }}>
           <GreenHeart />
-          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: '#475569', fontSize: isMobile ? '12px' : '18px', margin: 0 }}>Darío Carmona Concejal 2026</h2>
+          <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: 'white', fontSize: isMobile ? '12px' : '16px', margin: 0, textTransform: 'uppercase' }}>Darío Carmona Concejal 2026</h2>
         </div>
       </header>
 
-      {/* TABS */}
+      {/* TABS (Inalteradas) */}
       <nav style={{ display: 'flex', background: '#f1f5f9', padding: '10px 10px 0 10px', sticky: 'top', top: 0, zIndex: 100 }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
@@ -245,7 +242,7 @@ export default function App() {
       <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '30px 15px', paddingBottom: 120 }}>
         {activeTab === 'inicio' && (
           <div style={{ display: 'grid', gap: 25 }}>
-            <div className="card" style={{ background: 'white', padding: 25, borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+            <div className="card" style={{ background: 'white', padding: 25, borderRadius: '25px', boxShadow: '0 8px 25px rgba(0,0,0,0.02)' }}>
               <h4 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 20, fontSize: '14px', textTransform: 'uppercase' }}>🔍 BUSCADOR DE PADRÓN</h4>
               <div style={{ display: 'flex', gap: 10 }}>
                 <input type="text" value={cedulaRapida} onChange={e => setCedulaRapida(e.target.value)} placeholder="Cédula..." style={{ flex: 1, padding: '15px', borderRadius: '12px', border: '2px solid #f1f5f9', fontSize: '16px' }} />
@@ -254,12 +251,11 @@ export default function App() {
               {resultadoPadron && (
                 <div style={{ marginTop: 20, padding: 20, background: '#fef2f2', borderRadius: '20px', border: '2px dashed #C8102E', textAlign: 'center' }}>
                   <h3 style={{ fontSize: '18px', color: '#C8102E', fontWeight: '900' }}>{resultadoPadron?.nombre} {resultadoPadron?.apellido}</h3>
-                  <p style={{ fontWeight: '700', color: '#444', fontSize: '13px' }}>Mesa: {resultadoPadron?.mesa} | Orden: {resultadoPadron?.orden}</p>
                   <button onClick={() => { setFormVotante({ ...formVotante, ...resultadoPadron }); setResultadoPadron(null); }} style={{ background: '#16a34a', color: 'white', padding: '12px 25px', borderRadius: '10px', fontWeight: '900', border: 'none' }}>ASIGNAR</button>
                 </div>
               )}
             </div>
-            <div className="card" style={{ background: 'white', padding: 30, borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+            <div className="card" style={{ background: 'white', padding: 30, borderRadius: '25px', boxShadow: '0 8px 25px rgba(0,0,0,0.02)' }}>
               <h3 style={{ color: '#C8102E', fontWeight: '900', textAlign: 'center', marginBottom: 25, fontSize: '20px', textTransform: 'uppercase' }}>REGISTRAR VOTANTE</h3>
               <form onSubmit={guardarVotante} style={{ display: 'grid', gap: 15 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
@@ -279,7 +275,7 @@ export default function App() {
           </div>
         )}
         {activeTab === 'votantes' && (
-          <div className="card" style={{ background: 'white', padding: 20, borderRadius: '25px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+          <div className="card" style={{ background: 'white', padding: 20, borderRadius: '25px', boxShadow: '0 8px 25px rgba(0,0,0,0.02)' }}>
             <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 20, fontSize: '18px', textTransform: 'uppercase' }}>Listado General</h3>
             <input type="text" placeholder="🔍 Buscar..." value={busquedaLista} onChange={e => setBusquedaLista(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: '2px solid #f1f5f9', marginBottom: 25, fontSize: '16px' }} />
             <div style={{ overflowX: 'auto' }}>
@@ -303,7 +299,7 @@ export default function App() {
         {activeTab === 'equipo' && (
           <div style={{ display: 'grid', gap: 30 }}>
             <div className="card" style={{ background: 'white', padding: 25, borderRadius: '25px' }}>
-              <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, textAlign: 'center', textTransform: 'uppercase' }}>EQUIPO</h3>
+              <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, textAlign: 'center', textTransform: 'uppercase' }}>Gestión de Equipo</h3>
               <form onSubmit={guardarEquipo} style={{ display: 'grid', gap: 15 }}>
                 <input type="text" placeholder="NOMBRE COMPLETO" value={formEquipo.nombre} onChange={e => setFormEquipo({...formEquipo, nombre: e.target.value})} required style={{padding:14, borderRadius:12, border:'1px solid #e2e8f0', fontSize:'16px'}} />
                 <input type="text" placeholder="TELÉFONO" value={formEquipo.telefono} onChange={e => setFormEquipo({...formEquipo, telefono: e.target.value})} style={{padding:14, borderRadius:12, border:'1px solid #e2e8f0', fontSize:'16px'}} />
@@ -350,8 +346,9 @@ export default function App() {
         )}
       </main>
 
+      {/* EXCEL FLOTANTE CENTRADO (Inalterado) */}
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '15px 35px', borderRadius: '50px', fontWeight: '900', border: 'none', boxShadow: '0 10px 30px rgba(22,163,74,0.3)', cursor: 'pointer', zIndex: 1000, fontSize: '14px' }}>
-        <span>📥</span> EXPORTAR EXCEL PRO
+        📥 EXPORTAR EXCEL PRO
       </button>
     </div>
   );
