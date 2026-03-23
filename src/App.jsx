@@ -27,9 +27,12 @@ const ANRLogo = () => (
 );
 
 // CORAZÓN VERDE CON ENLACE EXTERNO PARA SEGURIDAD
+
+import corazon from "./img/corazon.jpg"; 
+
 const GreenHeart = () => (
   <img 
-    src="https://i.ibb.co/mC60YpS/image-137be8.png" 
+    src={corazon} 
     alt="Corazón" 
     style={{ width: '22px', height: '22px', marginRight: '8px', verticalAlign: 'middle', borderRadius: '4px' }} 
   />
@@ -192,7 +195,7 @@ export default function App() {
         { header: "Mesa", key: "mes", width: 8 },
         { header: "Seccional", key: "sec", width: 10 },
         { header: "Local", key: "loc", width: 35 },
-        { header: "Captado por", key: "cap", width: 20 }
+        { header: "Hagamos que suceda", key: "cap", width: 20 }
       ];
 
       const headerRow = sheet.getRow(4);
