@@ -91,7 +91,7 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  // Identificación de usuario y rol
+  // Jerarquía y Permisos
   const userRole = session?.user?.user_metadata?.role || "coordinador";
   const isAdmin = userRole === "administrador";
   const userId = session?.user?.id;
@@ -125,17 +125,17 @@ export default function App() {
   async function cargarDatos() {
     setLoading(true);
     try {
-      let queryVotantes = supabase.from("votantes").select("*");
-      let queryEquipo = supabase.from("equipo").select("*");
+      let queryV = supabase.from("votantes").select("*");
+      let queryE = supabase.from("equipo").select("*");
 
       if (!isAdmin) {
-        queryVotantes = queryVotantes.eq("user_id", userId);
-        queryEquipo = queryEquipo.eq("user_id", userId);
+        queryV = queryV.eq("user_id", userId);
+        queryE = queryE.eq("user_id", userId);
       }
 
       const [v, e] = await Promise.all([
-        queryVotantes.order("created_at", { ascending: false }),
-        queryEquipo.order("created_at", { ascending: false }),
+        queryV.order("created_at", { ascending: false }),
+        queryE.order("created_at", { ascending: false }),
       ]);
       setVotantes(v.data || []);
       setEquipo(e.data || []);
@@ -185,17 +185,15 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existe = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
+    const existeLocal = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
-    if (existe) {
-      return alert("Este votante ya fue registrado.");
+    if (existeLocal) {
+      return alert("Ya tienes a este votante registrado.");
     }
 
     setLoading(true);
-
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
-    // Limpiamos el payload para evitar que campos nulos de búsqueda rompan la inserción
     const payload = {
       nombre: formVotante.nombre || "",
       apellido: formVotante.apellido || "",
@@ -221,10 +219,13 @@ export default function App() {
       setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
       setEditIdVotante(null);
       cargarDatos();
-      alert("¡Guardado!");
+      alert("¡Registro exitoso!");
     } else {
-      console.error(error);
-      alert("Error al guardar: " + error.message);
+      if (error.code === "23505") {
+        alert("Aviso: Esta cédula ya fue captada por otro miembro del equipo.");
+      } else {
+        alert("Error al guardar: " + error.message);
+      }
     }
     setLoading(false);
   }
@@ -232,14 +233,7 @@ export default function App() {
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
-    
-    const payload = { 
-      nombre: formEquipo.nombre, 
-      telefono: formEquipo.telefono, 
-      rol: formEquipo.rol, 
-      zona: formEquipo.zona,
-      user_id: userId 
-    };
+    const payload = { ...formEquipo, user_id: userId };
 
     const { error } = editIdEquipo
       ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
@@ -250,8 +244,7 @@ export default function App() {
       setEditIdEquipo(null);
       cargarDatos();
     } else {
-      console.error(error);
-      alert("Error al guardar equipo: " + error.message);
+      alert("Error al guardar miembro: " + error.message);
     }
     setLoading(false);
   }
@@ -410,7 +403,6 @@ export default function App() {
                   </p>
                   <button
                     onClick={() => {
-                      // Solo copiamos campos necesarios del padron para el formulario de registro
                       setFormVotante({ 
                         ...formVotante, 
                         nombre: resultadoPadron.nombre, 
