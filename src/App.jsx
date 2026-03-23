@@ -237,7 +237,7 @@ export default function App() {
         { header: "Nombre", key: "nom", width: 25 },
         { header: "Apellido", key: "ape", width: 25 },
         { header: "Cedula", key: "ci", width: 12 },
-        { header: "Fecha Nacimiento", key: "fnac", width: 15 },
+        { header: "Fecha Nacimiento", key: "fnac", width: 20 },
         { header: "Teléfono", key: "tel", width: 15 },
         { header: "Orden", key: "ord", width: 8 },
         { header: "Mesa", key: "mes", width: 8 },
