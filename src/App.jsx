@@ -27,7 +27,6 @@ const ANRLogo = () => (
   </div>
 );
 
-// CORAZÓN VERDE BLINDADO EN SVG
 const GreenHeart = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
     <path fill="#00a859" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -198,33 +197,20 @@ export default function App() {
 
   if (!session) return <LoginScreen onLogin={(e, p) => supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />;
 
-  // Estilo para LISTA 2 y OPCION 5 SEGÚN IMAGEN
-  const sideTextStyle = {
-    color: '#C8102E', 
-    fontSize: isMobile ? '22px' : '38px', 
-    fontWeight: '900', 
-    fontFamily: 'Montserrat', 
-    textTransform: 'uppercase',
-    letterSpacing: '-1px'
-  };
-
   return (
     <div style={{ background: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      {/* CABECERA REDISEÑADA SEGÚN LA IMAGEN WhatsApp Image */}
       <header style={{ background: 'white', padding: isMobile ? '20px 10px' : '30px 20px', textAlign: 'center', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', position: 'relative' }}>
         <button onClick={() => supabase.auth.signOut()} style={{ background: '#f1f5f9', color: '#64748b', padding: '8px 15px', borderRadius: '10px', border: 'none', fontWeight: '800', cursor: 'pointer', position: 'absolute', right: 10, top: 10, fontSize: '10px' }}>SALIR</button>
         
-        {/* FILA DE LOGO Y TEXTOS LATERALES COMPACTOS */}
+        {/* FILA DE LOGO Y TEXTOS: Aquí se aplicó el centrado estrecho y cambio de fuente */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '15px' : '30px', marginBottom: '10px' }}>
-          <span style={sideTextStyle}>LISTA 2</span>
+          <span style={{ color: '#C8102E', fontSize: isMobile ? '22px' : '38px', fontWeight: '900', fontFamily: 'Impact, fantasy', letterSpacing: '1px' }}>LISTA 2</span>
           <ANRLogo />
-          <span style={sideTextStyle}>OPCIÓN 5</span>
+          <span style={{ color: '#C8102E', fontSize: isMobile ? '22px' : '38px', fontWeight: '900', fontFamily: 'Impact, fantasy', letterSpacing: '1px' }}>OPCIÓN 5</span>
         </div>
 
-        {/* TÍTULO PRINCIPAL GRANDE Y ROJO */}
         <h1 style={{ fontFamily: 'Montserrat', fontWeight: '900', color: '#C8102E', fontSize: isMobile ? '28px' : '48px', margin: '0', textTransform: 'uppercase', letterSpacing: '-1.5px' }}>HAGAMOS QUE SUCEDA</h1>
         
-        {/* SUBTÍTULO EN PÍLDORA ROJA CON CORAZÓN VERDE Y TEXTO BLANCO (CAMBIO CRÍTICO) */}
         <div style={{ background: '#C8102E', padding: '10px 30px', borderRadius: '50px', display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 15, boxShadow: '0 4px 10px rgba(200,16,46,0.3)' }}>
           <GreenHeart />
           <h2 style={{ fontFamily: 'Montserrat', fontWeight: '800', color: 'white', fontSize: isMobile ? '12px' : '16px', margin: 0, textTransform: 'uppercase' }}>Darío Carmona Concejal 2026</h2>
@@ -299,7 +285,7 @@ export default function App() {
         {activeTab === 'equipo' && (
           <div style={{ display: 'grid', gap: 30 }}>
             <div className="card" style={{ background: 'white', padding: 25, borderRadius: '25px' }}>
-              <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, textAlign: 'center', textTransform: 'uppercase' }}>Gestión de Equipo</h3>
+              <h3 style={{ color: '#C8102E', fontWeight: '900', marginBottom: 25, textAlign: 'center', textTransform: 'uppercase' }}>GESTAÓN DE EQUIPO</h3>
               <form onSubmit={guardarEquipo} style={{ display: 'grid', gap: 15 }}>
                 <input type="text" placeholder="NOMBRE COMPLETO" value={formEquipo.nombre} onChange={e => setFormEquipo({...formEquipo, nombre: e.target.value})} required style={{padding:14, borderRadius:12, border:'1px solid #e2e8f0', fontSize:'16px'}} />
                 <input type="text" placeholder="TELÉFONO" value={formEquipo.telefono} onChange={e => setFormEquipo({...formEquipo, telefono: e.target.value})} style={{padding:14, borderRadius:12, border:'1px solid #e2e8f0', fontSize:'16px'}} />
@@ -346,7 +332,6 @@ export default function App() {
         )}
       </main>
 
-      {/* EXCEL FLOTANTE CENTRADO (Inalterado) */}
       <button onClick={exportarExcel} style={{ position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)', background: '#16a34a', color: 'white', padding: '15px 35px', borderRadius: '50px', fontWeight: '900', border: 'none', boxShadow: '0 10px 30px rgba(22,163,74,0.3)', cursor: 'pointer', zIndex: 1000, fontSize: '14px' }}>
         📥 EXPORTAR EXCEL PRO
       </button>
