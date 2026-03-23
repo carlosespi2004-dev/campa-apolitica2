@@ -128,6 +128,7 @@ export default function App() {
       let queryV = supabase.from("votantes").select("*");
       let queryE = supabase.from("equipo").select("*");
 
+      // El administrador ve todo, los integrantes ven solo lo cargado por su user_id
       if (!isAdmin) {
         queryV = queryV.eq("user_id", userId);
         queryE = queryE.eq("user_id", userId);
@@ -185,10 +186,16 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existeLocal = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
-    if (existeLocal) {
-      return alert("Ya tienes a este votante registrado.");
+    // NUEVA LÓGICA DE DUPLICADOS: Solo bloquea si el MISMO usuario ya registró esa cédula.
+    const existeParaEsteUsuario = (votantes || []).some(v => 
+      normalizarCedula(v.cedula) === cedulaLimpiaActual && 
+      v.id !== editIdVotante && 
+      v.user_id === userId
+    );
+    
+    if (existeParaEsteUsuario) {
+      return alert("Ya tienes a este votante registrado en tu lista.");
     }
 
     setLoading(true);
@@ -221,11 +228,7 @@ export default function App() {
       cargarDatos();
       alert("¡Registro exitoso!");
     } else {
-      if (error.code === "23505") {
-        alert("Aviso: Esta cédula ya fue captada por otro miembro del equipo.");
-      } else {
-        alert("Error al guardar: " + error.message);
-      }
+      alert("Error al guardar: " + error.message);
     }
     setLoading(false);
   }
@@ -307,8 +310,15 @@ export default function App() {
       });
     };
 
-    crearHoja("LISTA GENERAL", votantes);
+    // Excel Hoja General: Sin duplicados visuales (tomamos el primer registro de cada cédula)
+    const mapaUnicos = new Map();
+    votantes.forEach(v => {
+      const ci = normalizarCedula(v.cedula);
+      if (!mapaUnicos.has(ci)) mapaUnicos.set(ci, v);
+    });
+    crearHoja("LISTA GENERAL", Array.from(mapaUnicos.values()));
 
+    // Hojas por integrante: Aquí sí pueden repetirse cédulas si pertenecen a integrantes distintos
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) {
@@ -345,6 +355,25 @@ export default function App() {
     transition: "0.3s",
     margin: "0 2px",
   });
+
+  // Filtrado de lista para la visualización en pestaña "Votantes"
+  const votantesFiltrados = useMemo(() => {
+    const term = busquedaLista.toLowerCase();
+    const filtrados = (votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(term));
+    
+    // Si es administrador, en la tabla general NO mostramos duplicados (por cédula)
+    if (isAdmin) {
+      const unicos = new Map();
+      filtrados.forEach(v => {
+        const ci = normalizarCedula(v.cedula);
+        if (!unicos.has(ci)) unicos.set(ci, v);
+      });
+      return Array.from(unicos.values());
+    }
+    
+    // Si no es admin, ya vienen filtrados por su propio userId desde la base de datos (cargarDatos)
+    return filtrados;
+  }, [votantes, busquedaLista, isAdmin]);
 
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "Inter, sans-serif" }}>
@@ -464,7 +493,7 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {(votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
+                    {votantesFiltrados.map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
