@@ -38,7 +38,7 @@ function GreenHeart() {
     <img
       src={logocarmona}
       alt="Logo Carmona"
-      style={{ width: "40px", height: "40px", borderRadius: "20px" }}
+      style={{ width: "60px", height: "40px", borderRadius: "30px" }}
     />
   );
 }
