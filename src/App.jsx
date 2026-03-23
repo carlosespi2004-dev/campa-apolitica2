@@ -27,7 +27,7 @@ function ANRLogo() {
     <img
       src={logoofi}
       alt="Logo Oficial"
-      style={{ width: "80px", borderRadius: "50%" }}
+      style={{ width: "100px", borderRadius: "50%" }}
       
     />
   );
@@ -312,7 +312,7 @@ export default function App() {
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
           <ANRLogo />
-          <h1 style={{ fontFamily: "Montserrat", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "24px" : "44px", margin: 0, textTransform: "uppercase", letterSpacing: "-1.5px" }}>
+          <h1 style={{ fontFamily: "Carattere", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "24px" : "44px", margin: 0, textTransform: "uppercase", letterSpacing: "-1.5px" }}>
             HAGAMOS QUE SUCEDA
           </h1>
           <div style={{ background: "#f1f5f9", padding: "6px 20px", borderRadius: "50px", display: "flex", alignItems: "center", gap: 8 }}>
