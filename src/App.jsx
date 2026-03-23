@@ -28,7 +28,6 @@ function ANRLogo() {
       src={anrlogo}
       alt="Logo Oficial"
       style={{ width: "80px", borderRadius: "50%" }}
-      
     />
   );
 }
@@ -312,7 +311,6 @@ export default function App() {
           SALIR
         </button>
 
-        {/* FILA DE TEXTOS LATERALES Y LOGO ANR */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "40px", marginBottom: "10px" }}>
           <span style={{ color: "#C8102E", fontSize: isMobile ? "24px" : "48px", fontWeight: "900", fontFamily: "Domine" }}>LISTA 2</span>
           <ANRLogo />
@@ -383,7 +381,6 @@ export default function App() {
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
-                {/* NUEVOS CAMPOS: FECHA NACIMIENTO Y TELÉFONO */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="date" value={formVotante.fecha_nacimiento} onChange={(e) => setFormVotante({ ...formVotante, fecha_nacimiento: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>TELÉFONO</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
@@ -458,6 +455,7 @@ export default function App() {
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
                           <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
+                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
