@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import logocarmona from "./img/logocarmona.png";
-import logoofi from "./img/logoofi.png";
+import anrlogo from "./img/anrlogo.png";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -25,7 +25,7 @@ const LISTA_BARRIOS = [
 function ANRLogo() {
   return (
     <img
-      src={logoofi}
+      src={anrlogo}
       alt="Logo Oficial"
       style={{ width: "80px", height: "80px", borderRadius: "50%", border: "3px solid white", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
     />
@@ -37,7 +37,7 @@ function GreenHeart() {
     <img
       src={logocarmona}
       alt="Logo Carmona"
-      style={{ width: "25px", height: "25px", borderRadius: "5px", marginRight: "8px" }}
+      style={{ width: "50px", height: "25px", borderRadius: "50px", marginRight: "8px" }}
     />
   );
 }
