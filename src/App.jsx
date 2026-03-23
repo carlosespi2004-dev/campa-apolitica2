@@ -91,7 +91,7 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  // Permisos y Roles
+  // Identificación de usuario y rol
   const userRole = session?.user?.user_metadata?.role || "coordinador";
   const isAdmin = userRole === "administrador";
   const userId = session?.user?.id;
@@ -128,7 +128,6 @@ export default function App() {
       let queryVotantes = supabase.from("votantes").select("*");
       let queryEquipo = supabase.from("equipo").select("*");
 
-      // Si no es admin, filtrar solo lo que le pertenece
       if (!isAdmin) {
         queryVotantes = queryVotantes.eq("user_id", userId);
         queryEquipo = queryEquipo.eq("user_id", userId);
@@ -186,7 +185,7 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
+    const existe = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
     if (existe) {
       return alert("Este votante ya fue registrado.");
@@ -195,11 +194,23 @@ export default function App() {
     setLoading(true);
 
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
+    
+    // Limpiamos el payload para evitar que campos nulos de búsqueda rompan la inserción
     const payload = {
-      ...formVotante,
+      nombre: formVotante.nombre || "",
+      apellido: formVotante.apellido || "",
+      cedula: formVotante.cedula || "",
       cedula_limpia: cedulaLimpiaActual,
+      orden: formVotante.orden || "",
+      mesa: formVotante.mesa || "",
+      local_votacion: formVotante.local_votacion || "",
+      seccional: formVotante.seccional || "",
+      barrio: formVotante.barrio || "",
+      por_parte_de_id: formVotante.por_parte_de_id,
       por_parte_de_nombre: resp?.nombre || "",
-      user_id: userId // Se guarda quién lo creó
+      fecha_nacimiento: formVotante.fecha_nacimiento || null,
+      telefono: formVotante.telefono || "",
+      user_id: userId
     };
 
     const { error } = editIdVotante
@@ -211,6 +222,9 @@ export default function App() {
       setEditIdVotante(null);
       cargarDatos();
       alert("¡Guardado!");
+    } else {
+      console.error(error);
+      alert("Error al guardar: " + error.message);
     }
     setLoading(false);
   }
@@ -219,7 +233,13 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     
-    const payload = { ...formEquipo, user_id: userId };
+    const payload = { 
+      nombre: formEquipo.nombre, 
+      telefono: formEquipo.telefono, 
+      rol: formEquipo.rol, 
+      zona: formEquipo.zona,
+      user_id: userId 
+    };
 
     const { error } = editIdEquipo
       ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
@@ -229,12 +249,15 @@ export default function App() {
       setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
       setEditIdEquipo(null);
       cargarDatos();
+    } else {
+      console.error(error);
+      alert("Error al guardar equipo: " + error.message);
     }
     setLoading(false);
   }
 
   const exportarExcel = async () => {
-    if (!isAdmin) return; // Seguridad extra
+    if (!isAdmin) return;
     const workbook = new ExcelJS.Workbook();
 
     const crearHoja = (nombreHoja, lista) => {
@@ -387,7 +410,17 @@ export default function App() {
                   </p>
                   <button
                     onClick={() => {
-                      setFormVotante({ ...formVotante, ...resultadoPadron });
+                      // Solo copiamos campos necesarios del padron para el formulario de registro
+                      setFormVotante({ 
+                        ...formVotante, 
+                        nombre: resultadoPadron.nombre, 
+                        apellido: resultadoPadron.apellido,
+                        cedula: resultadoPadron.cedula,
+                        orden: resultadoPadron.orden,
+                        mesa: resultadoPadron.mesa,
+                        seccional: resultadoPadron.seccional,
+                        local_votacion: resultadoPadron.local_votacion
+                      });
                       setResultadoPadron(null);
                     }}
                     style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none" }}
