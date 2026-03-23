@@ -214,7 +214,7 @@ export default function App() {
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
 
-      sheet.addRow(["HAGAMOS QUE SUCEDA FRANCO"]);
+      
       sheet.mergeCells("A1:K1");
       const r1 = sheet.getRow(1);
       r1.height = 30;
