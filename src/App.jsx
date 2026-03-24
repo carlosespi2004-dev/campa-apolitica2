@@ -256,8 +256,12 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
+  // 1. Extraemos el id para que NO se incluya en el resto de los datos (...rest)
+    const { id, ...datosSinId } = formVotante;
+
+    // 2. Creamos el payload usando solo los datos, sin el ID viejo
     const payload = {
-      ...formVotante,
+      ...datosSinId, // Aquí ya no va el ID que causa el error
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
       equipo_id: formVotante.por_parte_de_id, 
