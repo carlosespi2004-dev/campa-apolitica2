@@ -93,7 +93,7 @@ function LoginScreen({ onLogin, loading }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [userRole, setUserRole] = useState(null); // Nuevo: Rol del usuario
+  const [userRole, setUserRole] = useState(null); 
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -108,7 +108,6 @@ export default function App() {
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
-  // Nuevo: Limpiar todo el estado al cerrar sesión o cambiar de cuenta
   const limpiarEstado = () => {
     setVotantes([]);
     setEquipo([]);
@@ -151,7 +150,6 @@ export default function App() {
     }
   }, [session]);
 
-  // Nuevo: Cargar rol desde profiles y luego los datos
   async function cargarRolYDatos() {
     setLoading(true);
     try {
@@ -182,6 +180,22 @@ export default function App() {
     }
   }
 
+  // Lógica para filtrar votantes según rol
+  const votantesFiltrados = useMemo(() => {
+    if (userRole === "administrador") return votantes;
+    return votantes.filter(v => v.created_by === session?.user?.id);
+  }, [votantes, userRole, session]);
+
+  // Lista General sin duplicados visuales (para la tabla principal)
+  const votantesUnicos = useMemo(() => {
+    const seen = new Set();
+    return votantesFiltrados.filter(v => {
+      const duplicate = seen.has(normalizarCedula(v.cedula));
+      seen.add(normalizarCedula(v.cedula));
+      return !duplicate;
+    });
+  }, [votantesFiltrados]);
+
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
     return (equipo || [])
@@ -194,12 +208,12 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    (votantes || []).forEach((v) => {
+    (votantesFiltrados || []).forEach((v) => {
       const b = v.barrio || "Sin barrio";
       counts[b] = (counts[b] || 0) + 1;
     });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
-  }, [votantes]);
+  }, [votantesFiltrados]);
 
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
@@ -222,14 +236,18 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
+    // Nueva lógica de duplicados: No en mi propia lista, pero sí permitido si es de otro integrante
+    const existeEnMiLista = votantes.some(v => 
+      normalizarCedula(v.cedula) === cedulaLimpiaActual && 
+      v.created_by === session?.user?.id &&
+      v.id !== editIdVotante
+    );
     
-    if (existe) {
-      return alert("Este votante ya fue registrado.");
+    if (existeEnMiLista) {
+      return alert("Ya has registrado a esta persona en tu lista.");
     }
 
     setLoading(true);
-
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
     const payload = {
@@ -259,28 +277,20 @@ export default function App() {
 
   async function guardarEquipo(e) {
     e.preventDefault();
+    if(userRole !== "administrador") return;
     setLoading(true);
 
     let authUserId = null;
-
     if (!editIdEquipo) {
-      if (!formEquipo.email || !formEquipo.password) {
-        alert("⚠️ Para crear un nuevo usuario, el correo y la contraseña son obligatorios.");
-        setLoading(false);
-        return;
-      }
-
       const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
         email: formEquipo.email,
         password: formEquipo.password,
       });
-
       if (authError) {
         alert("❌ Error al crear el acceso: " + authError.message);
         setLoading(false);
         return;
       }
-
       authUserId = authData.user.id;
     }
 
@@ -294,7 +304,6 @@ export default function App() {
 
     if (editIdEquipo) {
       const { error: errorEquipo } = await supabase.from("equipo").update(payloadEquipo).eq("id", editIdEquipo);
-      
       const { error: errorPerfil } = await supabase.from("profiles").update({
         nombre: formEquipo.nombre,
         rol: formEquipo.rol,
@@ -310,7 +319,6 @@ export default function App() {
         cargarDatos();
         alert("✅ ¡Datos actualizados con éxito!");
       }
-
     } else {
       const { data: nuevoEquipo, error: errorEquipo } = await supabase
         .from("equipo")
@@ -329,17 +337,14 @@ export default function App() {
           telefono: formEquipo.telefono,
           zona: formEquipo.zona
         };
-        
         const { error: errorPerfil } = await supabase.from("profiles").insert([payloadProfile]);
-        
         if (errorPerfil) {
-          console.error("Error al crear perfil:", errorPerfil);
-          alert("⚠️ El equipo se guardó, pero hubo un error al crear su perfil de seguridad.");
+          alert("⚠️ Hubo un error al crear su perfil de seguridad.");
         } else {
           setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
           setEditIdEquipo(null);
           cargarDatos();
-          alert("✅ ¡Usuario, equipo y perfil configurados con éxito!");
+          alert("✅ ¡Usuario creado con éxito!");
         }
       }
     }
@@ -347,8 +352,7 @@ export default function App() {
   }
 
   const exportarExcel = async () => {
-    // Restricción: Solo administrador exporta
-    if (userRole !== "administrador") return alert("No tienes permisos para exportar.");
+    if (userRole !== "administrador") return;
 
     const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombreHoja, lista) => {
@@ -398,7 +402,11 @@ export default function App() {
         });
       });
     };
-    crearHoja("LISTA GENERAL", votantes);
+    
+    // Lista general sin duplicados para la primera hoja
+    crearHoja("LISTA GENERAL", votantesUnicos);
+    
+    // Hojas individuales para cada integrante (aquí sí se permiten duplicados si los registraron varios)
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
@@ -461,10 +469,11 @@ export default function App() {
       <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 100 }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
-        <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
-        {/* Restricción: Solo administrador ve Reportes */}
         {userRole === "administrador" && (
-          <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+          <>
+            <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
+            <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+          </>
         )}
       </nav>
 
@@ -527,6 +536,7 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
+                {/* Coordinador sí puede ver todos los integrantes en el select de responsable */}
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{equipo.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
               </form>
@@ -545,7 +555,8 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {(votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
+                    {/* Tabla principal usa votantesUnicos (lista general sin duplicados) */}
+                    {(votantesUnicos || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
@@ -562,38 +573,34 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "equipo" && (
+        {activeTab === "equipo" && userRole === "administrador" && (
           <div style={{ display: "grid", gap: 30 }}>
-            {/* Restricción: Solo administrador carga integrantes */}
-            {userRole === "administrador" && (
-              <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-                <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
-                <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
-                  <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                    <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                    <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                  </div>
-                  {!editIdEquipo && (
-                    <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
-                      <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
-                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
-                        <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                        <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                      </div>
+            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
+              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
+              <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
+                <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                </div>
+                {!editIdEquipo && (
+                  <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
+                    <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
+                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                     </div>
-                  )}
-                  <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                    <option value="coordinador">Coordinador (Solo ve su zona)</option>
-                    <option value="administrador">Administrador (Ve todo)</option>
-                  </select>
-                  <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
-                    {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
-                  </button>
-                </form>
-              </div>
-            )}
-            
+                  </div>
+                )}
+                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
+                  <option value="coordinador">Coordinador (Solo ve su zona)</option>
+                  <option value="administrador">Administrador (Ve todo)</option>
+                </select>
+                <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
+                  {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
+                </button>
+              </form>
+            </div>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
               <div style={{ overflowX: "auto" }}>
@@ -604,13 +611,8 @@ export default function App() {
                         <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small><br /><small style={{ color: "#64748b" }}>{m?.telefono}</small></td>
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
-                          {/* Restricción: Solo administrador edita/borra equipo */}
-                          {userRole === "administrador" && (
-                            <>
-                              <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                              <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
-                            </>
-                          )}
+                          <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
+                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
@@ -660,7 +662,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Restricción: Solo administrador exporta excel */}
       {userRole === "administrador" && (
         <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
           <span>📥</span> EXPORTAR EXCEL
