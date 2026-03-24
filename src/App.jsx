@@ -255,11 +255,11 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
-    // EL PARCHE: Extraemos id y created_at para no enviarlos y que no choquen
-    const { id, created_at, ...datosSinConflicto } = formVotante;
+    // CORRECCIÓN CLAVE: Quitar el id original para evitar conflictos
+    const { id, created_at, ...datosLimpios } = formVotante;
 
     const payload = {
-      ...datosSinConflicto,
+      ...datosLimpios,
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
       equipo_id: formVotante.por_parte_de_id, 
