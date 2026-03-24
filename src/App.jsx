@@ -9,6 +9,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// NUEVO: Cliente silencioso para registrar usuarios sin cerrar la sesión actual
+const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
+
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
 
 const LISTA_BARRIOS = [
@@ -92,7 +97,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("inicio");
 
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
-  const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
+  
+  // NUEVO: Agregamos email y password al estado del formulario de equipo
+  const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
+  
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
   const [busquedaLista, setBusquedaLista] = useState("");
@@ -167,7 +175,6 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- FUNCIÓN ACTUALIZADA ---
   async function guardarVotante(e) {
     e.preventDefault();
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
@@ -187,9 +194,9 @@ export default function App() {
       ...formVotante,
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
-      equipo_id: formVotante.por_parte_de_id, // Añadido para la política RLS
-      user_id: session?.user?.id,             // Añadido para permisos
-      created_by: session?.user?.id           // Añadido para trazabilidad
+      equipo_id: formVotante.por_parte_de_id, 
+      user_id: session?.user?.id,             
+      created_by: session?.user?.id           
     };
 
     const { error } = editIdVotante
@@ -207,21 +214,58 @@ export default function App() {
     }
     setLoading(false);
   }
-  // ---------------------------
 
+  // NUEVO: Función para guardar equipo con creación de usuario en Auth
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
 
+    let authUserId = null;
+
+    // Si estamos creando un NUEVO miembro, lo registramos en Auth primero
+    if (!editIdEquipo) {
+      if (!formEquipo.email || !formEquipo.password) {
+        alert("⚠️ Para crear un nuevo usuario, el correo y la contraseña son obligatorios.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
+        email: formEquipo.email,
+        password: formEquipo.password,
+      });
+
+      if (authError) {
+        alert("❌ Error al crear el acceso: " + authError.message);
+        setLoading(false);
+        return;
+      }
+
+      authUserId = authData.user.id;
+    }
+
+    const payload = {
+      nombre: formEquipo.nombre,
+      telefono: formEquipo.telefono,
+      zona: formEquipo.zona,
+      rol: formEquipo.rol,
+      ...(authUserId && { user_id: authUserId })
+    };
+
     const { error } = editIdEquipo
-      ? await supabase.from("equipo").update(formEquipo).eq("id", editIdEquipo)
-      : await supabase.from("equipo").insert([formEquipo]);
+      ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
+      : await supabase.from("equipo").insert([payload]);
 
     if (!error) {
-      setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
+      setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
       setEditIdEquipo(null);
       cargarDatos();
+      alert("✅ ¡Guardado con éxito!");
+    } else {
+      alert("❌ Error al guardar datos del equipo: " + error.message);
+      console.error(error);
     }
+    
     setLoading(false);
   }
 
@@ -452,15 +496,36 @@ export default function App() {
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
               <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
+                
                 <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                </div>
+
+                {/* NUEVO: Contenedor para crear credenciales, solo visible si es un usuario nuevo */}
+                {!editIdEquipo && (
+                  <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
+                    <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
+                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                    </div>
+                  </div>
+                )}
+
                 <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="coordinador">Coordinador</option><option value="administrador">Administrador</option>
+                  <option value="coordinador">Coordinador (Solo ve su zona)</option>
+                  <option value="administrador">Administrador (Ve todo)</option>
                 </select>
-                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>GUARDAR MIEMBRO</button>
+
+                <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
+                  {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
+                </button>
               </form>
             </div>
+            
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
               <div style={{ overflowX: "auto" }}>
