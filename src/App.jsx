@@ -108,7 +108,6 @@ export default function App() {
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
-  // CAMBIO 1: Limpieza total al cerrar sesión o cambiar cuenta
   const limpiarEstado = () => {
     setVotantes([]);
     setEquipo([]);
@@ -214,7 +213,6 @@ export default function App() {
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [votantesFiltrados]);
 
-  // CAMBIO 2: Búsqueda arreglada para el Coordinador
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
@@ -244,6 +242,8 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
+    
+    // VALIDACIÓN: No duplicar el mismo votante en MI PROPIA lista
     const existeEnMiLista = votantes.some(v => 
       normalizarCedula(v.cedula) === cedulaLimpiaActual && 
       v.created_by === session?.user?.id &&
@@ -257,7 +257,7 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
-    // CAMBIO 3: Eliminar el id viejo para evitar "duplicate key" al asignar
+    // ELIMINAR ID: Para evitar que herede el ID de la tabla padrón
     const { id, ...datosSinId } = formVotante;
 
     const payload = {
@@ -367,6 +367,7 @@ export default function App() {
     const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
+      
       sheet.addRow(["HAGAMOS QUE SUCEDA "]);
       sheet.mergeCells("A1:K1");
       const r1 = sheet.getRow(1);
@@ -374,6 +375,7 @@ export default function App() {
       r1.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r1.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 18, bold: true };
       r1.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
+
       sheet.addRow(["Darío Carmona Concejal 2026"]);
       sheet.mergeCells("A2:K2");
       const r2 = sheet.getRow(2);
@@ -381,6 +383,7 @@ export default function App() {
       r2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r2.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 12, bold: true };
       r2.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
+
       sheet.addRow([]);
       sheet.columns = [
         { header: "Nro", key: "nro", width: 5 },
@@ -395,6 +398,7 @@ export default function App() {
         { header: "Local", key: "loc", width: 35 },
         { header: "Captado por", key: "cap", width: 20 },
       ];
+
       const headerRow = sheet.getRow(4);
       headerRow.values = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Orden", "Mesa", "Seccional", "Local", "Captado por"];
       headerRow.eachCell((c) => {
@@ -402,6 +406,7 @@ export default function App() {
         c.font = { color: { argb: "FFFFFFFF" }, bold: true };
         c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
       });
+
       lista.forEach((v, i) => {
         const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
@@ -413,13 +418,13 @@ export default function App() {
       });
     };
     
-    // Lista general sin duplicados visuales
     crearHoja("LISTA GENERAL", votantesUnicos);
     
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
     });
+
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), "Campaña_Dario_Carmona.xlsx");
   };
