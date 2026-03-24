@@ -85,7 +85,8 @@ function LoginScreen({ onLogin, loading }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [userRole, setUserRole] = useState(null); // NUEVO: Estado para la jerarquía
+  const [userRole, setUserRole] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null); // NUEVO: Estado para el ID del usuario actual
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -114,7 +115,10 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) fetchUserRole(session.user.email);
-      else setUserRole(null);
+      else {
+        setUserRole(null);
+        setCurrentUserId(null);
+      }
     });
 
     return () => {
@@ -123,17 +127,22 @@ export default function App() {
     };
   }, []);
 
-  // NUEVA FUNCIÓN: Identificar jerarquía
+  // MODIFICADO: Selecciona también el ID para filtrar luego
   async function fetchUserRole(email) {
     try {
       const { data, error } = await supabase
         .from("equipo")
-        .select("rol")
-        .eq("email", email) // Asume que tienes el campo email en la tabla equipo
+        .select("id, rol") 
+        .eq("email", email)
         .maybeSingle();
       
-      if (data) setUserRole(data.rol);
-      else setUserRole("coordinador"); // Rol por defecto si no se encuentra
+      if (data) {
+        setUserRole(data.rol);
+        setCurrentUserId(data.id);
+      } else {
+        setUserRole("coordinador"); 
+        setCurrentUserId(null);
+      }
     } catch (err) {
       console.error("Error identificando rol:", err);
     }
@@ -366,8 +375,13 @@ export default function App() {
       <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 100 }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
-        <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
-        <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+        {/* MODIFICADO: Pestañas exclusivas para el administrador */}
+        {userRole === "administrador" && (
+          <>
+            <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
+            <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+          </>
+        )}
       </nav>
 
       <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "30px 15px", paddingBottom: 120 }}>
@@ -447,7 +461,11 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {(votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
+                    {(votantes || [])
+                      /* MODIFICADO: Filtro por jerarquía para ver solo los propios si no es admin */
+                      .filter((v) => userRole === "administrador" || v.por_parte_de_id === currentUserId)
+                      .filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase()))
+                      .map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
@@ -464,7 +482,8 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "equipo" && (
+        {/* MODIFICADO: Solo el administrador renderiza el contenido de Equipo */}
+        {activeTab === "equipo" && userRole === "administrador" && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
@@ -500,7 +519,8 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "reportes" && (
+        {/* MODIFICADO: Solo el administrador renderiza el contenido de Reportes */}
+        {activeTab === "reportes" && userRole === "administrador" && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 30, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Rendimiento</h3>
@@ -539,9 +559,12 @@ export default function App() {
         )}
       </main>
 
-      <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
-        <span>📥</span> EXPORTAR EXCEL
-      </button>
+      {/* MODIFICADO: Botón de exportar visible solo para administrador */}
+      {userRole === "administrador" && (
+        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
+          <span>📥</span> EXPORTAR EXCEL
+        </button>
+      )}
     </div>
   );
 }
