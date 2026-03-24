@@ -255,7 +255,7 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
-    // EXTRACCIÓN CRÍTICA DEL ID PARA EVITAR DUPLICATE PKEY
+    // EXTRACCIÓN DEL ID PARA EVITAR DUPLICATE PKEY AL REGISTRAR DESDE EL PADRÓN
     const { id, ...datosSinId } = formVotante;
 
     const payload = {
