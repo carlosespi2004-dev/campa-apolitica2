@@ -187,12 +187,12 @@ export default function App() {
 
   const votantesUnicos = useMemo(() => {
     const seen = new Set();
-    return votantesFiltrados.filter(v => {
+    return (userRole === "administrador" ? votantes : votantesFiltrados).filter(v => {
       const duplicate = seen.has(normalizarCedula(v.cedula));
       seen.add(normalizarCedula(v.cedula));
       return !duplicate;
     });
-  }, [votantesFiltrados]);
+  }, [votantes, votantesFiltrados, userRole]);
 
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
@@ -255,11 +255,11 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
-    // EXTRACCIÓN DEL ID PARA EVITAR DUPLICATE PKEY AL REGISTRAR DESDE EL PADRÓN
-    const { id, ...datosSinId } = formVotante;
+    // EL PARCHE: Extraemos id y created_at para no enviarlos y que no choquen
+    const { id, created_at, ...datosSinConflicto } = formVotante;
 
     const payload = {
-      ...datosSinId,
+      ...datosSinConflicto,
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: resp?.nombre || "",
       equipo_id: formVotante.por_parte_de_id, 
