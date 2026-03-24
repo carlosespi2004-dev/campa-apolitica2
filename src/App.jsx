@@ -108,6 +108,7 @@ export default function App() {
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
+  // CAMBIO 1: Limpieza total al cerrar sesión o cambiar cuenta
   const limpiarEstado = () => {
     setVotantes([]);
     setEquipo([]);
@@ -213,6 +214,7 @@ export default function App() {
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [votantesFiltrados]);
 
+  // CAMBIO 2: Búsqueda arreglada para el Coordinador
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
@@ -255,6 +257,7 @@ export default function App() {
     setLoading(true);
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
+    // CAMBIO 3: Eliminar el id viejo para evitar "duplicate key" al asignar
     const { id, ...datosSinId } = formVotante;
 
     const payload = {
@@ -410,6 +413,7 @@ export default function App() {
       });
     };
     
+    // Lista general sin duplicados visuales
     crearHoja("LISTA GENERAL", votantesUnicos);
     
     equipo.forEach((miembro) => {
