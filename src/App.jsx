@@ -295,7 +295,7 @@ export default function App() {
         password: formEquipo.password,
       });
       if (authError) {
-        alert("❌ Error al crear el acceso: " + authError.message);
+        alert("❌ El correo electrónico ya está en uso " + authError.message);
         setLoading(false);
         return;
       }
