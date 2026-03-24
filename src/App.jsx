@@ -91,9 +91,11 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  const userRole = session?.user?.user_metadata?.role || "coordinador";
+  // --- IMPLEMENTACIÓN PUNTUAL: ROL DESDE BASE DE DATOS ---
+  const [userRole, setUserRole] = useState("coordinador"); 
   const isAdmin = userRole === "administrador";
   const userId = session?.user?.id;
+  // --- FIN IMPLEMENTACIÓN ---
 
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
@@ -124,12 +126,26 @@ export default function App() {
   async function cargarDatos() {
     setLoading(true);
     try {
+      // --- IMPLEMENTACIÓN PUNTUAL: IDENTIFICAR ROL AUTOMÁTICAMENTE ---
+      const { data: memberData } = await supabase
+        .from("equipo")
+        .select("rol")
+        .eq("user_id", session?.user?.id)
+        .maybeSingle();
+      
+      if (memberData?.rol) {
+        setUserRole(memberData.rol);
+      }
+      // --- FIN IMPLEMENTACIÓN ---
+
       let queryV = supabase.from("votantes").select("*");
       let queryE = supabase.from("equipo").select("*");
 
-      if (!isAdmin) {
-        queryV = queryV.eq("user_id", userId);
-        queryE = queryE.eq("user_id", userId);
+      // Usamos el rol actualizado de la base de datos para filtrar
+      const currentRole = memberData?.rol || "coordinador";
+      if (currentRole !== "administrador") {
+        queryV = queryV.eq("user_id", session?.user?.id);
+        queryE = queryE.eq("user_id", session?.user?.id);
       }
 
       const [v, e] = await Promise.all([
@@ -144,17 +160,6 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- REGLA 3: Lista Única para el Administrador ---
-  const votantesUnicos = useMemo(() => {
-    const vistos = new Set();
-    return (votantes || []).filter(v => {
-      const ci = normalizarCedula(v.cedula);
-      if (vistos.has(ci)) return false;
-      vistos.add(ci);
-      return true;
-    });
-  }, [votantes]);
-
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
     return (equipo || [])
@@ -167,13 +172,12 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    const listaParaBarrios = isAdmin ? votantesUnicos : votantes;
-    (listaParaBarrios || []).forEach((v) => {
+    (votantes || []).forEach((v) => {
       const b = v.barrio || "Sin barrio";
       counts[b] = (counts[b] || 0) + 1;
     });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
-  }, [votantes, votantesUnicos, isAdmin]);
+  }, [votantes]);
 
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
@@ -196,16 +200,10 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    
-    // REGLA 2: Bloqueo solo si el INTEGRANTE ACTUAL ya tiene esa cédula
-    const existeLocal = (votantes || []).some(v => 
-      normalizarCedula(v.cedula) === cedulaLimpiaActual && 
-      v.user_id === userId && 
-      v.id !== editIdVotante
-    );
+    const existeLocal = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
     if (existeLocal) {
-      return alert("Tú ya tienes a este votante registrado en tu lista.");
+      return alert("Ya tienes a este votante registrado.");
     }
 
     setLoading(true);
@@ -238,9 +236,8 @@ export default function App() {
       cargarDatos();
       alert("¡Registro exitoso!");
     } else {
-      // Manejo del error de la base de datos alineado al nuevo SQL
       if (error.code === "23505") {
-        alert("Ya has registrado esta cédula anteriormente. No se permiten duplicados en tu propia lista.");
+        alert("Aviso: Esta cédula ya fue captada por otro miembro del equipo.");
       } else {
         alert("Error al guardar: " + error.message);
       }
@@ -267,7 +264,6 @@ export default function App() {
     setLoading(false);
   }
 
-  // REGLAS 4 y 5: Exportación condicionada y hojas configuradas
   const exportarExcel = async () => {
     if (!isAdmin) return;
     const workbook = new ExcelJS.Workbook();
@@ -326,10 +322,8 @@ export default function App() {
       });
     };
 
-    // HOJA 1: Lista General con personas ÚNICAS
-    crearHoja("LISTA GENERAL", votantesUnicos);
+    crearHoja("LISTA GENERAL", votantes);
 
-    // HOJAS SIGUIENTES: Por cada integrante con sus captados propios
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) {
@@ -476,7 +470,7 @@ export default function App() {
 
         {activeTab === "votantes" && (
           <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General (Personas Únicas)" : "Mis Registros"}</h3>
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General" : "Mis Registros"}</h3>
             <input type="text" placeholder="🔍 Buscar por nombre o CI..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
@@ -485,7 +479,7 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {(isAdmin ? votantesUnicos : votantes).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
+                    {(votantes || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
@@ -502,7 +496,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ... (El resto de las pestañas equipo y reportes se mantienen igual) ... */}
         {activeTab === "equipo" && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
