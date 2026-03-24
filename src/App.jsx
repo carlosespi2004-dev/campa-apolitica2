@@ -9,7 +9,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// NUEVO: Cliente silencioso para registrar usuarios sin cerrar la sesión actual
+// Cliente silencioso para registrar usuarios sin cerrar la sesión actual
 const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
@@ -97,8 +97,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("inicio");
 
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
-  
-  // NUEVO: Agregamos email y password al estado del formulario de equipo
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
   
   const [editIdVotante, setEditIdVotante] = useState(null);
@@ -215,14 +213,14 @@ export default function App() {
     setLoading(false);
   }
 
-  // NUEVO: Función para guardar equipo con creación de usuario en Auth
+  // --- FUNCIÓN GUARDAR EQUIPO ACTUALIZADA (Crea Auth + Equipo + Perfil) ---
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
 
     let authUserId = null;
 
-    // Si estamos creando un NUEVO miembro, lo registramos en Auth primero
+    // 1. REGISTRO EN AUTH (Solo si es nuevo)
     if (!editIdEquipo) {
       if (!formEquipo.email || !formEquipo.password) {
         alert("⚠️ Para crear un nuevo usuario, el correo y la contraseña son obligatorios.");
@@ -244,7 +242,8 @@ export default function App() {
       authUserId = authData.user.id;
     }
 
-    const payload = {
+    // 2. PREPARAR DATOS DEL EQUIPO
+    const payloadEquipo = {
       nombre: formEquipo.nombre,
       telefono: formEquipo.telefono,
       zona: formEquipo.zona,
@@ -252,22 +251,63 @@ export default function App() {
       ...(authUserId && { user_id: authUserId })
     };
 
-    const { error } = editIdEquipo
-      ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
-      : await supabase.from("equipo").insert([payload]);
+    // 3. GUARDAR EN BASE DE DATOS (Equipo + Perfil)
+    if (editIdEquipo) {
+      // Si estamos EDITANDO, actualizamos el equipo y también su perfil
+      const { error: errorEquipo } = await supabase.from("equipo").update(payloadEquipo).eq("id", editIdEquipo);
+      
+      const { error: errorPerfil } = await supabase.from("profiles").update({
+        nombre: formEquipo.nombre,
+        rol: formEquipo.rol,
+        telefono: formEquipo.telefono,
+        zona: formEquipo.zona
+      }).eq("equipo_id", editIdEquipo);
 
-    if (!error) {
-      setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
-      setEditIdEquipo(null);
-      cargarDatos();
-      alert("✅ ¡Guardado con éxito!");
+      if (errorEquipo || errorPerfil) {
+        alert("❌ Error al actualizar: " + (errorEquipo?.message || errorPerfil?.message));
+      } else {
+        setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
+        setEditIdEquipo(null);
+        cargarDatos();
+        alert("✅ ¡Datos actualizados con éxito!");
+      }
+
     } else {
-      alert("❌ Error al guardar datos del equipo: " + error.message);
-      console.error(error);
+      // Si estamos CREANDO, insertamos el equipo y pedimos que nos devuelva los datos (.select)
+      const { data: nuevoEquipo, error: errorEquipo } = await supabase
+        .from("equipo")
+        .insert([payloadEquipo])
+        .select(); 
+
+      if (errorEquipo) {
+        alert("❌ Error al guardar equipo: " + errorEquipo.message);
+      } else if (nuevoEquipo && nuevoEquipo.length > 0 && authUserId) {
+        // ¡LA MAGIA AQUÍ! Creamos el registro en la tabla profiles para la seguridad RLS
+        const payloadProfile = {
+          user_id: authUserId,
+          equipo_id: nuevoEquipo[0].id,
+          nombre: formEquipo.nombre,
+          rol: formEquipo.rol,
+          telefono: formEquipo.telefono,
+          zona: formEquipo.zona
+        };
+        
+        const { error: errorPerfil } = await supabase.from("profiles").insert([payloadProfile]);
+        
+        if (errorPerfil) {
+          console.error("Error al crear perfil:", errorPerfil);
+          alert("⚠️ El equipo se guardó, pero hubo un error al crear su perfil de seguridad.");
+        } else {
+          setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
+          setEditIdEquipo(null);
+          cargarDatos();
+          alert("✅ ¡Usuario, equipo y perfil configurados con éxito!");
+        }
+      }
     }
-    
     setLoading(false);
   }
+  // --------------------------------------------------------------------------
 
   const exportarExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -504,7 +544,6 @@ export default function App() {
                   <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 </div>
 
-                {/* NUEVO: Contenedor para crear credenciales, solo visible si es un usuario nuevo */}
                 {!editIdEquipo && (
                   <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
                     <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
