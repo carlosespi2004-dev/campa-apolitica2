@@ -24,7 +24,7 @@ const LISTA_BARRIOS = [
   "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián",
   "San Francisco", "San Isidro", "Sagrado Corazón de Jesús", "San Miguel",
   "San Lorenzo", "San Jorge", "Santo Domingo", "San Pablo",
-  "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Área 5", "CONAVI",
+  "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
   "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
@@ -180,13 +180,11 @@ export default function App() {
     }
   }
 
-  // Lógica para filtrar votantes según rol
   const votantesFiltrados = useMemo(() => {
     if (userRole === "administrador") return votantes;
     return votantes.filter(v => v.created_by === session?.user?.id);
   }, [votantes, userRole, session]);
 
-  // Lista General sin duplicados visuales (para la tabla principal)
   const votantesUnicos = useMemo(() => {
     const seen = new Set();
     return votantesFiltrados.filter(v => {
@@ -215,19 +213,28 @@ export default function App() {
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [votantesFiltrados]);
 
+  // CORRECCIÓN PUNTUAL: Búsqueda en padrón para todos los roles con manejo de errores
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
     setLoading(true);
-    const { data } = await supabase
+    setResultadoPadron(null);
+
+    const { data, error } = await supabase
       .from("padron_importado")
       .select("*")
       .or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`)
       .limit(1)
       .maybeSingle();
 
-    if (data) setResultadoPadron(data);
-    else alert("Cédula no encontrada.");
+    if (error) {
+      if (error.code === "42501") alert("Error de permisos: No tienes acceso al padrón.");
+      else alert("Error de consulta: " + error.message);
+    } else if (data) {
+      setResultadoPadron(data);
+    } else {
+      alert("Cédula realmente no encontrada en el padrón.");
+    }
     setLoading(false);
   }
 
@@ -236,7 +243,6 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    // Nueva lógica de duplicados: No en mi propia lista, pero sí permitido si es de otro integrante
     const existeEnMiLista = votantes.some(v => 
       normalizarCedula(v.cedula) === cedulaLimpiaActual && 
       v.created_by === session?.user?.id &&
@@ -403,10 +409,8 @@ export default function App() {
       });
     };
     
-    // Lista general sin duplicados para la primera hoja
     crearHoja("LISTA GENERAL", votantesUnicos);
     
-    // Hojas individuales para cada integrante (aquí sí se permiten duplicados si los registraron varios)
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
       if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
@@ -536,7 +540,6 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-                {/* Coordinador sí puede ver todos los integrantes en el select de responsable */}
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{equipo.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
               </form>
@@ -555,7 +558,6 @@ export default function App() {
                     <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
-                    {/* Tabla principal usa votantesUnicos (lista general sin duplicados) */}
                     {(votantesUnicos || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
