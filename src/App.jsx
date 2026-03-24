@@ -11,7 +11,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Cliente silencioso para registrar usuarios sin cerrar la sesión actual
 const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false, autoRefreshToken: false }
+  auth: { 
+    persistSession: false, 
+    autoRefreshToken: false,
+    storageKey: "silent-auth-key" // Evita la advertencia amarilla en consola
+  }
 });
 
 const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
@@ -213,7 +217,7 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- FUNCIÓN GUARDAR EQUIPO ACTUALIZADA (Crea Auth + Equipo + Perfil) ---
+  // --- FUNCIÓN GUARDAR EQUIPO (Crea Auth + Equipo + Perfil con ID forzado) ---
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
@@ -282,8 +286,10 @@ export default function App() {
       if (errorEquipo) {
         alert("❌ Error al guardar equipo: " + errorEquipo.message);
       } else if (nuevoEquipo && nuevoEquipo.length > 0 && authUserId) {
-        // ¡LA MAGIA AQUÍ! Creamos el registro en la tabla profiles para la seguridad RLS
+        
+        // ¡LA MAGIA AQUÍ! Creamos el registro en la tabla profiles forzando el ID
         const payloadProfile = {
+          id: authUserId,               // SOLUCIÓN: Le pasamos el ID explícitamente
           user_id: authUserId,
           equipo_id: nuevoEquipo[0].id,
           nombre: formEquipo.nombre,
