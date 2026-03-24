@@ -9,12 +9,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Cliente silencioso para registrar usuarios sin cerrar la sesión actual
 const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
   auth: { 
     persistSession: false, 
     autoRefreshToken: false,
-    storageKey: "silent-auth-key" // Evita la advertencia amarilla en consola
+    storageKey: "silent-auth-key"
   }
 });
 
@@ -94,6 +93,7 @@ function LoginScreen({ onLogin, loading }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [userRole, setUserRole] = useState(null); // Nuevo: Rol del usuario
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -102,20 +102,42 @@ export default function App() {
 
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
-  
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
   const [busquedaLista, setBusquedaLista] = useState("");
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
+  // Nuevo: Limpiar todo el estado al cerrar sesión o cambiar de cuenta
+  const limpiarEstado = () => {
+    setVotantes([]);
+    setEquipo([]);
+    setUserRole(null);
+    setActiveTab("inicio");
+    setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
+    setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
+    setEditIdVotante(null);
+    setEditIdEquipo(null);
+    setBusquedaLista("");
+    setCedulaRapida("");
+    setResultadoPadron(null);
+  };
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) limpiarEstado();
+      setSession(data.session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        limpiarEstado();
+      }
+      setSession(session);
+    });
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -124,11 +146,30 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session) cargarDatos();
+    if (session) {
+      cargarRolYDatos();
+    }
   }, [session]);
 
-  async function cargarDatos() {
+  // Nuevo: Cargar rol desde profiles y luego los datos
+  async function cargarRolYDatos() {
     setLoading(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("rol")
+        .eq("user_id", session.user.id)
+        .single();
+      
+      setUserRole(profile?.rol || "coordinador");
+      await cargarDatos();
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  }
+
+  async function cargarDatos() {
     try {
       const [v, e] = await Promise.all([
         supabase.from("votantes").select("*").order("created_at", { ascending: false }),
@@ -139,7 +180,6 @@ export default function App() {
     } catch (err) {
       console.error(err);
     }
-    setLoading(false);
   }
 
   const rendimientoEquipo = useMemo(() => {
@@ -217,14 +257,12 @@ export default function App() {
     setLoading(false);
   }
 
-  // --- FUNCIÓN GUARDAR EQUIPO (Crea Auth + Equipo + Perfil con ID forzado) ---
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
 
     let authUserId = null;
 
-    // 1. REGISTRO EN AUTH (Solo si es nuevo)
     if (!editIdEquipo) {
       if (!formEquipo.email || !formEquipo.password) {
         alert("⚠️ Para crear un nuevo usuario, el correo y la contraseña son obligatorios.");
@@ -246,7 +284,6 @@ export default function App() {
       authUserId = authData.user.id;
     }
 
-    // 2. PREPARAR DATOS DEL EQUIPO
     const payloadEquipo = {
       nombre: formEquipo.nombre,
       telefono: formEquipo.telefono,
@@ -255,9 +292,7 @@ export default function App() {
       ...(authUserId && { user_id: authUserId })
     };
 
-    // 3. GUARDAR EN BASE DE DATOS (Equipo + Perfil)
     if (editIdEquipo) {
-      // Si estamos EDITANDO, actualizamos el equipo y también su perfil
       const { error: errorEquipo } = await supabase.from("equipo").update(payloadEquipo).eq("id", editIdEquipo);
       
       const { error: errorPerfil } = await supabase.from("profiles").update({
@@ -277,7 +312,6 @@ export default function App() {
       }
 
     } else {
-      // Si estamos CREANDO, insertamos el equipo y pedimos que nos devuelva los datos (.select)
       const { data: nuevoEquipo, error: errorEquipo } = await supabase
         .from("equipo")
         .insert([payloadEquipo])
@@ -286,10 +320,8 @@ export default function App() {
       if (errorEquipo) {
         alert("❌ Error al guardar equipo: " + errorEquipo.message);
       } else if (nuevoEquipo && nuevoEquipo.length > 0 && authUserId) {
-        
-        // ¡LA MAGIA AQUÍ! Creamos el registro en la tabla profiles forzando el ID
         const payloadProfile = {
-          id: authUserId,               // SOLUCIÓN: Le pasamos el ID explícitamente
+          id: authUserId,
           user_id: authUserId,
           equipo_id: nuevoEquipo[0].id,
           nombre: formEquipo.nombre,
@@ -313,14 +345,14 @@ export default function App() {
     }
     setLoading(false);
   }
-  // --------------------------------------------------------------------------
 
   const exportarExcel = async () => {
-    const workbook = new ExcelJS.Workbook();
+    // Restricción: Solo administrador exporta
+    if (userRole !== "administrador") return alert("No tienes permisos para exportar.");
 
+    const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
-
       sheet.addRow(["HAGAMOS QUE SUCEDA "]);
       sheet.mergeCells("A1:K1");
       const r1 = sheet.getRow(1);
@@ -328,7 +360,6 @@ export default function App() {
       r1.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r1.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 18, bold: true };
       r1.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
-
       sheet.addRow(["Darío Carmona Concejal 2026"]);
       sheet.mergeCells("A2:K2");
       const r2 = sheet.getRow(2);
@@ -336,9 +367,7 @@ export default function App() {
       r2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r2.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 12, bold: true };
       r2.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
-
       sheet.addRow([]);
-
       sheet.columns = [
         { header: "Nro", key: "nro", width: 5 },
         { header: "Nombre", key: "nom", width: 25 },
@@ -352,7 +381,6 @@ export default function App() {
         { header: "Local", key: "loc", width: 35 },
         { header: "Captado por", key: "cap", width: 20 },
       ];
-
       const headerRow = sheet.getRow(4);
       headerRow.values = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Orden", "Mesa", "Seccional", "Local", "Captado por"];
       headerRow.eachCell((c) => {
@@ -360,7 +388,6 @@ export default function App() {
         c.font = { color: { argb: "FFFFFFFF" }, bold: true };
         c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
       });
-
       lista.forEach((v, i) => {
         const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
@@ -371,16 +398,11 @@ export default function App() {
         });
       });
     };
-
     crearHoja("LISTA GENERAL", votantes);
-
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
-      if (datosMiembro.length > 0) {
-        crearHoja(miembro.nombre, datosMiembro);
-      }
+      if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
     });
-
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), "Campaña_Dario_Carmona.xlsx");
   };
@@ -440,7 +462,10 @@ export default function App() {
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
         <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
-        <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+        {/* Restricción: Solo administrador ve Reportes */}
+        {userRole === "administrador" && (
+          <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
+        )}
       </nav>
 
       <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "30px 15px", paddingBottom: 120 }}>
@@ -539,37 +564,35 @@ export default function App() {
 
         {activeTab === "equipo" && (
           <div style={{ display: "grid", gap: 30 }}>
-            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
-              <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
-                
-                <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                </div>
-
-                {!editIdEquipo && (
-                  <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
-                    <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
-                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                    </div>
+            {/* Restricción: Solo administrador carga integrantes */}
+            {userRole === "administrador" && (
+              <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
+                <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
+                <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
+                  <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                    <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                    <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                   </div>
-                )}
-
-                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="coordinador">Coordinador (Solo ve su zona)</option>
-                  <option value="administrador">Administrador (Ve todo)</option>
-                </select>
-
-                <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
-                  {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
-                </button>
-              </form>
-            </div>
+                  {!editIdEquipo && (
+                    <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
+                      <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
+                        <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                        <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                      </div>
+                    </div>
+                  )}
+                  <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
+                    <option value="coordinador">Coordinador (Solo ve su zona)</option>
+                    <option value="administrador">Administrador (Ve todo)</option>
+                  </select>
+                  <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
+                    {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
+                  </button>
+                </form>
+              </div>
+            )}
             
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
@@ -581,8 +604,13 @@ export default function App() {
                         <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small><br /><small style={{ color: "#64748b" }}>{m?.telefono}</small></td>
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
-                          <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                          {/* Restricción: Solo administrador edita/borra equipo */}
+                          {userRole === "administrador" && (
+                            <>
+                              <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
+                              <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -593,7 +621,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === "reportes" && (
+        {activeTab === "reportes" && userRole === "administrador" && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 30, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Rendimiento</h3>
@@ -632,9 +660,12 @@ export default function App() {
         )}
       </main>
 
-      <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
-        <span>📥</span> EXPORTAR EXCEL
-      </button>
+      {/* Restricción: Solo administrador exporta excel */}
+      {userRole === "administrador" && (
+        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
+          <span>📥</span> EXPORTAR EXCEL
+        </button>
+      )}
     </div>
   );
 }
