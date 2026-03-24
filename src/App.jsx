@@ -86,38 +86,69 @@ function LoginScreen({ onLogin, loading }) {
 export default function App() {
   const [session, setSession] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null); // NUEVO: Estado para el ID del usuario actual
+  const [currentUserId, setCurrentUserId] = useState(null); // auth user id
+  const [currentProfile, setCurrentProfile] = useState(null); // profile completo
+  const [currentEquipoId, setCurrentEquipoId] = useState(null); // equipo_id del profile
+
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
-  const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
+  const [formVotante, setFormVotante] = useState({
+    nombre: "",
+    apellido: "",
+    cedula: "",
+    orden: "",
+    mesa: "",
+    local_votacion: "",
+    seccional: "",
+    barrio: "",
+    por_parte_de_id: "",
+    fecha_nacimiento: "",
+    telefono: ""
+  });
+
+  const [formEquipo, setFormEquipo] = useState({
+    nombre: "",
+    telefono: "",
+    rol: "coordinador",
+    zona: ""
+  });
+
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
   const [busquedaLista, setBusquedaLista] = useState("");
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
 
+  const esAdmin = userRole === "administrador";
+  const esCoordinador = userRole === "coordinador";
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    
-    supabase.auth.getSession().then(({ data }) => {
+
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
-      if (data.session) fetchUserRole(data.session.user.email);
+      if (data.session?.user) {
+        await fetchUserProfile(data.session.user.id);
+      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) fetchUserRole(session.user.email);
-      else {
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession);
+
+      if (newSession?.user) {
+        await fetchUserProfile(newSession.user.id);
+      } else {
         setUserRole(null);
         setCurrentUserId(null);
+        setCurrentProfile(null);
+        setCurrentEquipoId(null);
       }
     });
 
@@ -127,30 +158,51 @@ export default function App() {
     };
   }, []);
 
-  // MODIFICADO: Selecciona también el ID para filtrar luego
-  async function fetchUserRole(email) {
+  async function fetchUserProfile(authUserId) {
     try {
+      setCurrentUserId(authUserId);
+
       const { data, error } = await supabase
-        .from("equipo")
-        .select("id, rol") 
-        .eq("email", email)
+        .from("profiles")
+        .select("*")
+        .eq("user_id", authUserId)
         .maybeSingle();
-      
+
+      if (error) {
+        console.error("Error cargando profile:", error);
+        setUserRole(null);
+        setCurrentProfile(null);
+        setCurrentEquipoId(null);
+        return;
+      }
+
       if (data) {
-        setUserRole(data.rol);
-        setCurrentUserId(data.id);
+        setCurrentProfile(data);
+        setUserRole(data.rol || null);
+        setCurrentEquipoId(data.equipo_id || null);
+
+        setFormVotante((prev) => ({
+          ...prev,
+          por_parte_de_id: data.equipo_id || ""
+        }));
       } else {
-        setUserRole("coordinador"); 
-        setCurrentUserId(null);
+        setCurrentProfile(null);
+        setUserRole(null);
+        setCurrentEquipoId(null);
       }
     } catch (err) {
-      console.error("Error identificando rol:", err);
+      console.error("Error identificando perfil:", err);
+      setUserRole(null);
+      setCurrentProfile(null);
+      setCurrentEquipoId(null);
     }
   }
 
   useEffect(() => {
-    if (session) cargarDatos();
-  }, [session]);
+    if (session && userRole) {
+      cargarDatos();
+    }
+  }, [session, userRole]);
 
   async function cargarDatos() {
     setLoading(true);
@@ -159,6 +211,10 @@ export default function App() {
         supabase.from("votantes").select("*").order("created_at", { ascending: false }),
         supabase.from("equipo").select("*").order("created_at", { ascending: false }),
       ]);
+
+      if (v.error) console.error("Error cargando votantes:", v.error);
+      if (e.error) console.error("Error cargando equipo:", e.error);
+
       setVotantes(v.data || []);
       setEquipo(e.data || []);
     } catch (err) {
@@ -167,12 +223,26 @@ export default function App() {
     setLoading(false);
   }
 
+  const votantesVisibles = useMemo(() => {
+    if (esAdmin) return votantes || [];
+    return (votantes || []).filter((v) => v.por_parte_de_id === currentEquipoId);
+  }, [votantes, esAdmin, currentEquipoId]);
+
+  const equipoVisibleParaSelect = useMemo(() => {
+    if (esAdmin) return equipo || [];
+    return (equipo || []).filter((m) => m.id === currentEquipoId);
+  }, [equipo, esAdmin, currentEquipoId]);
+
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
     return (equipo || [])
       .map((m) => {
         const cant = (votantes || []).filter((v) => v.por_parte_de_id === m.id).length;
-        return { ...m, cantidad: cant, porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0 };
+        return {
+          ...m,
+          cantidad: cant,
+          porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0
+        };
       })
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
@@ -187,71 +257,133 @@ export default function App() {
   }, [votantes]);
 
   async function buscarEnPadron() {
+    if (!esAdmin) {
+      alert("Solo el administrador puede buscar en el padrón importado.");
+      return;
+    }
+
     const limpia = normalizarCedula(cedulaRapida);
     if (!limpia) return;
+
     setLoading(true);
-    const { data } = await supabase
+    setResultadoPadron(null);
+
+    const { data, error } = await supabase
       .from("padron_importado")
       .select("*")
       .or(`cedula_limpia.eq.${limpia},cedula.eq.${cedulaRapida}`)
       .limit(1)
       .maybeSingle();
 
-    if (data) setResultadoPadron(data);
-    else alert("Cédula no encontrada.");
+    if (error) {
+      console.error("Error buscando en padrón:", error);
+      alert("No se pudo consultar el padrón.");
+    } else if (data) {
+      setResultadoPadron(data);
+    } else {
+      alert("Cédula no encontrada.");
+    }
+
     setLoading(false);
   }
 
   async function guardarVotante(e) {
     e.preventDefault();
-    if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
-    
+
+    const responsableId = esAdmin ? formVotante.por_parte_de_id : currentEquipoId;
+
+    if (!responsableId) {
+      return alert("Selecciona un responsable.");
+    }
+
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
-    
+
+    const existe = (votantes || []).some(
+      (v) =>
+        normalizarCedula(v.cedula) === cedulaLimpiaActual &&
+        v.por_parte_de_id === responsableId &&
+        v.id !== editIdVotante
+    );
+
     if (existe) {
-      return alert("Este votante ya fue registrado.");
+      return alert("Este votante ya fue registrado por este integrante.");
     }
 
     setLoading(true);
 
-    const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
+    const resp = (equipo || []).find((m) => m.id === responsableId);
+
     const payload = {
       ...formVotante,
-      cedula_limpia: cedulaLimpiaActual,
+      por_parte_de_id: responsableId,
       por_parte_de_nombre: resp?.nombre || "",
+      cedula_limpia: cedulaLimpiaActual,
+      equipo_id: responsableId,
+      created_by: currentUserId
     };
 
     const { error } = editIdVotante
       ? await supabase.from("votantes").update(payload).eq("id", editIdVotante)
       : await supabase.from("votantes").insert([payload]);
 
-    if (!error) {
-      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
+    if (error) {
+      console.error("Error guardando votante:", error);
+      alert(error.message || "No se pudo guardar el votante.");
+    } else {
+      setFormVotante({
+        nombre: "",
+        apellido: "",
+        cedula: "",
+        orden: "",
+        mesa: "",
+        local_votacion: "",
+        seccional: "",
+        barrio: "",
+        por_parte_de_id: esAdmin ? "" : currentEquipoId || "",
+        fecha_nacimiento: "",
+        telefono: ""
+      });
       setEditIdVotante(null);
-      cargarDatos();
+      setResultadoPadron(null);
+      await cargarDatos();
       alert("¡Guardado!");
     }
+
     setLoading(false);
   }
 
   async function guardarEquipo(e) {
     e.preventDefault();
+
+    if (!esAdmin) {
+      alert("Solo el administrador puede gestionar el equipo.");
+      return;
+    }
+
     setLoading(true);
 
     const { error } = editIdEquipo
       ? await supabase.from("equipo").update(formEquipo).eq("id", editIdEquipo)
       : await supabase.from("equipo").insert([formEquipo]);
 
-    if (!error) {
+    if (error) {
+      console.error("Error guardando equipo:", error);
+      alert(error.message || "No se pudo guardar el miembro.");
+    } else {
       setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
       setEditIdEquipo(null);
-      cargarDatos();
+      await cargarDatos();
     }
+
     setLoading(false);
   }
 
   const exportarExcel = async () => {
+    if (!esAdmin) {
+      alert("Solo el administrador puede exportar Excel.");
+      return;
+    }
+
     const workbook = new ExcelJS.Workbook();
 
     const crearHoja = (nombreHoja, lista) => {
@@ -294,15 +426,39 @@ export default function App() {
       headerRow.eachCell((c) => {
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
         c.font = { color: { argb: "FFFFFFFF" }, bold: true };
-        c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+        c.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" }
+        };
       });
 
       lista.forEach((v, i) => {
-        const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
+        const row = sheet.addRow([
+          i + 1,
+          v.nombre,
+          v.apellido,
+          v.cedula,
+          v.fecha_nacimiento,
+          v.telefono,
+          v.orden,
+          v.mesa,
+          v.seccional,
+          v.local_votacion,
+          v.por_parte_de_nombre
+        ]);
+
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
+
         row.eachCell((c) => {
           c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
-          c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
+          c.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" }
+          };
           c.alignment = { vertical: "middle", horizontal: "left" };
         });
       });
@@ -350,7 +506,10 @@ export default function App() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "Inter, sans-serif" }}>
       <header style={{ background: "white", padding: isMobile ? "20px 10px" : "40px 20px", textAlign: "center", boxShadow: "0 4px 15px rgba(0,0,0,0.05)", position: "relative" }}>
-        <button onClick={() => supabase.auth.signOut()} style={{ background: "#f1f5f9", color: "#64748b", padding: "8px 15px", borderRadius: "10px", border: "none", fontWeight: "800", cursor: "pointer", position: "absolute", right: 10, top: 10, fontSize: "10px" }}>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          style={{ background: "#f1f5f9", color: "#64748b", padding: "8px 15px", borderRadius: "10px", border: "none", fontWeight: "800", cursor: "pointer", position: "absolute", right: 10, top: 10, fontSize: "10px" }}
+        >
           SALIR
         </button>
 
@@ -363,20 +522,24 @@ export default function App() {
         <h1 style={{ fontFamily: "Kumar One", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "28px" : "52px", margin: 0, textTransform: "uppercase", letterSpacing: "-1.5px" }}>
           HAGAMOS QUE SUCEDA
         </h1>
-        
+
         <div style={{ background: "#C8102E", padding: "10px 30px", borderRadius: "50px", display: "inline-flex", alignItems: "center", gap: 5, marginTop: 15, boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
           <GreenHeart />
           <h2 style={{ fontFamily: "Montserrat", fontWeight: "800", color: "white", fontSize: isMobile ? "12px" : "16px", margin: 0, textTransform: "uppercase" }}>
             Darío Carmona Concejal 2026
           </h2>
         </div>
+
+        <div style={{ marginTop: 12, fontSize: 12, fontWeight: 800, color: "#64748b" }}>
+          Rol actual: {userRole || "sin perfil"}
+        </div>
       </header>
 
       <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 100 }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
-        {/* MODIFICADO: Pestañas exclusivas para el administrador */}
-        {userRole === "administrador" && (
+
+        {esAdmin && (
           <>
             <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
             <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
@@ -387,64 +550,142 @@ export default function App() {
       <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "30px 15px", paddingBottom: 120 }}>
         {activeTab === "inicio" && (
           <div style={{ display: "grid", gap: 25 }}>
-            <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
-              <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
-              <div style={{ display: "flex", gap: 10 }}>
-                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value)} placeholder="Cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px" }} />
-                <button onClick={buscarEnPadron} style={{ padding: "0 25px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900" }}>
-                  BUSCAR
-                </button>
-              </div>
-
-              {resultadoPadron && (
-                <div style={{ marginTop: 20, padding: 20, background: "#fef2f2", borderRadius: "20px", border: "2px dashed #C8102E", textAlign: "center" }}>
-                  <h3 style={{ fontSize: "18px", color: "#C8102E", fontWeight: "900" }}>
-                    {resultadoPadron?.nombre} {resultadoPadron?.apellido}
-                  </h3>
-                  <p style={{ fontWeight: "700", color: "#444", fontSize: "13px" }}>
-                    Mesa: {resultadoPadron?.mesa} | Orden: {resultadoPadron?.orden} | Sec: {resultadoPadron?.seccional}
-                  </p>
-                  <p style={{ color: "#C8102E", fontWeight: "800", fontSize: "12px", marginBottom: 15 }}>
-                    {resultadoPadron?.local_votacion}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setFormVotante({ ...formVotante, ...resultadoPadron });
-                      setResultadoPadron(null);
-                    }}
-                    style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none" }}
-                  >
-                    ASIGNAR AL FORMULARIO
+            {esAdmin && (
+              <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
+                <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <input
+                    type="text"
+                    value={cedulaRapida}
+                    onChange={(e) => setCedulaRapida(e.target.value)}
+                    placeholder="Cédula..."
+                    style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px" }}
+                  />
+                  <button onClick={buscarEnPadron} style={{ padding: "0 25px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900" }}>
+                    BUSCAR
                   </button>
                 </div>
-              )}
-            </div>
+
+                {resultadoPadron && (
+                  <div style={{ marginTop: 20, padding: 20, background: "#fef2f2", borderRadius: "20px", border: "2px dashed #C8102E", textAlign: "center" }}>
+                    <h3 style={{ fontSize: "18px", color: "#C8102E", fontWeight: "900" }}>
+                      {resultadoPadron?.nombre} {resultadoPadron?.apellido}
+                    </h3>
+                    <p style={{ fontWeight: "700", color: "#444", fontSize: "13px" }}>
+                      Mesa: {resultadoPadron?.mesa} | Orden: {resultadoPadron?.orden} | Sec: {resultadoPadron?.seccional}
+                    </p>
+                    <p style={{ color: "#C8102E", fontWeight: "800", fontSize: "12px", marginBottom: 15 }}>
+                      {resultadoPadron?.local_votacion}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setFormVotante({
+                          ...formVotante,
+                          ...resultadoPadron,
+                          por_parte_de_id: esAdmin ? formVotante.por_parte_de_id : currentEquipoId || ""
+                        });
+                        setResultadoPadron(null);
+                      }}
+                      style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none" }}
+                    >
+                      ASIGNAR AL FORMULARIO
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="card" style={{ background: "white", padding: isMobile ? 25 : 40, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", textAlign: "center", marginBottom: 25, fontSize: "20px", textTransform: "uppercase" }}>REGISTRAR VOTANTE</h3>
+              <h3 style={{ color: "#C8102E", fontWeight: "900", textAlign: "center", marginBottom: 25, fontSize: "20px", textTransform: "uppercase" }}>
+                REGISTRAR VOTANTE
+              </h3>
+
               <form onSubmit={guardarVotante} style={{ display: "grid", gap: 15 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>NOMBRE</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>APELLIDO</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>NOMBRE</label>
+                    <input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>APELLIDO</label>
+                    <input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
                 </div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="date" value={formVotante.fecha_nacimiento} onChange={(e) => setFormVotante({ ...formVotante, fecha_nacimiento: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>TELÉFONO</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+
+                <div>
+                  <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label>
+                  <input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label>
+                    <input type="date" value={formVotante.fecha_nacimiento} onChange={(e) => setFormVotante({ ...formVotante, fecha_nacimiento: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>TELÉFONO</label>
+                    <input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
                 </div>
+
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>SECCIONAL</label><input type="text" value={formVotante.seccional} onChange={(e) => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>MESA</label>
+                    <input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>ORDEN</label>
+                    <input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
                 </div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{equipo.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
-                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>SECCIONAL</label>
+                    <input type="text" value={formVotante.seccional} onChange={(e) => setFormVotante({ ...formVotante, seccional: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label>
+                    <input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label>
+                  <select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}>
+                    <option value="">Elegir barrio...</option>
+                    {LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label>
+                  <select
+                    value={esAdmin ? formVotante.por_parte_de_id : (currentEquipoId || "")}
+                    onChange={(e) => {
+                      if (esAdmin) {
+                        setFormVotante({ ...formVotante, por_parte_de_id: e.target.value });
+                      }
+                    }}
+                    required
+                    disabled={!esAdmin}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: "12px",
+                      border: "1px solid #e2e8f0",
+                      fontSize: "16px",
+                      background: !esAdmin ? "#f8fafc" : "white"
+                    }}
+                  >
+                    <option value="">¿Quién lo captó?</option>
+                    {equipoVisibleParaSelect.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                  </select>
+                </div>
+
+                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>
+                  {editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}
+                </button>
               </form>
             </div>
           </div>
@@ -452,29 +693,71 @@ export default function App() {
 
         {activeTab === "votantes" && (
           <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado General</h3>
-            <input type="text" placeholder="🔍 Buscar por nombre o CI..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>
+              {esAdmin ? "Listado General" : "Mis Votantes"}
+            </h3>
+
+            <input
+              type="text"
+              placeholder="🔍 Buscar por nombre o CI..."
+              value={busquedaLista}
+              onChange={(e) => setBusquedaLista(e.target.value)}
+              style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }}
+            />
+
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
-                    <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
+                    <tr style={{ fontSize: "11px", color: "#64748b" }}>
+                      <th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th>
+                      <th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th>
+                      <th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th>
+                    </tr>
                   </thead>
                   <tbody>
-                    {(votantes || [])
-                      /* MODIFICADO: Filtro por jerarquía para ver solo los propios si no es admin */
-                      .filter((v) => userRole === "administrador" || v.por_parte_de_id === currentUserId)
-                      .filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase()))
+                    {votantesVisibles
+                      .filter((v) => `${v?.nombre || ""} ${v?.apellido || ""} ${v?.cedula || ""}`.toLowerCase().includes(busquedaLista.toLowerCase()))
                       .map((v) => (
-                      <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
-                        <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
-                        <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5, justifyContent: "center" }}>
-                          <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); setActiveTab("inicio"); window.scrollTo(0, 0); }} style={{ padding: "8px 15px", background: "#f1f5f9", border: "none", borderRadius: "10px", fontWeight: "800", color: "#64748b", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: "8px 15px", background: "#dc2626", color: "white", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
-                        </td>
-                      </tr>
-                    ))}
+                        <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>
+                            {v?.nombre} {v?.apellido}
+                            <br />
+                            <small style={{ color: "#94a3b8" }}>{v?.barrio}</small>
+                          </td>
+                          <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
+                          <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5, justifyContent: "center" }}>
+                            <button
+                              onClick={() => {
+                                setFormVotante(v);
+                                setEditIdVotante(v.id);
+                                setActiveTab("inicio");
+                                window.scrollTo(0, 0);
+                              }}
+                              style={{ padding: "8px 15px", background: "#f1f5f9", border: "none", borderRadius: "10px", fontWeight: "800", color: "#64748b", fontSize: "10px" }}
+                            >
+                              EDITAR
+                            </button>
+
+                            <button
+                              onClick={async () => {
+                                if (confirm("¿Borrar?")) {
+                                  const { error } = await supabase.from("votantes").delete().eq("id", v.id);
+                                  if (error) {
+                                    console.error("Error borrando votante:", error);
+                                    alert(error.message || "No se pudo borrar.");
+                                  } else {
+                                    cargarDatos();
+                                  }
+                                }
+                              }}
+                              style={{ padding: "8px 15px", background: "#dc2626", color: "white", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "10px" }}
+                            >
+                              BORRAR
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -482,21 +765,27 @@ export default function App() {
           </div>
         )}
 
-        {/* MODIFICADO: Solo el administrador renderiza el contenido de Equipo */}
-        {activeTab === "equipo" && userRole === "administrador" && (
+        {activeTab === "equipo" && esAdmin && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
+              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>
+                Gestión de Equipo
+              </h3>
+
               <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
                 <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
                 <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="coordinador">Coordinador</option><option value="administrador">Administrador</option>
+                  <option value="coordinador">Coordinador</option>
+                  <option value="administrador">Administrador</option>
                 </select>
-                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>GUARDAR MIEMBRO</button>
+                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
+                  GUARDAR MIEMBRO
+                </button>
               </form>
             </div>
+
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
               <div style={{ overflowX: "auto" }}>
@@ -504,11 +793,44 @@ export default function App() {
                   <tbody>
                     {(equipo || []).map((m) => (
                       <tr key={m?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small><br /><small style={{ color: "#64748b" }}>{m?.telefono}</small></td>
-                        <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
+                        <td style={{ padding: 15, fontWeight: "700" }}>
+                          {m?.nombre}
+                          <br />
+                          <small style={{ color: "#64748b" }}>{m?.rol}</small>
+                          <br />
+                          <small style={{ color: "#64748b" }}>{m?.telefono}</small>
+                        </td>
+                        <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>
+                          {m?.zona}
+                        </td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
-                          <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar este miembro?")) { await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                          <button
+                            onClick={() => {
+                              setFormEquipo(m);
+                              setEditIdEquipo(m.id);
+                              window.scrollTo(0, 0);
+                            }}
+                            style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}
+                          >
+                            EDITAR
+                          </button>
+
+                          <button
+                            onClick={async () => {
+                              if (confirm("¿Seguro que deseas eliminar este miembro?")) {
+                                const { error } = await supabase.from("equipo").delete().eq("id", m.id);
+                                if (error) {
+                                  console.error("Error borrando miembro:", error);
+                                  alert(error.message || "No se pudo borrar.");
+                                } else {
+                                  cargarDatos();
+                                }
+                              }
+                            }}
+                            style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}
+                          >
+                            BORRAR
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -519,8 +841,7 @@ export default function App() {
           </div>
         )}
 
-        {/* MODIFICADO: Solo el administrador renderiza el contenido de Reportes */}
-        {activeTab === "reportes" && userRole === "administrador" && (
+        {activeTab === "reportes" && esAdmin && (
           <div style={{ display: "grid", gap: 30 }}>
             <div className="card" style={{ background: "white", padding: 30, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Rendimiento</h3>
@@ -536,6 +857,7 @@ export default function App() {
                 </div>
               ))}
             </div>
+
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
               <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Votos por Barrio</h3>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -559,9 +881,28 @@ export default function App() {
         )}
       </main>
 
-      {/* MODIFICADO: Botón de exportar visible solo para administrador */}
-      {userRole === "administrador" && (
-        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
+      {esAdmin && (
+        <button
+          onClick={exportarExcel}
+          style={{
+            position: "fixed",
+            bottom: 30,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#16a34a",
+            color: "white",
+            padding: "18px 40px",
+            borderRadius: "50px",
+            fontWeight: "900",
+            border: "none",
+            boxShadow: "0 10px 30px rgba(22,163,74,0.3)",
+            cursor: "pointer",
+            zIndex: 1000,
+            display: "flex",
+            gap: 10,
+            alignItems: "center"
+          }}
+        >
           <span>📥</span> EXPORTAR EXCEL
         </button>
       )}
