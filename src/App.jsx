@@ -85,17 +85,12 @@ function LoginScreen({ onLogin, loading }) {
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [userRole, setUserRole] = useState(null); // NUEVO: Estado para la jerarquía
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
-
-  // --- IMPLEMENTACIÓN PUNTUAL: ROL DESDE BASE DE DATOS ---
-  const [userRole, setUserRole] = useState("coordinador"); 
-  const isAdmin = userRole === "administrador";
-  const userId = session?.user?.id;
-  // --- FIN IMPLEMENTACIÓN ---
 
   const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
@@ -108,16 +103,41 @@ export default function App() {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (data.session) fetchUserRole(data.session.user.email);
+    });
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) fetchUserRole(session.user.email);
+      else setUserRole(null);
+    });
 
     return () => {
       window.removeEventListener("resize", handleResize);
       subscription.unsubscribe();
     };
   }, []);
+
+  // NUEVA FUNCIÓN: Identificar jerarquía
+  async function fetchUserRole(email) {
+    try {
+      const { data, error } = await supabase
+        .from("equipo")
+        .select("rol")
+        .eq("email", email) // Asume que tienes el campo email en la tabla equipo
+        .maybeSingle();
+      
+      if (data) setUserRole(data.rol);
+      else setUserRole("coordinador"); // Rol por defecto si no se encuentra
+    } catch (err) {
+      console.error("Error identificando rol:", err);
+    }
+  }
 
   useEffect(() => {
     if (session) cargarDatos();
@@ -126,31 +146,9 @@ export default function App() {
   async function cargarDatos() {
     setLoading(true);
     try {
-      // --- IMPLEMENTACIÓN PUNTUAL: IDENTIFICAR ROL AUTOMÁTICAMENTE ---
-      const { data: memberData } = await supabase
-        .from("equipo")
-        .select("rol")
-        .eq("user_id", session?.user?.id)
-        .maybeSingle();
-      
-      if (memberData?.rol) {
-        setUserRole(memberData.rol);
-      }
-      // --- FIN IMPLEMENTACIÓN ---
-
-      let queryV = supabase.from("votantes").select("*");
-      let queryE = supabase.from("equipo").select("*");
-
-      // Usamos el rol actualizado de la base de datos para filtrar
-      const currentRole = memberData?.rol || "coordinador";
-      if (currentRole !== "administrador") {
-        queryV = queryV.eq("user_id", session?.user?.id);
-        queryE = queryE.eq("user_id", session?.user?.id);
-      }
-
       const [v, e] = await Promise.all([
-        queryV.order("created_at", { ascending: false }),
-        queryE.order("created_at", { ascending: false }),
+        supabase.from("votantes").select("*").order("created_at", { ascending: false }),
+        supabase.from("equipo").select("*").order("created_at", { ascending: false }),
       ]);
       setVotantes(v.data || []);
       setEquipo(e.data || []);
@@ -200,30 +198,19 @@ export default function App() {
     if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
-    const existeLocal = (votantes || []).some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
+    const existe = votantes.some(v => normalizarCedula(v.cedula) === cedulaLimpiaActual && v.id !== editIdVotante);
     
-    if (existeLocal) {
-      return alert("Ya tienes a este votante registrado.");
+    if (existe) {
+      return alert("Este votante ya fue registrado.");
     }
 
     setLoading(true);
+
     const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
-    
     const payload = {
-      nombre: formVotante.nombre || "",
-      apellido: formVotante.apellido || "",
-      cedula: formVotante.cedula || "",
+      ...formVotante,
       cedula_limpia: cedulaLimpiaActual,
-      orden: formVotante.orden || "",
-      mesa: formVotante.mesa || "",
-      local_votacion: formVotante.local_votacion || "",
-      seccional: formVotante.seccional || "",
-      barrio: formVotante.barrio || "",
-      por_parte_de_id: formVotante.por_parte_de_id,
       por_parte_de_nombre: resp?.nombre || "",
-      fecha_nacimiento: formVotante.fecha_nacimiento || null,
-      telefono: formVotante.telefono || "",
-      user_id: userId
     };
 
     const { error } = editIdVotante
@@ -234,13 +221,7 @@ export default function App() {
       setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
       setEditIdVotante(null);
       cargarDatos();
-      alert("¡Registro exitoso!");
-    } else {
-      if (error.code === "23505") {
-        alert("Aviso: Esta cédula ya fue captada por otro miembro del equipo.");
-      } else {
-        alert("Error al guardar: " + error.message);
-      }
+      alert("¡Guardado!");
     }
     setLoading(false);
   }
@@ -248,24 +229,20 @@ export default function App() {
   async function guardarEquipo(e) {
     e.preventDefault();
     setLoading(true);
-    const payload = { ...formEquipo, user_id: userId };
 
     const { error } = editIdEquipo
-      ? await supabase.from("equipo").update(payload).eq("id", editIdEquipo)
-      : await supabase.from("equipo").insert([payload]);
+      ? await supabase.from("equipo").update(formEquipo).eq("id", editIdEquipo)
+      : await supabase.from("equipo").insert([formEquipo]);
 
     if (!error) {
       setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "" });
       setEditIdEquipo(null);
       cargarDatos();
-    } else {
-      alert("Error al guardar miembro: " + error.message);
     }
     setLoading(false);
   }
 
   const exportarExcel = async () => {
-    if (!isAdmin) return;
     const workbook = new ExcelJS.Workbook();
 
     const crearHoja = (nombreHoja, lista) => {
@@ -418,16 +395,7 @@ export default function App() {
                   </p>
                   <button
                     onClick={() => {
-                      setFormVotante({ 
-                        ...formVotante, 
-                        nombre: resultadoPadron.nombre, 
-                        apellido: resultadoPadron.apellido,
-                        cedula: resultadoPadron.cedula,
-                        orden: resultadoPadron.orden,
-                        mesa: resultadoPadron.mesa,
-                        seccional: resultadoPadron.seccional,
-                        local_votacion: resultadoPadron.local_votacion
-                      });
+                      setFormVotante({ ...formVotante, ...resultadoPadron });
                       setResultadoPadron(null);
                     }}
                     style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none" }}
@@ -470,7 +438,7 @@ export default function App() {
 
         {activeTab === "votantes" && (
           <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado {isAdmin ? "General" : "Mis Registros"}</h3>
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Listado General</h3>
             <input type="text" placeholder="🔍 Buscar por nombre o CI..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
@@ -511,7 +479,7 @@ export default function App() {
               </form>
             </div>
             <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>{isAdmin ? "MIEMBROS ACTIVOS" : "MIS MIEMBROS"}</h4>
+              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", minWidth: "400px" }}>
                   <tbody>
@@ -571,11 +539,9 @@ export default function App() {
         )}
       </main>
 
-      {isAdmin && (
-        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
-          <span>📥</span> EXPORTAR EXCEL
-        </button>
-      )}
+      <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
+        <span>📥</span> EXPORTAR EXCEL
+      </button>
     </div>
   );
 }
