@@ -203,7 +203,6 @@ export default function App() {
     const total = votantes?.length || 0;
     return (equipo || [])
       .map((m) => {
-        // CORRECCIÓN 1: Contar por equipo_id asegura que admin y coordinadores sumen por igual
         const cant = (votantes || []).filter((v) => v.equipo_id === m.id).length;
         return { ...m, cantidad: cant, porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0 };
       })
@@ -212,6 +211,7 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
+    // AJUSTE PUNTUAL: Administrador procesa la lista global, Coordinador solo su filtro personal
     const fuenteDatos = userRole === "administrador" ? votantes : votantesFiltrados;
     
     (fuenteDatos || []).forEach((v) => {
@@ -428,7 +428,6 @@ export default function App() {
 
     crearHoja("LISTA GENERAL", todosVotantesUnicos);
     
-    // CORRECCIÓN 2: El Excel ahora crea pestañas para TODOS los miembros de la tabla equipo que tengan votantes, incluyendo administradores si están en dicha tabla.
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.equipo_id === miembro.id);
       if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
