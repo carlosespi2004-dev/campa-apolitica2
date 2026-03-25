@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros...."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros....."
 ];
 
 function ANRLogo() {
@@ -187,18 +187,18 @@ export default function App() {
   }
 
   const votantesFiltrados = useMemo(() => {
-    if (userRole === "administrador") return votantes;
+    // AJUSTE PUNTUAL: Ahora el administrador también ve solo sus propios registros en la lista
     return votantes.filter(v => v.created_by === session?.user?.id);
-  }, [votantes, userRole, session]);
+  }, [votantes, session]);
 
   const votantesUnicos = useMemo(() => {
     const seen = new Set();
-    return (userRole === "administrador" ? votantes : votantesFiltrados).filter(v => {
+    return votantesFiltrados.filter(v => {
       const duplicate = seen.has(normalizarCedula(v.cedula));
       seen.add(normalizarCedula(v.cedula));
       return !duplicate;
     });
-  }, [votantes, votantesFiltrados, userRole]);
+  }, [votantesFiltrados]);
 
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
@@ -259,7 +259,6 @@ export default function App() {
 
     setLoading(true);
     
-    // CORRECCIÓN CLAVE: Quitar el id original para evitar conflictos
     const { id, created_at, ...datosLimpios } = formVotante;
 
     const payload = {
@@ -415,7 +414,17 @@ export default function App() {
       });
     };
     
-    crearHoja("LISTA GENERAL", votantesUnicos);
+    // El Excel sigue exportando todos los votantes únicos si es administrador
+    const todosVotantesUnicos = (() => {
+      const seen = new Set();
+      return votantes.filter(v => {
+        const duplicate = seen.has(normalizarCedula(v.cedula));
+        seen.add(normalizarCedula(v.cedula));
+        return !duplicate;
+      });
+    })();
+
+    crearHoja("LISTA GENERAL", todosVotantesUnicos);
     
     equipo.forEach((miembro) => {
       const datosMiembro = votantes.filter((v) => v.equipo_id === miembro.id);
