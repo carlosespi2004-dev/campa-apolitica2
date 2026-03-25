@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros....."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros......"
 ];
 
 function ANRLogo() {
@@ -187,7 +187,6 @@ export default function App() {
   }
 
   const votantesFiltrados = useMemo(() => {
-    // AJUSTE PUNTUAL: Ahora el administrador también ve solo sus propios registros en la lista
     return votantes.filter(v => v.created_by === session?.user?.id);
   }, [votantes, session]);
 
@@ -414,7 +413,6 @@ export default function App() {
       });
     };
     
-    // El Excel sigue exportando todos los votantes únicos si es administrador
     const todosVotantesUnicos = (() => {
       const seen = new Set();
       return votantes.filter(v => {
@@ -502,7 +500,7 @@ export default function App() {
             <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
               <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
               <div style={{ display: "flex", gap: 10 }}>
-                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value)} placeholder="Cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px" }} />
+                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value.replace(/\D/g, ''))} placeholder="Cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px" }} />
                 <button onClick={buscarEnPadron} style={{ padding: "0 25px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900" }}>
                   BUSCAR
                 </button>
@@ -539,7 +537,7 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>NOMBRE</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>APELLIDO</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="date" value={formVotante.fecha_nacimiento} onChange={(e) => setFormVotante({ ...formVotante, fecha_nacimiento: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
