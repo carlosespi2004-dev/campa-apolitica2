@@ -252,7 +252,7 @@ export default function App() {
     } else if (data) {
       setResultadoPadron(data);
     } else {
-      alert("Cédula no encontrada en el padrón");
+      alert("Cédula realmente no encontrada en el padrón.");
     }
     setLoading(false);
   }
@@ -658,7 +658,7 @@ export default function App() {
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
                           <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar a este miembro de todo el sistema (Equipo, Perfil y Acceso)?")) { if (m.user_id) { await supabase.rpc("eliminar_usuario_auth", { uid_usuario: m.user_id }); await supabase.from("profiles").delete().eq("user_id", m.user_id); } await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar a este miembro de todo el sistema (Equipo, Perfil y Acceso)?")) { const { data: perfilData } = await supabase.from("profiles").select("user_id").eq("equipo_id", m.id).maybeSingle(); if (perfilData && perfilData.user_id) { await supabase.rpc("eliminar_usuario_auth", { uid_usuario: perfilData.user_id }); await supabase.from("profiles").delete().eq("user_id", perfilData.user_id); } await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
