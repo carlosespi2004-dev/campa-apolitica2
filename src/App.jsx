@@ -426,7 +426,7 @@ export default function App() {
       const headerRow = sheet.getRow(4);
       const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local"];
       if (!esListaGeneral) {
-        headerNombres.push("Hagamos que suceda");
+        headerNombres.push("Captado por");
       }
       headerRow.values = headerNombres;
 
