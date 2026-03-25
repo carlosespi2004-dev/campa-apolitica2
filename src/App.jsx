@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros......."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
 ];
 
 function ANRLogo() {
@@ -211,12 +211,15 @@ export default function App() {
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    (votantesFiltrados || []).forEach((v) => {
+    // AJUSTE PUNTUAL: Admin ve todo el mapa, Coordinador solo su lista
+    const fuenteDatos = userRole === "administrador" ? votantes : votantesFiltrados;
+    
+    (fuenteDatos || []).forEach((v) => {
       const b = v.barrio || "Sin barrio";
       counts[b] = (counts[b] || 0) + 1;
     });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
-  }, [votantesFiltrados]);
+  }, [votantes, votantesFiltrados, userRole]);
 
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
