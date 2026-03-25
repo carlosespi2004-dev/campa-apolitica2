@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros......"
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros......."
 ];
 
 function ANRLogo() {
@@ -368,14 +368,14 @@ export default function App() {
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
       sheet.addRow(["HAGAMOS QUE SUCEDA"]);
-      sheet.mergeCells("A1:K1");
+      sheet.mergeCells("A1:L1");
       const r1 = sheet.getRow(1);
       r1.height = 30;
       r1.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r1.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 18, bold: true };
       r1.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
       sheet.addRow(["Darío Carmona Concejal 2026"]);
-      sheet.mergeCells("A2:K2");
+      sheet.mergeCells("A2:L2");
       const r2 = sheet.getRow(2);
       r2.height = 20;
       r2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
@@ -389,6 +389,7 @@ export default function App() {
         { header: "Cedula", key: "ci", width: 12 },
         { header: "Fecha Nacimiento", key: "fnac", width: 20 },
         { header: "Teléfono", key: "tel", width: 15 },
+        { header: "Barrio", key: "bar", width: 20 },
         { header: "Orden", key: "ord", width: 8 },
         { header: "Mesa", key: "mes", width: 8 },
         { header: "Seccional", key: "sec", width: 10 },
@@ -396,14 +397,14 @@ export default function App() {
         { header: "Captado por", key: "cap", width: 20 },
       ];
       const headerRow = sheet.getRow(4);
-      headerRow.values = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Orden", "Mesa", "Seccional", "Local", "Captado por"];
+      headerRow.values = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Captado por"];
       headerRow.eachCell((c) => {
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
         c.font = { color: { argb: "FFFFFFFF" }, bold: true };
         c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
       });
       lista.forEach((v, i) => {
-        const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
+        const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
         row.eachCell((c) => {
           c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
