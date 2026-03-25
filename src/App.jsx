@@ -418,7 +418,7 @@ export default function App() {
       ];
 
       if (!esListaGeneral) {
-        columnasBase.push({ header: "Captado por", key: "cap", width: 20 });
+        columnasBase.push({ header: "Hagamos que suceda", key: "cap", width: 20 });
       }
 
       sheet.columns = columnasBase;
@@ -426,7 +426,7 @@ export default function App() {
       const headerRow = sheet.getRow(4);
       const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local"];
       if (!esListaGeneral) {
-        headerNombres.push("Captado por");
+        headerNombres.push("Hagamos que suceda");
       }
       headerRow.values = headerNombres;
 
