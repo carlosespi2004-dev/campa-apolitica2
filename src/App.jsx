@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros...."
 ];
 
 function ANRLogo() {
@@ -94,13 +94,15 @@ function LoginScreen({ onLogin, loading }) {
 export default function App() {
   const [session, setSession] = useState(null);
   const [userRole, setUserRole] = useState(null); 
+  const [userName, setUserName] = useState("");
+  const [userEquipoId, setUserEquipoId] = useState(null);
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
+  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
@@ -112,8 +114,10 @@ export default function App() {
     setVotantes([]);
     setEquipo([]);
     setUserRole(null);
+    setUserName("");
+    setUserEquipoId(null);
     setActiveTab("inicio");
-    setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
+    setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
     setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
     setEditIdVotante(null);
     setEditIdEquipo(null);
@@ -155,11 +159,13 @@ export default function App() {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("rol")
+        .select("rol, nombre, equipo_id")
         .eq("user_id", session.user.id)
         .single();
       
       setUserRole(profile?.rol || "coordinador");
+      setUserName(profile?.nombre || "Usuario");
+      setUserEquipoId(profile?.equipo_id || null);
       await cargarDatos();
     } catch (err) {
       console.error(err);
@@ -198,7 +204,7 @@ export default function App() {
     const total = votantes?.length || 0;
     return (equipo || [])
       .map((m) => {
-        const cant = (votantes || []).filter((v) => v.por_parte_de_id === m.id).length;
+        const cant = (votantes || []).filter((v) => v.equipo_id === m.id).length;
         return { ...m, cantidad: cant, porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0 };
       })
       .sort((a, b) => b.cantidad - a.cantidad);
@@ -239,7 +245,6 @@ export default function App() {
 
   async function guardarVotante(e) {
     e.preventDefault();
-    if (!formVotante.por_parte_de_id) return alert("Selecciona un responsable.");
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
     const existeEnMiLista = votantes.some(v => 
@@ -253,7 +258,6 @@ export default function App() {
     }
 
     setLoading(true);
-    const resp = equipo.find((m) => m.id === formVotante.por_parte_de_id);
     
     // CORRECCIÓN CLAVE: Quitar el id original para evitar conflictos
     const { id, created_at, ...datosLimpios } = formVotante;
@@ -261,10 +265,10 @@ export default function App() {
     const payload = {
       ...datosLimpios,
       cedula_limpia: cedulaLimpiaActual,
-      por_parte_de_nombre: resp?.nombre || "",
-      equipo_id: formVotante.por_parte_de_id, 
-      user_id: session?.user?.id,             
-      created_by: session?.user?.id           
+      por_parte_de_nombre: userName,
+      equipo_id: userEquipoId, 
+      user_id: session?.user?.id, 
+      created_by: session?.user?.id 
     };
 
     const { error } = editIdVotante
@@ -272,7 +276,7 @@ export default function App() {
       : await supabase.from("votantes").insert([payload]);
 
     if (!error) {
-      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", por_parte_de_id: "", fecha_nacimiento: "", telefono: "" });
+      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
       setEditIdVotante(null);
       cargarDatos();
       alert("¡Guardado!");
@@ -414,7 +418,7 @@ export default function App() {
     crearHoja("LISTA GENERAL", votantesUnicos);
     
     equipo.forEach((miembro) => {
-      const datosMiembro = votantes.filter((v) => v.por_parte_de_id === miembro.id);
+      const datosMiembro = votantes.filter((v) => v.equipo_id === miembro.id);
       if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
     });
     const buffer = await workbook.xlsx.writeBuffer();
@@ -542,7 +546,7 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>RESPONSABLE</label><select value={formVotante.por_parte_de_id} onChange={(e) => setFormVotante({ ...formVotante, por_parte_de_id: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">¿Quién lo captó?</option>{equipo.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</select></div>
+                
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
               </form>
             </div>
