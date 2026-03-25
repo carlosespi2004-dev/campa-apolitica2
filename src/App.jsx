@@ -669,6 +669,9 @@ export default function App() {
                                 }
                   
                                 if (uid) {
+                                  const { error: errVotantes } = await supabase.from("votantes").update({ user_id: null, created_by: null }).eq("user_id", uid);
+                                  if (errVotantes) return alert("Error al desvincular votantes: " + errVotantes.message);
+                                  
                                   const { error: errProfile } = await supabase.from("profiles").delete().eq("user_id", uid);
                                   if (errProfile) return alert("Error al eliminar perfil: " + errProfile.message);
                                 }
@@ -745,3 +748,4 @@ export default function App() {
     </div>
   );
 }
+
