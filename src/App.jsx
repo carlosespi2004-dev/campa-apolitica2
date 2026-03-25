@@ -252,7 +252,7 @@ export default function App() {
     } else if (data) {
       setResultadoPadron(data);
     } else {
-      alert("Cédula realmente no encontrada en el padrón.");
+      alert("Cédula no encontrada en el padrón");
     }
     setLoading(false);
   }
