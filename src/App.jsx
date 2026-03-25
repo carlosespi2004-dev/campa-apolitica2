@@ -201,17 +201,31 @@ export default function App() {
 
   const rendimientoEquipo = useMemo(() => {
     const total = votantes?.length || 0;
-    return (equipo || [])
-      .map((m) => {
-        const cant = (votantes || []).filter((v) => v.equipo_id === m.id).length;
-        return { ...m, cantidad: cant, porcentaje: total > 0 ? Math.round((cant / total) * 100) : 0 };
-      })
+    const captadoresMap = new Map();
+
+    // Agregar a todos los miembros del equipo (para que aparezcan aunque tengan 0)
+    (equipo || []).forEach((m) => {
+      captadoresMap.set(m.nombre, { id: m.id, nombre: m.nombre, cantidad: 0 });
+    });
+
+    // Sumar los votos e incluir a los administradores u otros usuarios que cargaron registros
+    (votantes || []).forEach((v) => {
+      const nombre = v.por_parte_de_nombre;
+      if (nombre) {
+        if (!captadoresMap.has(nombre)) {
+          captadoresMap.set(nombre, { id: v.created_by || nombre, nombre: nombre, cantidad: 0 });
+        }
+        captadoresMap.get(nombre).cantidad += 1;
+      }
+    });
+
+    return Array.from(captadoresMap.values())
+      .map((m) => ({ ...m, porcentaje: total > 0 ? Math.round((m.cantidad / total) * 100) : 0 }))
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
-    // AJUSTE PUNTUAL: Administrador procesa la lista global, Coordinador solo su filtro personal
     const fuenteDatos = userRole === "administrador" ? votantes : votantesFiltrados;
     
     (fuenteDatos || []).forEach((v) => {
@@ -428,10 +442,14 @@ export default function App() {
 
     crearHoja("LISTA GENERAL", todosVotantesUnicos);
     
-    equipo.forEach((miembro) => {
-      const datosMiembro = votantes.filter((v) => v.equipo_id === miembro.id);
-      if (datosMiembro.length > 0) crearHoja(miembro.nombre, datosMiembro);
+    // Obtener los nombres de todos los que registraron al menos un votante
+    const nombresCaptadores = [...new Set(votantes.map((v) => v.por_parte_de_nombre).filter(Boolean))];
+    
+    nombresCaptadores.forEach((nombre) => {
+      const datosMiembro = votantes.filter((v) => v.por_parte_de_nombre === nombre);
+      if (datosMiembro.length > 0) crearHoja(nombre, datosMiembro);
     });
+
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), "Campaña_Dario_Carmona.xlsx");
   };
