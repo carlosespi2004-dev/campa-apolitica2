@@ -669,15 +669,17 @@ export default function App() {
                                 }
                   
                                 if (uid) {
-                                  const { error: errAuth } = await supabase.rpc("eliminar_usuario_auth", { uid_usuario: uid });
-                                  if (errAuth) return alert("Error al eliminar de Auth: " + errAuth.message);
-                  
                                   const { error: errProfile } = await supabase.from("profiles").delete().eq("user_id", uid);
                                   if (errProfile) return alert("Error al eliminar perfil: " + errProfile.message);
                                 }
                   
                                 const { error: errEquipo } = await supabase.from("equipo").delete().eq("id", m.id);
                                 if (errEquipo) return alert("Error al eliminar equipo: " + errEquipo.message);
+                  
+                                if (uid) {
+                                  const { error: errAuth } = await supabase.rpc("eliminar_usuario_auth", { uid_usuario: uid });
+                                  if (errAuth) return alert("Error al eliminar de Auth: " + errAuth.message);
+                                }
                   
                                 cargarDatos();
                               } catch (error) {
