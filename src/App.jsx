@@ -27,7 +27,7 @@ const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros...."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros..."
 ];
 
 function ANRLogo() {
@@ -203,12 +203,10 @@ export default function App() {
     const total = votantes?.length || 0;
     const captadoresMap = new Map();
 
-    // Agregar a todos los miembros del equipo (para que aparezcan aunque tengan 0)
     (equipo || []).forEach((m) => {
       captadoresMap.set(m.nombre, { id: m.id, nombre: m.nombre, cantidad: 0 });
     });
 
-    // Sumar los votos e incluir a los administradores u otros usuarios que cargaron registros
     (votantes || []).forEach((v) => {
       const nombre = v.por_parte_de_nombre;
       if (nombre) {
@@ -279,6 +277,7 @@ export default function App() {
 
     const payload = {
       ...datosLimpios,
+      fecha_nacimiento: datosLimpios.fecha_nacimiento || null, 
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: userName,
       equipo_id: userEquipoId, 
@@ -384,22 +383,27 @@ export default function App() {
     const workbook = new ExcelJS.Workbook();
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
+      const esListaGeneral = nombreHoja === "LISTA GENERAL";
+      const colFinal = esListaGeneral ? "K" : "L";
+
       sheet.addRow(["HAGAMOS QUE SUCEDA"]);
-      sheet.mergeCells("A1:L1");
+      sheet.mergeCells(`A1:${colFinal}1`);
       const r1 = sheet.getRow(1);
       r1.height = 30;
       r1.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r1.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 18, bold: true };
       r1.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
+      
       sheet.addRow(["Darío Carmona Concejal 2026"]);
-      sheet.mergeCells("A2:L2");
+      sheet.mergeCells(`A2:${colFinal}2`);
       const r2 = sheet.getRow(2);
       r2.height = 20;
       r2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r2.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 12, bold: true };
       r2.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
       sheet.addRow([]);
-      sheet.columns = [
+      
+      const columnasBase = [
         { header: "Nro", key: "nro", width: 5 },
         { header: "Nombre", key: "nom", width: 25 },
         { header: "Apellido", key: "ape", width: 25 },
@@ -411,17 +415,33 @@ export default function App() {
         { header: "Mesa", key: "mes", width: 8 },
         { header: "Seccional", key: "sec", width: 10 },
         { header: "Local", key: "loc", width: 35 },
-        { header: "Captado por", key: "cap", width: 20 },
       ];
+
+      if (!esListaGeneral) {
+        columnasBase.push({ header: "Captado por", key: "cap", width: 20 });
+      }
+
+      sheet.columns = columnasBase;
+      
       const headerRow = sheet.getRow(4);
-      headerRow.values = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Captado por"];
+      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local"];
+      if (!esListaGeneral) {
+        headerNombres.push("Captado por");
+      }
+      headerRow.values = headerNombres;
+
       headerRow.eachCell((c) => {
         c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
         c.font = { color: { argb: "FFFFFFFF" }, bold: true };
         c.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
       });
+
       lista.forEach((v, i) => {
-        const row = sheet.addRow([i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre]);
+        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, v.fecha_nacimiento, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion];
+        if (!esListaGeneral) {
+          valoresFila.push(v.por_parte_de_nombre);
+        }
+        const row = sheet.addRow(valoresFila);
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
         row.eachCell((c) => {
           c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
@@ -442,7 +462,6 @@ export default function App() {
 
     crearHoja("LISTA GENERAL", todosVotantesUnicos);
     
-    // Obtener los nombres de todos los que registraron al menos un votante
     const nombresCaptadores = [...new Set(votantes.map((v) => v.por_parte_de_nombre).filter(Boolean))];
     
     nombresCaptadores.forEach((nombre) => {
