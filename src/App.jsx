@@ -658,7 +658,34 @@ export default function App() {
                         <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
                           <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Seguro que deseas eliminar a este miembro completamente (Equipo, Perfil y Acceso)?")) { await supabase.rpc("eliminar_miembro_completo", { id_equipo: m.id }); cargarDatos(); } }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                          <button onClick={async () => { 
+                            if (confirm("¿Seguro que deseas eliminar a este miembro completamente (Equipo, Perfil y Acceso)?")) { 
+                              try {
+                                let uid = m.user_id;
+                                
+                                if (!uid) {
+                                  const { data } = await supabase.from("profiles").select("user_id").eq("equipo_id", m.id).maybeSingle();
+                                  if (data) uid = data.user_id;
+                                }
+                  
+                                if (uid) {
+                                  const { error: errAuth } = await supabase.rpc("eliminar_usuario_auth", { uid_usuario: uid });
+                                  if (errAuth) return alert("Error al eliminar de Auth: " + errAuth.message);
+                  
+                                  const { error: errProfile } = await supabase.from("profiles").delete().eq("user_id", uid);
+                                  if (errProfile) return alert("Error al eliminar perfil: " + errProfile.message);
+                                }
+                  
+                                const { error: errEquipo } = await supabase.from("equipo").delete().eq("id", m.id);
+                                if (errEquipo) return alert("Error al eliminar equipo: " + errEquipo.message);
+                  
+                                cargarDatos();
+                              } catch (error) {
+                                console.error(error);
+                                alert("Ocurrió un error inesperado al intentar borrar: " + error.message);
+                              }
+                            } 
+                          }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
