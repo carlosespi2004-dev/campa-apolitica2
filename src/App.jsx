@@ -386,7 +386,7 @@ export default function App() {
       const esListaGeneral = nombreHoja === "LISTA GENERAL";
       const colFinal = esListaGeneral ? "K" : "L";
 
-      sheet.addRow(["HAGAMOS QUE SUCEDA"]);
+      sheet.addRow(["Hagamos que suceda"]);
       sheet.mergeCells(`A1:${colFinal}1`);
       const r1 = sheet.getRow(1);
       r1.height = 30;
