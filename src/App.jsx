@@ -386,7 +386,7 @@ export default function App() {
       const esListaGeneral = nombreHoja === "LISTA GENERAL";
       const colFinal = esListaGeneral ? "K" : "L";
 
-      sheet.addRow(["Hagamos que suceda"]);
+      sheet.addRow(["HAGAMOS QUE SUCEDA"]);
       sheet.mergeCells(`A1:${colFinal}1`);
       const r1 = sheet.getRow(1);
       r1.height = 30;
@@ -401,28 +401,18 @@ export default function App() {
       r2.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } };
       r2.getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 12, bold: true };
       r2.getCell(1).alignment = { vertical: "middle", horizontal: "center" };
-      sheet.addRow([]);
       
-      const columnasBase = [
-        { header: "Nro", key: "nro", width: 5 },
-        { header: "Nombre", key: "nom", width: 25 },
-        { header: "Apellido", key: "ape", width: 25 },
-        { header: "Cedula", key: "ci", width: 12 },
-        { header: "Fecha Nacimiento", key: "fnac", width: 20 },
-        { header: "Teléfono", key: "tel", width: 15 },
-        { header: "Barrio", key: "bar", width: 20 },
-        { header: "Orden", key: "ord", width: 8 },
-        { header: "Mesa", key: "mes", width: 8 },
-        { header: "Seccional", key: "sec", width: 10 },
-        { header: "Local", key: "loc", width: 35 },
-      ];
-
+      sheet.addRow([]); 
+      
+      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 8, 8, 10, 35];
       if (!esListaGeneral) {
-        columnasBase.push({ header: "Hagamos que suceda", key: "cap", width: 20 });
+        anchosColumnas.push(20); 
       }
-
-      sheet.columns = columnasBase;
       
+      anchosColumnas.forEach((ancho, index) => {
+        sheet.getColumn(index + 1).width = ancho;
+      });
+
       const headerRow = sheet.getRow(4);
       const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local"];
       if (!esListaGeneral) {
