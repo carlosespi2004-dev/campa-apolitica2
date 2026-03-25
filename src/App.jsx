@@ -608,7 +608,7 @@ export default function App() {
                         <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
                         <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5, justifyContent: "center" }}>
                           <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); setActiveTab("inicio"); window.scrollTo(0, 0); }} style={{ padding: "8px 15px", background: "#f1f5f9", border: "none", borderRadius: "10px", fontWeight: "800", color: "#64748b", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Borrar?")) { await supabase.from("votantes").delete().eq("id", v.id); cargarDatos(); } }} style={{ padding: "8px 15px", background: "#dc2626", color: "white", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                          <button onClick={async () => { if (confirm("¿Borrar?")) { const { error } = await supabase.from("votantes").delete().eq("id", v.id); if (!error) { setVotantes(prev => prev.filter(item => item.id !== v.id)); cargarDatos(); } else { alert("Error al borrar: " + error.message); } } }} style={{ padding: "8px 15px", background: "#dc2626", color: "white", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
