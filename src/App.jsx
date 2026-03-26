@@ -437,6 +437,11 @@ export default function App() {
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "Inter, sans-serif" }}>
       <header style={{ background: "white", padding: isMobile ? "20px 10px" : "40px 20px", textAlign: "center", boxShadow: "0 4px 15px rgba(0,0,0,0.05)", position: "relative" }}>
+        
+        <div style={{ position: "absolute", left: 15, top: 15, fontWeight: "800", color: "#64748b", fontSize: isMobile ? "11px" : "14px" }}>
+          Hola {userName}
+        </div>
+
         <button onClick={() => supabase.auth.signOut()} style={{ background: "#f1f5f9", color: "#64748b", padding: "8px 15px", borderRadius: "10px", border: "none", fontWeight: "800", cursor: "pointer", position: "absolute", right: 10, top: 10, fontSize: "10px" }}>
           SALIR
         </button>
