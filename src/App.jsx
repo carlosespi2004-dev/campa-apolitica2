@@ -448,7 +448,7 @@ export default function App() {
         </div>
 
         <button onClick={() => supabase.auth.signOut()} style={{ background: "#f1f5f9", color: "#64748b", padding: "8px 15px", borderRadius: "10px", border: "none", fontWeight: "800", cursor: "pointer", position: "absolute", right: 10, top: 10, fontSize: "10px" }}>
-          SALIR
+          CERRAR SESIÓN 
         </button>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "40px", marginBottom: "10px" }}>
