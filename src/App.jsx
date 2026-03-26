@@ -1,95 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import logocarmona from "./img/logocarmona.png";
-import anrlogo from "./img/anrlogo.png";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
-  auth: { 
-    persistSession: false, 
-    autoRefreshToken: false,
-    storageKey: "silent-auth-key"
-  }
-});
-
-const normalizarCedula = (v) => String(v || "").replace(/[.\-\s]/g, "").trim();
-
-const LISTA_BARRIOS = [
-  "Santa Clara", "San José Obrero", "San Juan", "San Antonio", "San Rafael",
-  "Las Mercedes", "San Roque", "San Damián", "Santa Rosa", "San Sebastián",
-  "San Francisco", "San Isidro", "Sagrado Corazón de Jesús", "San Miguel",
-  "San Lorenzo", "San Jorge", "Santo Domingo", "San Pablo",
-  "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
-  "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
-  "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros...."
-];
-
-function ANRLogo() {
-  return (
-    <img
-      src={anrlogo}
-      alt="Logo Oficial"
-      style={{ width: "80px", borderRadius: "50%" }}
-    />
-  );
-}
-
-function GreenHeart() {
-  return (
-    <img
-      src={logocarmona}
-      alt="Logo Carmona"
-      style={{ width: "50px", height: "50px", borderRadius: "10px" }}
-    />
-  );
-}
-
-function LoginScreen({ onLogin, loading }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoginError(false);
-    const { error } = await onLogin(email, password);
-    if (error) setLoginError(true);
-  };
-
-  return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#e2e8f0", padding: 15 }}>
-      <div style={{ width: "100%", maxWidth: 400, padding: "40px 30px", textAlign: "center", borderRadius: "30px", background: "white", boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
-        <ANRLogo />
-        <h1 style={{ fontFamily: "Montserrat", fontWeight: "900", color: "#C8102E", fontSize: "28px", marginTop: 15, marginBottom: 5 }}>BIENVENIDO</h1>
-        <p style={{ color: "#64748b", marginBottom: 35, fontWeight: "600", fontSize: "13px" }}>Gestión Política Darío Carmona</p>
-        {loginError && (
-          <div style={{ background: "#fee2e2", color: "#dc2626", padding: "10px", borderRadius: "10px", marginBottom: 20, fontSize: "13px", fontWeight: "700", border: "1px solid #fca5a5" }}>
-            Credenciales incorrectas. Intente de nuevo.
-          </div>
-        )}
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
-          <div style={{ textAlign: "left" }}>
-            <label style={{ fontWeight: "800", fontSize: "11px", color: "#444" }}>CORREO</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: "15px", borderRadius: "12px", border: "1px solid #eee", width: "100%", marginTop: 5, fontSize: "16px", background: "#f8fafc" }} />
-          </div>
-          <div style={{ textAlign: "left" }}>
-            <label style={{ fontWeight: "800", fontSize: "11px", color: "#444" }}>CONTRASEÑA</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: "15px", borderRadius: "12px", border: "1px solid #eee", width: "100%", marginTop: 5, fontSize: "16px", background: "#f8fafc" }} />
-          </div>
-          <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", cursor: "pointer", fontSize: "16px" }}>
-            {loading ? "VERIFICANDO..." : "ENTRAR AL PANEL"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
+import { supabase, supabaseAuth } from "./lib/supabase";
+import { normalizarCedula, LISTA_BARRIOS } from "./utils/helpers";
+import { ANRLogo, GreenHeart } from "./components/Logos";
+import { LoginScreen } from "./components/LoginScreen";
 
 export default function App() {
   const [session, setSession] = useState(null);
