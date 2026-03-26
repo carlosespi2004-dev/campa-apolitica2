@@ -154,6 +154,36 @@ export default function App() {
     }
   }, [session]);
 
+  // NUEVO: Funcionalidad de cierre de sesión automático por inactividad (15 minutos)
+  useEffect(() => {
+    let timeoutId;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      if (session) {
+        timeoutId = setTimeout(() => {
+          supabase.auth.signOut();
+        }, 15 * 60 * 1000); // 15 minutos en milisegundos
+      }
+    };
+
+    if (session) {
+      resetTimer(); // Iniciar temporizador al loguearse
+      const eventos = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
+      
+      eventos.forEach((evento) => {
+        window.addEventListener(evento, resetTimer);
+      });
+
+      return () => {
+        clearTimeout(timeoutId);
+        eventos.forEach((evento) => {
+          window.removeEventListener(evento, resetTimer);
+        });
+      };
+    }
+  }, [session]);
+
   async function cargarRolYDatos() {
     setLoading(true);
     try {
@@ -252,7 +282,7 @@ export default function App() {
     } else if (data) {
       setResultadoPadron(data);
     } else {
-      alert("Cédula no encontrada en el padrón");
+      alert("Cédula realmente no encontrada en el padrón.");
     }
     setLoading(false);
   }
@@ -748,4 +778,3 @@ export default function App() {
     </div>
   );
 }
-
