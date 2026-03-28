@@ -9,43 +9,43 @@ import { LoginScreen } from "./components/LoginScreen";
 import logocarmona from "./img/logocarmona.png";
 import anrlogo from "./img/anrlogo.png";
 
-// --- SVGs Decorativos para el Diseño Visual ---
-const BackgroundWaves = () => (
+// --- SVGs Decorativos para la Réplica Visual ---
+
+// 1. Fondo de Ciudad, Puente y Brillo
+const BridgeCity = () => (
   <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "250px", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1440 250" preserveAspectRatio="none">
-    <defs>
-      <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#991b1b" />
-        <stop offset="50%" stopColor="#dc2626" />
-        <stop offset="100%" stopColor="#991b1b" />
-      </linearGradient>
-    </defs>
-    <path fill="#e2e8f0" opacity="0.4" d="M150,180 L150,140 L170,140 L170,130 L190,130 L190,150 L210,150 L210,180 Z M350,180 L350,120 L380,120 L380,180 Z M850,180 L850,110 L890,110 L890,180 Z M1150,180 L1150,130 L1170,130 L1170,100 L1190,100 L1190,180 Z M1250,180 Q1300,130 1350,180 Z"></path>
-    <path fill="none" stroke="#1e3a8a" strokeWidth="4" d="M0,180 C320,240 420,120 720,160 C1020,200 1220,130 1440,170" opacity="0.6"></path>
-    <circle cx="720" cy="180" r="100" fill="#fef08a" opacity="0.4" filter="blur(20px)" />
-    <path fill="url(#grad1)" d="M0,200 C480,280 720,120 1440,190 L1440,250 L0,250 Z"></path>
-    <path fill="#7f1d1d" d="M0,220 C480,290 820,160 1440,220 L1440,250 L0,250 Z"></path>
+    {/* Silueta de la ciudad */}
+    <path fill="#1e293b" opacity="0.9" d="M150,180 L150,140 L170,140 L170,130 L190,130 L190,150 L210,150 L210,180 Z M350,180 L350,120 L380,120 L380,180 Z M850,180 L850,110 L890,110 L890,180 Z M1150,180 L1150,130 L1170,130 L1170,100 L1190,100 L1190,180 Z M1250,180 Q1300,130 1350,180 Z"></path>
+    {/* Silueta del puente atirantado */}
+    <path fill="none" stroke="#1e293b" strokeWidth="6" d="M0,180 C320,240 420,120 720,160 C1020,200 1220,130 1440,170" opacity="0.8"></path>
+    <path fill="none" stroke="#1e293b" strokeWidth="2" d="M720,160 L680,180 M720,160 L760,180 M720,160 L640,180 M720,160 L800,180" opacity="0.5"></path>
+    {/* Brillo estilo sol naciente */}
+    <circle cx="720" cy="180" r="100" fill="#fef08a" opacity="0.4" filter="blur(30px)" />
   </svg>
 );
 
-const AccentLeft = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: "absolute", left: -15, top: "25%", opacity: 0.8 }}>
-    <path d="M20 4 L10 10 M22 12 L10 12 M20 20 L10 14" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+// 2. Ondas rojas, blancas y azules inferiores
+const TricolorWaves = () => (
+  <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "70px", zIndex: 2, pointerEvents: "none" }} viewBox="0 0 1440 70" preserveAspectRatio="none">
+    <path fill="#C8102E" d="M0,20 C480,80 720,-40 1440,30 L1440,70 L0,70 Z"></path>
+    <path fill="white" d="M0,40 C480,90 720,-10 1440,50 L1440,70 L0,70 Z"></path>
+    <path fill="#1e3a8a" d="M0,60 C480,100 720,20 1440,65 L1440,70 L0,70 Z"></path>
   </svg>
 );
 
-const AccentRight = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: "absolute", right: -15, top: "25%", opacity: 0.8 }}>
-    <path d="M4 4 L14 10 M2 12 L14 12 M4 20 L14 14" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+const LineAccent = () => (
+  <svg width="40" height="2" viewBox="0 0 40 2" style={{ verticalAlign: "middle" }}>
+    <rect width="40" height="2" rx="1" fill="#cbd5e1"/>
   </svg>
+);
+
+const BrilloNumero = () => (
+  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(254,240,138,0.5) 0%, rgba(254,240,138,0) 70%)", borderRadius: "50%", filter: "blur(15px)", pointerEvents: "none", zIndex: -1 }} />
 );
 
 const ANRLogoSmall = () => (
-  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-    <div style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "50%" }}>
-      <div style={{ transform: "scale(0.4)" }}>
-        <ANRLogo />
-      </div>
-    </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <img src={anrlogo} alt="ANR" style={{ width: "32px", height: "32px", borderRadius: "50%" }} />
     <span style={{ fontSize: "14px", fontWeight: "600", color: "#C8102E" }}>ANR</span>
   </div>
 );
@@ -54,7 +54,7 @@ const UserAvatar = ({ name, role, isMobile }) => (
   <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: isMobile ? 0 : "20px", borderLeft: isMobile ? "none" : "1px solid #e2e8f0" }}>
     <div style={{ textAlign: isMobile ? "center" : "left" }}>
       <div style={{ fontSize: "12px", color: "#64748b" }}>Hola, <span style={{ fontWeight: "700", color: "#1e293b" }}>{name}</span></div>
-      <div style={{ color: "#64748b", fontSize: "11px", fontWeight: "500", textTransform: "capitalize", marginTop: "1px" }}>
+      <div style={{ color: "#64748b", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", marginTop: "1px" }}>
         {role}
       </div>
     </div>
@@ -515,57 +515,69 @@ export default function App() {
     <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
       {/* ------------------ ENCABEZADO SUPERIOR RÉPLICA EXACTA ------------------ */}
-      <header style={{ background: "white", padding: "10px 25px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 100 }}>
+      <header style={{ background: "white", padding: isMobile ? "10px 15px" : "15px 30px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 100 }}>
         
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "500" }}>
-            Sistema de Gestión – <span style={{ background: "#C8102E", color: "white", padding: "2px 10px", borderRadius: "10px", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", verticalAlign: "middle", marginLeft: "5px" }}>Lista 2 / Opción 5</span>
-          </span>
+          <ANRLogoSmall />
+          {!isMobile && (
+            <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "500", marginLeft: "5px" }}>
+              Sistema de Gestión – <span style={{ background: "#C8102E", color: "white", padding: "3px 10px", borderRadius: "10px", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", verticalAlign: "middle", marginLeft: "5px" }}>Lista 2 / Opción 5</span>
+            </span>
+          )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "10px" : "20px" }}>
           <UserAvatar name={userName} role={userRole === "administrador" ? "Administrador" : "Coordinador"} isMobile={isMobile} />
           <button 
             onClick={() => supabase.auth.signOut()} 
-            style={{ background: "white", color: "#1e293b", padding: "8px 20px", borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: "600", cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}
+            style={{ background: "white", color: "#1e293b", padding: "8px 15px", borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: "600", cursor: "pointer", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}
           >
-            <LogOut size={16} style={{ verticalAlign: "middle", marginRight: "8px" }} /> {!isMobile && "Cerrar sesión"}
+            <LogOut size={16} /> {!isMobile && "Cerrar sesión"}
           </button>
         </div>
       </header>
+      
+      {isMobile && (
+        <div style={{ background: "#f8fafc", padding: "10px 15px", borderBottom: "1px solid #f1f5f9", textAlign: "center", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
+           Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
+        </div>
+      )}
 
       {/* ------------------ SECCIÓN PRINCIPAL HERO RÉPLICA EXACTA ------------------ */}
-      <section style={{ position: "relative", width: "100%", background: "#f8fafc", padding: isMobile ? "40px 15px 140px 15px" : "60px 20px 160px 20px", textAlign: "center", overflow: "hidden" }}>
+      <section style={{ position: "relative", width: "100%", background: "#f8fafc", padding: isMobile ? "40px 15px 130px 15px" : "60px 20px 140px 20px", textAlign: "center", overflow: "hidden" }}>
         
-        <BackgroundWaves />
+        <BridgeCity />
+        <TricolorWaves />
 
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "25px" }}>
-           <img src={anrlogo} alt="ANR" style={{ width: "90px", height: "90px", borderRadius: "50%", background: "white", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }} />
-
+            <LineAccent />
+            <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)" }}>
+              <img src={anrlogo} alt="ANR" style={{ width: "90px", height: "90px", borderRadius: "50%" }} />
+            </div>
+            <LineAccent />
           </div>
 
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#fef2f2", padding: "6px 20px", borderRadius: "30px", color: "#C8102E", fontWeight: "900", fontSize: isMobile ? "15px" : "18px", marginBottom: "15px", border: "2px solid #C8102E" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#fef2f2", padding: "6px 20px", borderRadius: "30px", color: "#C8102E", fontWeight: "900", fontSize: isMobile ? "14px" : "16px", marginBottom: "15px", border: "1px solid #fecaca" }}>
             <span>LISTA 2</span>
-            <span>—</span>
+            <span style={{ color: "#fca5a5", fontWeight: "400" }}>—</span>
             <span>OPCIÓN 5</span>
           </div>
 
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "40px" : "68px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-1.5px", textShadow: "1px 1px 0px rgba(0,0,0,0.05)", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "38px" : "68px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-1.5px", textShadow: "1px 1px 0px rgba(0,0,0,0.05)", lineHeight: 1.1 }}>
             HAGAMOS QUE SUCEDA
           </h1>
           
-          <p style={{ fontSize: isMobile ? "16px" : "19px", color: "#1e3a8a", margin: "0 0 45px 0", fontWeight: "500", maxWidth: "600px" }}>
+          <p style={{ fontSize: isMobile ? "16px" : "19px", color: "#1e3a8a", margin: "0 0 45px 0", fontWeight: "600", maxWidth: "600px" }}>
             Unidos por el cambio que nuestra ciudad necesita
           </p>
 
           <button style={{ background: "#C8102E", borderRadius: "50px", padding: "10px 25px 10px 10px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.3)", width: isMobile ? "100%" : "auto", maxWidth: "520px", border: "none", cursor: "default" }}>
             <div style={{ background: "white", borderRadius: "50%", width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {/* CAMBIO REALIZADO: Se reemplazó el componente <GreenHeart /> por la etiqueta <img /> directa llamando a logocarmona para que vuelva a mostrarse correctamente */}
-              <img src={logocarmona} alt="Logo Carmona" style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
+              <img src={logocarmona} alt="Carmona" style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
             </div>
-            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "16px" : "19px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
+            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "15px" : "18px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
               DARÍO CARMONA – CONCEJAL 2026
             </span>
             <span style={{ color: "white", fontSize: "20px", fontWeight: "bold" }}>→</span>
@@ -579,7 +591,7 @@ export default function App() {
 
       {/* ------------------ TARJETA DEL CONTADOR RÉPLICA EXACTA ------------------ */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-70px", display: "flex", justifyContent: "center", padding: "0 15px", marginBottom: "40px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 45px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "35px", boxShadow: "0 15px 45px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0", maxWidth: "800px", width: "100%" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 45px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "35px", boxShadow: "0 15px 45px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "800px", width: "100%" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
             <div style={{ background: "#C8102E", color: "white", width: isMobile ? "50px" : "60px", height: isMobile ? "50px" : "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.2)" }}>
@@ -609,8 +621,10 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", marginBottom: "40px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" }}>
-        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026
+      {/* Pie visual inferior parecido */}
+      <div style={{ textAlign: "center", marginBottom: "40px", padding: "0 15px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", lineHeight: 1.5 }}>
+        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026<br/>
+        Desarrollado para la campaña de Darío Carmona
       </div>
       
       {/* ------------------ FIN RÉPLICA VISUAL ------------------ */}
