@@ -338,7 +338,7 @@ export default function App() {
     const crearHoja = (nombreHoja, lista) => {
       const sheet = workbook.addWorksheet(nombreHoja.substring(0, 31));
       const esListaGeneral = nombreHoja === "LISTA GENERAL";
-      const colFinal = esListaGeneral ? "K" : "L";
+      const colFinal = esListaGeneral ? "L" : "M";
 
       sheet.addRow(["HAGAMOS QUE SUCEDA"]);
       sheet.mergeCells(`A1:${colFinal}1`);
@@ -358,7 +358,7 @@ export default function App() {
       
       sheet.addRow([]); 
       
-      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 25, 8, 8, 40, 40];
+      const anchosColumnas = [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 40];
       if (!esListaGeneral) {
         anchosColumnas.push(20); 
       }
