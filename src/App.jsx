@@ -17,7 +17,7 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
 
-  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
+  const [formVotante, setFormVotante] = useState({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" });
   const [formEquipo, setFormEquipo] = useState({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
   const [editIdVotante, setEditIdVotante] = useState(null);
   const [editIdEquipo, setEditIdEquipo] = useState(null);
@@ -32,7 +32,7 @@ export default function App() {
     setUserName("");
     setUserEquipoId(null);
     setActiveTab("inicio");
-    setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
+    setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" });
     setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
     setEditIdVotante(null);
     setEditIdEquipo(null);
@@ -244,7 +244,7 @@ export default function App() {
       : await supabase.from("votantes").insert([payload]);
 
     if (!error) {
-      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "" });
+      setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" });
       setEditIdVotante(null);
       cargarDatos();
       alert("¡Guardado!");
@@ -358,7 +358,7 @@ export default function App() {
       
       sheet.addRow([]); 
       
-      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 8, 8, 10, 35];
+      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 25, 8, 8, 10, 35];
       if (!esListaGeneral) {
         anchosColumnas.push(20); 
       }
@@ -368,7 +368,7 @@ export default function App() {
       });
 
       const headerRow = sheet.getRow(4);
-      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local"];
+      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Observación", "Orden", "Mesa", "Seccional", "Local"];
       if (!esListaGeneral) {
         headerNombres.push("Captado por");
       }
@@ -382,7 +382,7 @@ export default function App() {
 
       lista.forEach((v, i) => {
         const fechaFormateada = v.fecha_nacimiento && v.fecha_nacimiento.includes("-") ? v.fecha_nacimiento.split("-").reverse().join("/") : (v.fecha_nacimiento || "");
-        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion];
+        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.observacion, v.orden, v.mesa, v.seccional, v.local_votacion];
         if (!esListaGeneral) {
           valoresFila.push(v.por_parte_de_nombre);
         }
@@ -556,6 +556,7 @@ export default function App() {
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
+                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>OBSERVACIÓN</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
                 <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
               </form>
