@@ -486,7 +486,7 @@ export default function App() {
         
         <div style={{ background: "#C8102E", padding: "10px 30px", borderRadius: "50px", display: "inline-flex", alignItems: "center", gap: 5, marginTop: 15, boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
           <GreenHeart />
-        <h2 style={{ fontFamily: "Montserrat", fontWeight: "800", color: "white", fontSize: isMobile ? "12px" : "16px", margin: 0, textTransform: "uppercase" }}>
+        <h2 style={{ fontFamily: "Domine", fontWeight: "800", color: "white", fontSize: isMobile ? "12px" : "16px", margin: 0, textTransform: "uppercase" }}>
             Darío Carmona Concejal 2026
           </h2>
         </div>
@@ -684,8 +684,8 @@ export default function App() {
                   </div>
                 )}
                 <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="Coordinador">Coordinador (Solo ve su zona)</option>
-                  <option value="Administrador">Administrador (Ve todo)</option>
+                  <option value="coordinador">Coordinador (Solo ve su zona)</option>
+                  <option value="administrador">Administrador (Ve todo)</option>
                 </select>
                 <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
                   {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
