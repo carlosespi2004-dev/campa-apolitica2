@@ -358,20 +358,19 @@ export default function App() {
       
       sheet.addRow([]); 
       
-      const anchosColumnas = [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 40];
-      if (!esListaGeneral) {
-        anchosColumnas.push(20); 
-      }
+      const anchosColumnas = esListaGeneral 
+        ? [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 40] 
+        : [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 20, 25];
       
       anchosColumnas.forEach((ancho, index) => {
         sheet.getColumn(index + 1).width = ancho;
       });
 
       const headerRow = sheet.getRow(4);
-      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Observación"];
-      if (!esListaGeneral) {
-        headerNombres.push("Captado por");
-      }
+      const headerNombres = esListaGeneral
+        ? ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Observación", "Orden", "Mesa", "Seccional", "Local"]
+        : ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Captado por", "Observación"];
+      
       headerRow.values = headerNombres;
 
       headerRow.eachCell((c) => {
@@ -382,10 +381,11 @@ export default function App() {
 
       lista.forEach((v, i) => {
         const fechaFormateada = v.fecha_nacimiento && v.fecha_nacimiento.includes("-") ? v.fecha_nacimiento.split("-").reverse().join("/") : (v.fecha_nacimiento || "");
-        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion, v.observacion];
-        if (!esListaGeneral) {
-          valoresFila.push(v.por_parte_de_nombre);
-        }
+        
+        const valoresFila = esListaGeneral
+          ? [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.observacion, v.orden, v.mesa, v.seccional, v.local_votacion]
+          : [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion, v.por_parte_de_nombre, v.observacion];
+        
         const row = sheet.addRow(valoresFila);
         const color = i % 2 !== 0 ? "FFFEE2E2" : "FFFFFFFF";
         row.eachCell((c) => {
