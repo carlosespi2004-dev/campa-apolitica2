@@ -37,13 +37,13 @@ const BridgeCityBackground = () => (
 );
 
 const AccentLeft = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "12px" }}>
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "5px" }}>
     <path d="M20 2 L8 10 M22 15 L6 15 M20 28 L8 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
 
 const AccentRight = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "12px" }}>
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "5px" }}>
     <path d="M4 2 L16 10 M2 15 L18 15 M4 28 L16 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
@@ -313,17 +313,18 @@ export default function App() {
       </section>
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
+      {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "40px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
           
-          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "15px", marginRight: isMobile ? 0 : "10px" }}>
             <div style={{ background: "#C8102E", color: "white", width: "60px", height: "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
               <Users size={32} strokeWidth={2.5} />
             </div>
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: "32px", color: "#1e293b", fontStyle: "italic" }}>YA SOMOS</span>
           </div>
 
-          <div style={{ position: "relative", padding: "0 15px", display: "flex", alignItems: "center", justifyContent: "center", flex: isMobile ? "none" : 1 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <BrilloNumero />
             <AccentLeft />
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "80px" : "110px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.8, letterSpacing: "-3px", textShadow: "2px 2px 0px rgba(0,0,0,0.05)" }}>
@@ -332,8 +333,8 @@ export default function App() {
             <AccentRight />
           </div>
 
-          <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: "800", color: "#64748b", fontSize: "18px", lineHeight: 1.2, textAlign: isMobile ? "center" : "left" }}>
-            personas
+          <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: "800", color: "#64748b", fontSize: "18px", lineHeight: 1.2, textAlign: isMobile ? "center" : "left", marginLeft: isMobile ? 0 : "10px" }}>
+            personas<br/>registradas
           </div>
 
           {/* Cápsula inferior */}
