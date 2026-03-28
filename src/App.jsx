@@ -6,8 +6,6 @@ import { supabase, supabaseAuth } from "./lib/supabase";
 import { normalizarCedula, LISTA_BARRIOS } from "./utils/helpers";
 import { ANRLogo, GreenHeart } from "./components/Logos";
 import { LoginScreen } from "./components/LoginScreen";
-import logocarmona from "./img/logocarmona.png";
-import anrlogo from "./img/anrlogo.png";
 
 // --- SVGs Decorativos para el Diseño Visual ---
 const BackgroundWaves = () => (
@@ -37,6 +35,29 @@ const AccentRight = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: "absolute", right: -15, top: "25%", opacity: 0.8 }}>
     <path d="M4 4 L14 10 M2 12 L14 12 M4 20 L14 14" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
   </svg>
+);
+
+const ANRLogoSmall = () => (
+  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <div style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "50%" }}>
+      <div style={{ transform: "scale(0.4)" }}>
+        <ANRLogo />
+      </div>
+    </div>
+    <span style={{ fontSize: "14px", fontWeight: "600", color: "#C8102E" }}>ANR</span>
+  </div>
+);
+
+const UserAvatar = ({ name, role }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 15px", borderLeft: "1px solid #e2e8f0" }}>
+    <UserCircle size={32} color="#64748b" strokeWidth={1.5} />
+    <div style={{ textAlign: "left" }}>
+      <div style={{ fontSize: "12px", color: "#64748b" }}>Hola, <span style={{ fontWeight: "700", color: "#1e293b" }}>{name}</span></div>
+      <div style={{ background: "#C8102E", color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700", display: "inline-block", textTransform: "uppercase", marginTop: "2px" }}>
+        {role}
+      </div>
+    </div>
+  </div>
 );
 
 export default function App() {
@@ -494,7 +515,7 @@ export default function App() {
       <header style={{ background: "white", padding: "15px 25px", borderBottom: "1px solid #f1f5f9", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "space-between", gap: isMobile ? "15px" : "0", position: "relative", zIndex: 100 }}>
         
         <div style={{ display: "flex", alignItems: "center", gap: "10px", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "center" : "flex-start" }}>
-          <img src={anrlogo} alt="ANR" style={{ width: "35px", height: "35px", borderRadius: "50%" }} />
+          <ANRLogoSmall />
           <span style={{ fontSize: isMobile ? "12px" : "14px", color: "#64748b", fontWeight: "500" }}>Sistema de Gestión – <span style={{fontWeight: "800", color: "#1e293b"}}>Lista 2 / Opción 5</span></span>
         </div>
 
@@ -514,8 +535,8 @@ export default function App() {
         <BackgroundWaves />
 
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }}>
-            <img src={anrlogo} alt="ANR" style={{ width: isMobile ? "70px" : "90px", height: isMobile ? "70px" : "90px", borderRadius: "50%" }} />
+          <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ANRLogo />
           </div>
 
           <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#C8102E", padding: "5px 25px", borderRadius: "30px", color: "white", fontWeight: "900", fontSize: isMobile ? "16px" : "20px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
@@ -533,8 +554,10 @@ export default function App() {
           </p>
 
           <button style={{ background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #b91c1c 100%)", borderRadius: "50px", padding: "8px 20px 8px 8px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.4)", width: isMobile ? "100%" : "auto", maxWidth: "500px", border: "none", cursor: "default" }}>
-            <div style={{ background: "white", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <User color="#C8102E" size={24} strokeWidth={2.5} />
+            <div style={{ background: "white", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <div style={{ transform: "scale(0.8)" }}>
+                <GreenHeart />
+              </div>
             </div>
             <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "14px" : "18px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
               DARÍO CARMONA – CONCEJAL 2026
@@ -553,8 +576,8 @@ export default function App() {
         <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "25px 20px" : "20px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "15px" : "30px", boxShadow: "0 15px 40px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-            <div style={{ background: "#C8102E", width: isMobile ? "45px" : "55px", height: isMobile ? "45px" : "55px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
-              <Users color="white" size={isMobile ? 24 : 28} />
+            <div style={{ background: "#C8102E", color: "white", width: isMobile ? "45px" : "55px", height: isMobile ? "45px" : "55px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
+              <Users size={isMobile ? 24 : 28} strokeWidth={2.5} />
             </div>
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "22px" : "28px", color: "#1e293b", fontStyle: "italic" }}>YA SOMOS</span>
           </div>
