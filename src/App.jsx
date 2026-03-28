@@ -542,11 +542,8 @@ export default function App() {
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "25px" }}>
-            <LineAccent />
-            <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)" }}>
-              <ANRLogo style={{ width: "90px", height: "90px" }} />
-            </div>
-            <LineAccent />
+           <img src={anrlogo} alt="ANR" style={{ width: "90px", height: "90px", borderRadius: "50%", background: "white", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }} />
+
           </div>
 
           <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#fef2f2", padding: "6px 20px", borderRadius: "30px", color: "#C8102E", fontWeight: "900", fontSize: isMobile ? "15px" : "18px", marginBottom: "15px", border: "2px solid #C8102E" }}>
