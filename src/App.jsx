@@ -231,7 +231,7 @@ export default function App() {
 
     const payload = {
       ...datosLimpios,
-      fecha_nacimiento: datosLimpios.fecha_nacimiento || null, 
+      fecha_nacimiento: datosLimpios.fecha_nacimiento && datosLimpios.fecha_nacimiento.includes("/") ? datosLimpios.fecha_nacimiento.split("/").reverse().join("-") : datosLimpios.fecha_nacimiento || null, 
       cedula_limpia: cedulaLimpiaActual,
       por_parte_de_nombre: userName,
       equipo_id: userEquipoId, 
@@ -542,7 +542,7 @@ export default function App() {
                 <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="date" value={formVotante.fecha_nacimiento} onChange={(e) => setFormVotante({ ...formVotante, fecha_nacimiento: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="text" placeholder="DD/MM/AAAA" value={formVotante.fecha_nacimiento} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length > 8) v = v.substring(0, 8); if (v.length > 4) { v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3'); } else if (v.length > 2) { v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2'); } setFormVotante({ ...formVotante, fecha_nacimiento: v }); }} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                   <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>TELÉFONO</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 </div>
 
