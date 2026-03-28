@@ -359,8 +359,8 @@ export default function App() {
       sheet.addRow([]); 
       
       const anchosColumnas = esListaGeneral 
-        ? [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 40] 
-        : [5, 25, 25, 12, 17, 15, 20, 5, 5, 8, 37, 20, 40];
+        ? [5, 25, 25, 12, 17, 15, 20, 10, 10, 10, 37, 40] 
+        : [5, 25, 25, 12, 17, 15, 20, 10, 10, 10, 37, 20, 40];
       
       anchosColumnas.forEach((ancho, index) => {
         sheet.getColumn(index + 1).width = ancho;
