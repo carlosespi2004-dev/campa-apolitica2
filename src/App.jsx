@@ -480,7 +480,7 @@ export default function App() {
           </h2>
         </div>
 
-        <div style={{ fontFamily: "Saira Stencil One", fontSize: isMobile ? "22px" : "28px", color: "#C8102E", marginTop: "15px", textTransform: "uppercase", letterSpacing: "1px" }}>
+        <div style={{ fontFamily: "Piedra", fontSize: isMobile ? "22px" : "28px", color: "#C8102E", marginTop: "15px", textTransform: "uppercase", letterSpacing: "1px" }}>
           YA SOMOS {totalVotantesGeneral}… ¡Y VAMOS POR MÁS!
         </div>
       </header>
