@@ -244,10 +244,10 @@ export default function App() {
   });
 
   return (
-    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif", width: "100%", overflowX: "hidden" }}>
       
       {/* --- ENCABEZADO SUPERIOR RÉPLICA --- */}
-      <header style={{ background: "white", padding: isMobile ? "12px 15px" : "15px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0", position: "relative", zIndex: 100 }}>
+      <header style={{ background: "white", padding: isMobile ? "12px 15px" : "15px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0", position: "relative", zIndex: 100, width: "100%", boxSizing: "border-box" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img src={anrlogo} alt="ANR" style={{ width: "35px", height: "35px", borderRadius: "50%" }} />
           {!isMobile && (
@@ -271,13 +271,13 @@ export default function App() {
       </header>
       
       {isMobile && (
-        <div style={{ background: "#f8fafc", padding: "10px", borderBottom: "1px solid #e2e8f0", textAlign: "center", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
+        <div style={{ background: "#f8fafc", padding: "10px", borderBottom: "1px solid #e2e8f0", textAlign: "center", fontSize: "12px", color: "#64748b", fontWeight: "500", width: "100%", boxSizing: "border-box" }}>
            Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
         </div>
       )}
 
       {/* --- SECCIÓN PRINCIPAL HERO RÉPLICA EXACTA --- */}
-      <section style={{ position: "relative", width: "100%", background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", padding: isMobile ? "40px 15px 160px 15px" : "50px 20px 180px 20px", textAlign: "center" }}>
+      <section style={{ position: "relative", width: "100%", background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", padding: isMobile ? "40px 15px 160px 15px" : "50px 20px 180px 20px", textAlign: "center", boxSizing: "border-box" }}>
         
         <BridgeCityBackground />
 
@@ -313,9 +313,8 @@ export default function App() {
       </section>
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
-      {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
-      <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
+      <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px", width: "100%", boxSizing: "border-box" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%", boxSizing: "border-box" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "15px", marginRight: isMobile ? 0 : "10px" }}>
             <div style={{ background: "#C8102E", color: "white", width: "60px", height: "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
@@ -350,7 +349,8 @@ export default function App() {
       
       {/* --- FIN RÉPLICA VISUAL --- */}
 
-      <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", position: "sticky", top: 0, zIndex: 90, borderBottom: "1px solid #e2e8f0" }}>
+      {/* SECCIÓN NAVEGACIÓN Y CONTENIDO: AJUSTE RESPONSIVE */}
+      <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", position: "sticky", top: 0, zIndex: 90, borderBottom: "1px solid #e2e8f0", width: "100%", boxSizing: "border-box", overflowX: "auto" }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Mis Votantes</button>
         {userRole === "administrador" && (
@@ -362,14 +362,14 @@ export default function App() {
         )}
       </nav>
 
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: isMobile ? "20px 15px" : "30px 15px", paddingBottom: 120 }}>
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: isMobile ? "20px 10px" : "30px 15px", paddingBottom: 120, width: "100%", boxSizing: "border-box" }}>
         {activeTab === "inicio" && (
-          <div style={{ display: "grid", gap: 25 }}>
-            <div style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+          <div style={{ display: "grid", gap: 25, width: "100%" }}>
+            <div style={{ background: "white", padding: isMobile ? 15 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
               <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
-                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value.replace(/\D/g, ''))} placeholder="Ingrese número de cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px", outline: "none" }} />
-                <button onClick={buscarEnPadron} style={{ padding: "15px 30px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900", fontSize: "16px", cursor: "pointer" }}>
+                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value.replace(/\D/g, ''))} placeholder="Ingrese número de cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                <button onClick={buscarEnPadron} style={{ padding: "15px 30px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900", fontSize: "16px", cursor: "pointer", width: isMobile ? "100%" : "auto" }}>
                   BUSCAR
                 </button>
               </div>
@@ -392,7 +392,7 @@ export default function App() {
                       setResultadoPadron(null);
                       alert("Datos cargados en el formulario inferior.");
                     }}
-                    style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none", cursor: "pointer", fontSize: "14px" }}
+                    style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none", cursor: "pointer", fontSize: "14px", width: "100%" }}
                   >
                     COPIAR AL FORMULARIO
                   </button>
@@ -400,35 +400,35 @@ export default function App() {
               )}
             </div>
 
-            <div id="formVotante" style={{ background: "white", padding: isMobile ? 25 : 40, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+            <div id="formVotante" style={{ background: "white", padding: isMobile ? 20 : 40, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h3 style={{ color: "#1e293b", fontWeight: "900", textAlign: "center", marginBottom: 30, fontSize: "22px", textTransform: "uppercase" }}>{editIdVotante ? "Editar Votante" : "Registrar Nuevo Votante"}</h3>
               <form onSubmit={guardarVotante} style={{ display: "grid", gap: 18 }}>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>NOMBRE *</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>APELLIDO *</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>NOMBRE *</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>APELLIDO *</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
                 </div>
                 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>CÉDULA DE IDENTIDAD *</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>TELÉFONO / WHATSAPP *</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>CÉDULA DE IDENTIDAD *</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>TELÉFONO / WHATSAPP *</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
                 </div>
                 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>FECHA DE NACIMIENTO *</label><input type="text" placeholder="DD/MM/AAAA" value={formVotante.fecha_nacimiento} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length > 8) v = v.substring(0, 8); if (v.length > 4) { v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3'); } else if (v.length > 2) { v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2'); } setFormVotante({ ...formVotante, fecha_nacimiento: v }); }} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
-                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>BARRIO *</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none" }}><option value="">Seleccione un barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>FECHA DE NACIMIENTO *</label><input type="text" placeholder="DD/MM/AAAA" value={formVotante.fecha_nacimiento} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length > 8) v = v.substring(0, 8); if (v.length > 4) { v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3'); } else if (v.length > 2) { v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2'); } setFormVotante({ ...formVotante, fecha_nacimiento: v }); }} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>BARRIO *</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none", boxSizing: "border-box" }}><option value="">Seleccione un barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 15, padding: "15px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                   <div style={{gridColumn: isMobile ? "1 / -1" : "auto"}}><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>LOCAL DE VOTACIÓN</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
-                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
-                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 15, padding: "15px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>LOCAL DE VOTACIÓN</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none", boxSizing: "border-box" }} /></div>
+                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none", boxSizing: "border-box" }} /></div>
+                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none", boxSizing: "border-box" }} /></div>
                 </div>
                 
-                <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>OBSERVACIÓN / COMENTARIO</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>OBSERVACIÓN / COMENTARIO</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", boxSizing: "border-box" }} /></div>
                 
-                <div style={{display: "flex", gap: "10px", marginTop: "15px"}}>
-                   {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "18px", borderRadius: "15px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
-                   <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", fontSize: "18px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdVotante ? "GUARDAR CAMBIOS" : "REGISTRAR VOTANTE"}</button>
+                <div style={{display: "flex", flexDirection: isMobile ? "column" : "row", gap: "10px", marginTop: "15px"}}>
+                   {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "18px", borderRadius: "15px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1, width: "100%" }}>CANCELAR</button>}
+                   <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", fontSize: "18px", cursor: "pointer", flex: 2, width: "100%" }}>{loading ? "PROCESANDO..." : editIdVotante ? "GUARDAR CAMBIOS" : "REGISTRAR VOTANTE"}</button>
                 </div>
               </form>
             </div>
@@ -436,11 +436,11 @@ export default function App() {
         )}
 
         {activeTab === "votantes" && (
-          <div style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
+          <div style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
             <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 20, fontSize: "20px", textTransform: "uppercase" }}>Mi Lista de Votantes</h3>
-            <input type="text" placeholder="🔍 Buscar por nombre o cédula..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none" }} />
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: isMobile ? "600px" : "100%", overflowY: "auto", maxHeight: "65vh" }}>
+            <input type="text" placeholder="🔍 Buscar por nombre o cédula..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none", boxSizing: "border-box" }} />
+            <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+              <div style={{ minWidth: "600px", overflowY: "auto", maxHeight: "65vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
                     <tr style={{ fontSize: "12px", color: "#64748b", textTransform: "uppercase" }}><th style={{ padding: "15px", textAlign: "left" }}>NOMBRE</th><th style={{ padding: "15px", textAlign: "left" }}>CÉDULA</th><th style={{ padding: "15px", textAlign: "left" }}>TELÉFONO</th><th style={{ padding: "15px", textAlign: "center" }}>ACCIONES</th></tr>
@@ -466,12 +466,12 @@ export default function App() {
         )}
 
         {activeTab === "lista_general" && userRole === "administrador" && (
-          <div style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+          <div style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
             <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 20, fontSize: "20px", textTransform: "uppercase" }}>Control de Asistencia General (Día D)</h3>
-            <input type="text" placeholder="🔍 Buscar por cédula..." value={busquedaListaGeneral} onChange={(e) => setBusquedaListaGeneral(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none" }} />
+            <input type="text" placeholder="🔍 Buscar por cédula..." value={busquedaListaGeneral} onChange={(e) => setBusquedaListaGeneral(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none", boxSizing: "border-box" }} />
             
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: "30px" }}>
-              <div style={{ minWidth: isMobile ? "600px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
+            <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: "30px" }}>
+              <div style={{ minWidth: "600px", overflowY: "auto", maxHeight: "60vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
                     <tr style={{ fontSize: "12px", color: "#64748b", textTransform: "uppercase" }}>
@@ -497,7 +497,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ background: "#f8fafc", padding: "25px", borderRadius: "20px", border: "1px solid #e2e8f0", textAlign: "center", maxWidth: "500px", margin: "0 auto" }}>
+            <div style={{ background: "#f8fafc", padding: "25px", borderRadius: "20px", border: "1px solid #e2e8f0", textAlign: "center", maxWidth: "500px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
               <h4 style={{ margin: "0 0 15px 0", color: "#475569", fontSize: "15px", fontWeight: "800" }}>RESUMEN DE PARTICIPACIÓN</h4>
               <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "10px" }}>
                 <span style={{ fontSize: "48px", fontWeight: "900", color: "#C8102E", fontStyle: "italic", lineHeight: 1 }}>
@@ -513,38 +513,38 @@ export default function App() {
         )}
 
         {activeTab === "equipo" && userRole === "administrador" && (
-          <div style={{ display: "grid", gap: 30 }}>
-            <div style={{ background: "white", padding: isMobile ? 25 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+          <div style={{ display: "grid", gap: 30, width: "100%" }}>
+            <div style={{ background: "white", padding: isMobile ? 25 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 30, textAlign: "center", textTransform: "uppercase", fontSize: "20px" }}>Gestión de Equipo</h3>
               <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 18 }}>
-                <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} />
+                <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
-                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value.replace(/\D/g, '') })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} />
-                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} />
+                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value.replace(/\D/g, '') })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                 </div>
                 {!editIdEquipo && (
                   <div style={{ padding: "18px", background: "#f8fafc", borderRadius: "15px", border: "1px dashed #cbd5e1" }}>
                     <p style={{ margin: "0 0 12px 0", fontSize: "12px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO</p>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
-                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px", outline: "none" }} />
-                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px", outline: "none" }} />
+                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px", outline: "none", width: "100%", boxSizing: "border-box" }} />
+                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px", outline: "none", width: "100%", boxSizing: "border-box" }} />
                     </div>
                   </div>
                 )}
-                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none" }}>
+                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none", width: "100%", boxSizing: "border-box" }}>
                   <option value="coordinador">Rol: Coordinador</option>
                   <option value="administrador">Rol: Administrador</option>
                 </select>
-                <div style={{display: "flex", gap: "10px", marginTop: "10px"}}>
-                   {editIdEquipo && <button type="button" onClick={() => { setEditIdEquipo(null); setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
-                   <button type="submit" disabled={loading} style={{ background: "#1e293b", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdEquipo ? "GUARDAR CAMBIOS" : "CREAR USUARIO"}</button>
+                <div style={{display: "flex", flexDirection: isMobile ? "column" : "row", gap: "10px", marginTop: "10px"}}>
+                   {editIdEquipo && <button type="button" onClick={() => { setEditIdEquipo(null); setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1, width: "100%" }}>CANCELAR</button>}
+                   <button type="submit" disabled={loading} style={{ background: "#1e293b", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 2, width: "100%" }}>{loading ? "PROCESANDO..." : editIdEquipo ? "GUARDAR CAMBIOS" : "CREAR USUARIO"}</button>
                 </div>
               </form>
             </div>
             
-            <div style={{ background: "white", padding: isMobile ? 20 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+            <div style={{ background: "white", padding: isMobile ? 20 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20, fontSize: "18px" }}>MIEMBROS ACTIVOS</h4>
-              <div style={{ overflowX: "auto" }}>
+              <div style={{ width: "100%", overflowX: "auto" }}>
                 <div style={{ minWidth: "500px", overflowY: "auto", maxHeight: "60vh" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
@@ -570,8 +570,8 @@ export default function App() {
         )}
 
         {activeTab === "reportes" && userRole === "administrador" && (
-          <div style={{ display: "grid", gap: 30 }}>
-            <div style={{ background: "white", padding: 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+          <div style={{ display: "grid", gap: 30, width: "100%" }}>
+            <div style={{ background: "white", padding: isMobile ? 20 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 25, textTransform: "uppercase", fontSize: "20px" }}>Ranking (Top 10)</h3>
               {(rendimientoEquipo || []).slice(0, 10).map((m, index) => (
                 <div key={m?.id} style={{ marginBottom: 18, padding: "15px", background: index < 3 ? "#fef2f2" : "white", borderRadius: "12px", border: index < 3 ? "1px solid #fecaca" : "1px solid #e2e8f0" }}>
@@ -589,10 +589,10 @@ export default function App() {
               ))}
             </div>
             
-            <div style={{ background: "white", padding: 25, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+            <div style={{ background: "white", padding: isMobile ? 20 : 25, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
               <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 25, textTransform: "uppercase", fontSize: "20px" }}>Distribución por Barrio</h3>
-              <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "400px" }}>
+              <div style={{ width: "100%", overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "300px" }}>
                     <thead style={{ background: "#C8102E" }}>
                       <tr style={{ fontSize: "12px", color: "white", fontWeight: "900" }}>
                         <th style={{ padding: "14px", textAlign: "left" }}>BARRIO</th>
