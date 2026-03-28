@@ -314,7 +314,7 @@ export default function App() {
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "40px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
             <div style={{ background: "#C8102E", color: "white", width: "60px", height: "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
@@ -333,7 +333,7 @@ export default function App() {
           </div>
 
           <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: "800", color: "#64748b", fontSize: "18px", lineHeight: 1.2, textAlign: isMobile ? "center" : "left" }}>
-            personas<br/>registradas
+            personas
           </div>
 
           {/* Cápsula inferior */}
