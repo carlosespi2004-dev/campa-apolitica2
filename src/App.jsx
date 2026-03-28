@@ -24,6 +24,7 @@ export default function App() {
   const [busquedaLista, setBusquedaLista] = useState("");
   const [cedulaRapida, setCedulaRapida] = useState("");
   const [resultadoPadron, setResultadoPadron] = useState(null);
+  const [busquedaListaGeneral, setBusquedaListaGeneral] = useState("");
 
   const limpiarEstado = () => {
     setVotantes([]);
@@ -39,6 +40,7 @@ export default function App() {
     setBusquedaLista("");
     setCedulaRapida("");
     setResultadoPadron(null);
+    setBusquedaListaGeneral("");
   };
 
   useEffect(() => {
@@ -69,7 +71,6 @@ export default function App() {
     }
   }, [session]);
 
-  // NUEVO: Funcionalidad de cierre de sesión automático por inactividad (15 minutos)
   useEffect(() => {
     let timeoutId;
 
@@ -78,12 +79,12 @@ export default function App() {
       if (session) {
         timeoutId = setTimeout(() => {
           supabase.auth.signOut();
-        }, 15 * 60 * 1000); // 15 minutos en milisegundos
+        }, 15 * 60 * 1000); 
       }
     };
 
     if (session) {
-      resetTimer(); // Iniciar temporizador al loguearse
+      resetTimer(); 
       const eventos = ["mousemove", "mousedown", "keydown", "touchstart", "scroll"];
       
       eventos.forEach((evento) => {
@@ -175,6 +176,15 @@ export default function App() {
       return !duplicate;
     }).length;
   }, [votantes]); 
+
+  const listaGeneralAdmin = useMemo(() => {
+    const seen = new Set();
+    return votantes.filter(v => {
+      const duplicate = seen.has(normalizarCedula(v.cedula));
+      seen.add(normalizarCedula(v.cedula));
+      return !duplicate;
+    });
+  }, [votantes]);
 
   const conteoBarrio = useMemo(() => {
     const counts = {};
@@ -481,7 +491,7 @@ export default function App() {
           </h2>
         </div>
 
-        <div style={{ fontFamily: "Piedra", fontSize: isMobile ? "22px" : "28px", color: "#C8102E", marginTop: "15px", textTransform: "uppercase", letterSpacing: "1px" }}>
+        <div style={{ fontFamily: "Staatliches, sans-serif", fontSize: isMobile ? "22px" : "28px", color: "#C8102E", marginTop: "15px", textTransform: "uppercase", letterSpacing: "1px" }}>
           YA SOMOS {totalVotantesGeneral}… ¡Y VAMOS POR MÁS!
         </div>
       </header>
@@ -491,6 +501,7 @@ export default function App() {
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Votantes</button>
         {userRole === "administrador" && (
           <>
+            <button onClick={() => setActiveTab("lista_general")} style={tabStyle("lista_general")}>Lista General</button>
             <button onClick={() => setActiveTab("equipo")} style={tabStyle("equipo")}>Equipo</button>
             <button onClick={() => setActiveTab("reportes")} style={tabStyle("reportes")}>Reportes</button>
           </>
@@ -588,6 +599,67 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "lista_general" && userRole === "administrador" && (
+          <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Control de Asistencia General</h3>
+            <input type="text" placeholder="🔍 Buscar por Cédula..." value={busquedaListaGeneral} onChange={(e) => setBusquedaListaGeneral(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
+            
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: "20px" }}>
+              <div style={{ minWidth: isMobile ? "500px" : "100%" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead style={{ background: "#f8fafc" }}>
+                    <tr style={{ fontSize: "11px", color: "#64748b" }}>
+                      <th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th>
+                      <th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th>
+                      <th style={{ padding: 15, textAlign: "center" }}>¿YA VOTÓ?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(listaGeneralAdmin || [])
+                      .filter((v) => busquedaListaGeneral ? v.cedula.includes(busquedaListaGeneral) : true)
+                      .slice(0, 10)
+                      .map((v) => (
+                      <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
+                        <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
+                        <td style={{ padding: 15, textAlign: "center" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={v.ha_votado || false}
+                            onChange={async (e) => {
+                              const checked = e.target.checked;
+                              const { error } = await supabase.from("votantes").update({ ha_votado: checked }).eq("id", v.id);
+                              if (!error) {
+                                setVotantes(prev => prev.map(item => item.id === v.id ? { ...item, ha_votado: checked } : item));
+                              } else {
+                                alert("Error al actualizar: " + error.message);
+                              }
+                            }}
+                            style={{ width: "20px", height: "20px", cursor: "pointer", accentColor: "#C8102E" }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", padding: "20px", borderRadius: "15px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+              <h4 style={{ margin: 0, color: "#475569", fontSize: "14px", fontWeight: "800" }}>RESUMEN DE ASISTENCIA</h4>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "10px", marginTop: "10px" }}>
+                <span style={{ fontSize: "32px", fontWeight: "900", color: "#C8102E" }}>
+                  {listaGeneralAdmin.length > 0 ? Math.round((listaGeneralAdmin.filter(v => v.ha_votado).length / listaGeneralAdmin.length) * 100) : 0}%
+                </span>
+                <span style={{ fontSize: "14px", fontWeight: "700", color: "#64748b" }}>chequeado</span>
+              </div>
+              <p style={{ margin: "5px 0 0 0", color: "#1e293b", fontWeight: "700", fontSize: "16px" }}>
+                {listaGeneralAdmin.filter(v => v.ha_votado).length} de {listaGeneralAdmin.length} personas ya vinieron a votar
+              </p>
             </div>
           </div>
         )}
