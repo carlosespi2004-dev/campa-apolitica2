@@ -303,10 +303,10 @@ export default function App() {
             <div style={{ background: "white", borderRadius: "50%", width: "46px", height: "46px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               <img src={logocarmona} alt="Carmona" style={{ width: "100%", height: "auto" }} />
             </div>
-            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "16px" : "19px", flex: 1, textAlign: "center" }}>
+            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "10px" : "19px", flex: 1, textAlign: "center" }}>
               DARÍO CARMONA – CONCEJAL 2026
             </span>
-            <span style={{ color: "white", fontSize: "22px", fontWeight: "bold" }}>→</span>
+            <span style={{ color: "white", fontSize: "22px", fontWeight: "bold" }}></span>
           </button>
           
         </div>
@@ -314,7 +314,7 @@ export default function App() {
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "40px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
             <div style={{ background: "#C8102E", color: "white", width: "60px", height: "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
