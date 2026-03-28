@@ -358,7 +358,7 @@ export default function App() {
       
       sheet.addRow([]); 
       
-      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 25, 8, 8, 10, 35];
+      const anchosColumnas = [5, 25, 25, 12, 20, 15, 20, 25, 8, 8, 40, 40];
       if (!esListaGeneral) {
         anchosColumnas.push(20); 
       }
