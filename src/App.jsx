@@ -368,7 +368,7 @@ export default function App() {
       });
 
       const headerRow = sheet.getRow(4);
-      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Observación", "Orden", "Mesa", "Seccional", "Local"];
+      const headerNombres = ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Observación"];
       if (!esListaGeneral) {
         headerNombres.push("Captado por");
       }
