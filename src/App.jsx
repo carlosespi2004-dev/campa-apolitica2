@@ -303,7 +303,7 @@ export default function App() {
             <div style={{ background: "white", borderRadius: "50%", width: "46px", height: "46px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
               <img src={logocarmona} alt="Carmona" style={{ width: "100%", height: "auto" }} />
             </div>
-            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "14px" : "19px", flex: 1, textAlign: "center" }}>
+            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "13px" : "19px", flex: 1, textAlign: "center" }}>
               DARÍO CARMONA – CONCEJAL 2026
             </span>
             <span style={{ color: "white", fontSize: "22px", fontWeight: "bold" }}></span>
