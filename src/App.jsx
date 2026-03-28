@@ -37,13 +37,13 @@ const BridgeCityBackground = () => (
 );
 
 const AccentLeft = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ position: "absolute", left: "-25px", top: "50%", transform: "translateY(-50%)", opacity: 0.8 }}>
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "12px" }}>
     <path d="M20 2 L8 10 M22 15 L6 15 M20 28 L8 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
 
 const AccentRight = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ position: "absolute", right: "-25px", top: "50%", transform: "translateY(-50%)", opacity: 0.8 }}>
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "12px" }}>
     <path d="M4 2 L16 10 M2 15 L18 15 M4 28 L16 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
