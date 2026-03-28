@@ -167,6 +167,15 @@ export default function App() {
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
 
+  const totalVotantesGeneral = useMemo(() => {
+    const seen = new Set();
+    return votantes.filter(v => {
+      const duplicate = seen.has(normalizarCedula(v.cedula));
+      seen.add(normalizarCedula(v.cedula));
+      return !duplicate;
+    }).length;
+  }, [votantes]); 
+
   const conteoBarrio = useMemo(() => {
     const counts = {};
     const fuenteDatos = userRole === "administrador" ? votantes : votantesFiltrados;
@@ -466,9 +475,13 @@ export default function App() {
         
         <div style={{ background: "#C8102E", padding: "10px 30px", borderRadius: "50px", display: "inline-flex", alignItems: "center", gap: 5, marginTop: 15, boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
           <GreenHeart />
-          <h2 style={{ fontFamily: "Montserrat", fontWeight: "800", color: "white", fontSize: isMobile ? "12px" : "16px", margin: 0, textTransform: "uppercase" }}>
+        <h2 style={{ fontFamily: "Montserrat", fontWeight: "800", color: "white", fontSize: isMobile ? "12px" : "16px", margin: 0, textTransform: "uppercase" }}>
             Darío Carmona Concejal 2026
           </h2>
+        </div>
+
+        <div style={{ fontFamily: "'Staatliches', sans-serif", fontSize: isMobile ? "22px" : "28px", color: "#C8102E", marginTop: "15px", textTransform: "uppercase", letterSpacing: "1px" }}>
+          YA SOMOS {totalVotantesGeneral}… ¡Y VAMOS POR MÁS!
         </div>
       </header>
 
