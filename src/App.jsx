@@ -346,10 +346,6 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", marginBottom: "40px", padding: "0 15px", fontSize: "12px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", lineHeight: 1.5 }}>
-        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026<br/>
-        Desarrollado para la campaña de Darío Carmona
-      </div>
       
       {/* --- FIN RÉPLICA VISUAL --- */}
 
