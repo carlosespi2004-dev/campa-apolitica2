@@ -334,7 +334,7 @@ export default function App() {
           </div>
 
           <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: "800", color: "#64748b", fontSize: "18px", lineHeight: 1.2, textAlign: isMobile ? "center" : "left", marginLeft: isMobile ? 0 : "10px" }}>
-            personas<br/>registradas
+            personas<br/>confiando en este objetivo 
           </div>
 
           {/* Cápsula inferior */}
