@@ -649,7 +649,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ background: "#f8fafc", padding: "20px", borderRadius: "15px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+            <div style={{ background: "#f8fafc", padding: "20px", borderRadius: "15px", border: "1px solid #ff0000", textAlign: "center" }}>
               <h4 style={{ margin: 0, color: "#475569", fontSize: "14px", fontWeight: "800" }}>RESUMEN DE ASISTENCIA</h4>
               <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "10px", marginTop: "10px" }}>
                 <span style={{ fontSize: "32px", fontWeight: "900", color: "#C8102E" }}>
