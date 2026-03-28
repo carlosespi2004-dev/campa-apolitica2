@@ -575,7 +575,7 @@ export default function App() {
 
           <button style={{ background: "#C8102E", borderRadius: "50px", padding: "10px 25px 10px 10px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.3)", width: isMobile ? "100%" : "auto", maxWidth: "520px", border: "none", cursor: "default" }}>
             <div style={{ background: "white", borderRadius: "50%", width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <img src={logocarmona} alt="Carmona" style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
+              <img src={logocarmona} alt="Carmona" style={{ width: "50px", height: "50px", borderRadius: "50%" }} />
             </div>
             <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "15px" : "18px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
               DARÍO CARMONA – CONCEJAL 2026
