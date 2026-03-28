@@ -382,7 +382,7 @@ export default function App() {
 
       lista.forEach((v, i) => {
         const fechaFormateada = v.fecha_nacimiento && v.fecha_nacimiento.includes("-") ? v.fecha_nacimiento.split("-").reverse().join("/") : (v.fecha_nacimiento || "");
-        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.observacion, v.orden, v.mesa, v.seccional, v.local_votacion];
+        const valoresFila = [i + 1, v.nombre, v.apellido, v.cedula, fechaFormateada, v.telefono, v.barrio, v.orden, v.mesa, v.seccional, v.local_votacion, v.observacion];
         if (!esListaGeneral) {
           valoresFila.push(v.por_parte_de_nombre);
         }
