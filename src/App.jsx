@@ -6,57 +6,57 @@ import { supabase, supabaseAuth } from "./lib/supabase";
 import { normalizarCedula, LISTA_BARRIOS } from "./utils/helpers";
 import { ANRLogo, GreenHeart } from "./components/Logos";
 import { LoginScreen } from "./components/LoginScreen";
+import logocarmona from "./img/logocarmona.png";
+import anrlogo from "./img/anrlogo.png";
 
-// --- SVGs Decorativos para el Diseño Visual ---
-// Componente de fondo replicando la silueta de la ciudad y el puente
-const BridgeCity = () => (
-  <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "250px", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1440 250" preserveAspectRatio="none">
-    <path fill="#2c3e50" opacity="0.9" d="M150,180 L150,140 L170,140 L170,130 L190,130 L190,150 L210,150 L210,180 Z M350,180 L350,120 L380,120 L380,180 Z M850,180 L850,110 L890,110 L890,180 Z M1150,180 L1150,130 L1170,130 L1170,100 L1190,100 L1190,180 Z M1250,180 Q1300,130 1350,180 Z"></path>
-    <path fill="none" stroke="#2c3e50" strokeWidth="8" d="M0,180 C320,240 420,120 720,160 C1020,200 1220,130 1440,170"></path>
-    <circle cx="720" cy="180" r="80" fill="#fef08a" opacity="0.3" filter="blur(30px)" />
-  </svg>
-);
+// --- SVGs y Componentes Decorativos para Réplica Visual ---
 
-// Componente para las ondas tricolores inferiores
-const TricolorWaves = () => (
-  <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "70px", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1440 70" preserveAspectRatio="none">
-    <path fill="#C8102E" d="M0,20 C480,80 720,-40 1440,30 L1440,70 L0,70 Z"></path>
-    <path fill="white" d="M0,40 C480,90 720,-10 1440,50 L1440,70 L0,70 Z"></path>
-    <path fill="#1e3a8a" d="M0,60 C480,100 720,20 1440,65 L1440,70 L0,70 Z"></path>
-  </svg>
-);
-
-// Brillo/Resplandor radial para el número
-const BrilloNumero = () => (
-  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "180px", height: "180px", background: "radial-gradient(circle, rgba(254,240,138,0.5) 0%, rgba(254,240,138,0) 70%)", borderRadius: "50%", filter: "blur(20px)", pointerEvents: "none", zIndex: 10 }} />
-);
-
-const LineAccent = () => (
-  <svg width="60" height="2" viewBox="0 0 60 2" style={{ verticalAlign: "middle" }}>
-    <rect width="60" height="2" rx="1" fill="#cbd5e1"/>
-  </svg>
-);
-
-const ANRLogoSmall = () => (
-  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-    <div style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "50%" }}>
-      <div style={{ transform: "scale(0.4)" }}>
-        <ANRLogo />
-      </div>
-    </div>
-    <span style={{ fontSize: "14px", fontWeight: "600", color: "#C8102E" }}>ANR</span>
+const BridgeCityBackground = () => (
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "250px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+    {/* Silueta Ciudad */}
+    <svg style={{ position: "absolute", bottom: "35px", left: 0, width: "100%", height: "130px", opacity: 0.9 }} viewBox="0 0 1440 130" preserveAspectRatio="none">
+      <path fill="#e2e8f0" d="M150,130 L150,40 L170,40 L170,30 L190,30 L190,50 L210,50 L210,130 Z M350,130 L350,20 L380,20 L380,130 Z M850,130 L850,10 L890,10 L890,130 Z M1150,130 L1150,30 L1170,30 L1170,0 L1190,0 L1190,130 Z M1250,130 Q1300,30 1350,130 Z"></path>
+    </svg>
+    {/* Puente */}
+    <svg style={{ position: "absolute", bottom: "35px", left: 0, width: "100%", height: "140px" }} viewBox="0 0 1440 140" preserveAspectRatio="none">
+      <path fill="none" stroke="#1e3a8a" strokeWidth="4" d="M0,80 C320,140 420,20 720,60 C1020,100 1220,30 1440,70" opacity="0.6"></path>
+    </svg>
+    {/* Brillo Sol */}
+    <div style={{ position: "absolute", bottom: "70px", left: "50%", transform: "translateX(-50%)", width: "200px", height: "200px", background: "#fef08a", borderRadius: "50%", opacity: 0.3, filter: "blur(40px)" }} />
+    {/* Franjas Rojas Inferiores */}
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "70px" }} viewBox="0 0 1440 70" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#991b1b" />
+          <stop offset="50%" stopColor="#dc2626" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+      </defs>
+      <path fill="url(#grad1)" d="M0,0 C480,80 720,-40 1440,30 L1440,70 L0,70 Z"></path>
+      <path fill="#7f1d1d" d="M0,20 C480,90 820,0 1440,60 L1440,70 L0,70 Z"></path>
+    </svg>
   </div>
 );
 
+const LineAccent = () => (
+  <svg width="40" height="2" viewBox="0 0 40 2" style={{ verticalAlign: "middle" }}>
+    <rect width="40" height="2" rx="1" fill="#cbd5e1"/>
+  </svg>
+);
+
+const BrilloNumero = () => (
+  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(254,240,138,0.5) 0%, rgba(254,240,138,0) 70%)", borderRadius: "50%", filter: "blur(15px)", pointerEvents: "none", zIndex: -1 }} />
+);
+
 const UserAvatar = ({ name, role, isMobile }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: isMobile ? 0 : "0 15px", borderLeft: isMobile ? "none" : "1px solid #e2e8f0" }}>
-    <UserCircle size={32} color="#94a3b8" strokeWidth={1.5} />
-    <div style={{ textAlign: "left" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: isMobile ? 0 : "20px", borderLeft: isMobile ? "none" : "1px solid #e2e8f0" }}>
+    <div style={{ textAlign: isMobile ? "center" : "left" }}>
       <div style={{ fontSize: "12px", color: "#64748b" }}>Hola, <span style={{ fontWeight: "700", color: "#1e293b" }}>{name}</span></div>
-      <div style={{ color: "#64748b", fontSize: "11px", fontWeight: "500", textTransform: "uppercase", marginTop: "2px" }}>
+      <div style={{ color: "#64748b", fontSize: "11px", fontWeight: "500", textTransform: "capitalize", marginTop: "1px" }}>
         {role}
       </div>
     </div>
+    <UserCircle size={32} color="#94a3b8" strokeWidth={1.5} />
   </div>
 );
 
@@ -280,7 +280,7 @@ export default function App() {
     
     const cedulaLimpiaActual = normalizarCedula(formVotante.cedula);
     const existeEnMiLista = votantes.some(v => 
-      normalizarCedula(v.cedula) === cedulaLintermiral_limpia === cedulaLimpiaActual && 
+      normalizarCedula(v.cedula) === cedulaLimpiaActual && 
       v.created_by === session?.user?.id &&
       v.id !== editIdVotante
     );
@@ -506,66 +506,67 @@ export default function App() {
     borderRadius: "15px 15px 0 0",
     transition: "0.3s",
     margin: "0 2px",
+    outline: "none",
   });
 
   return (
     <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
-      {/* ------------------ ENCABEZADO SUPERIOR RÉPLICA EXACTA ------------------ */}
-      <header style={{ background: "white", padding: "10px 25px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 100 }}>
+      {/* ------------------ ENCABEZADO SUPERIOR RÉPLICA ------------------ */}
+      <header style={{ background: "white", padding: isMobile ? "10px 15px" : "15px 30px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 100 }}>
         
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "500" }}>
-            Sistema de Gestión – <span style={{ background: "#C8102E", color: "white", padding: "2px 10px", borderRadius: "10px", fontSize: "11px", fontWeight: "800", textTransform: "uppercase", verticalAlign: "middle", marginLeft: "5px" }}>Lista 2 / Opción 5</span>
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <img src={anrlogo} alt="ANR" style={{ width: "35px", height: "35px", borderRadius: "50%" }} />
+          {!isMobile && (
+            <span style={{ fontSize: "14px", color: "#64748b", fontWeight: "500" }}>
+              Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
+            </span>
+          )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-          <UserAvatar name={userName} role={userRole === "administrador" ? "Administrador" : "Coordinador"} />
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "10px" : "20px" }}>
+          <UserAvatar name={userName} role={userRole === "administrador" ? "Administrador" : "Coordinador"} isMobile={isMobile} />
           <button 
             onClick={() => supabase.auth.signOut()} 
-            style={{ background: "white", color: "#1e293b", padding: "8px 20px", borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: "600", cursor: "pointer", fontSize: "13px" }}
+            style={{ background: "white", color: "#C8102E", padding: "8px 18px", borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: "700", cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <LogOut size={16} style={{ verticalAlign: "middle", marginRight: "8px" }} /> Cerrar sesión
+            <LogOut size={16} /> {!isMobile && "Cerrar sesión"}
           </button>
         </div>
       </header>
+      
+      {isMobile && (
+        <div style={{ background: "#f8fafc", padding: "10px 15px", borderBottom: "1px solid #f1f5f9", textAlign: "center", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
+           Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
+        </div>
+      )}
 
-      {/* ------------------ SECCIÓN PRINCIPAL HERO RÉPLICA EXACTA ------------------ */}
-      <section style={{ position: "relative", width: "100%", background: "#f8fafc", padding: isMobile ? "40px 15px 140px 15px" : "60px 20px 160px 20px", textAlign: "center", overflow: "hidden" }}>
+      {/* ------------------ SECCIÓN PRINCIPAL HERO RÉPLICA ------------------ */}
+      <section style={{ position: "relative", width: "100%", background: "#f8fafc", padding: isMobile ? "40px 15px 130px 15px" : "60px 20px 140px 20px", textAlign: "center", overflow: "hidden" }}>
         
-        {/* El Puente y Silueta Inferior Replicados */}
-        <BridgeCity />
-        {/* Ondas Tricolores */}
-        <TricolorWaves />
+        <BridgeCityBackground />
 
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto" }}>
           
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "25px" }}>
-            <LineAccent />
-            <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)" }}>
-              <ANRLogo style={{ width: "90px", height: "90px" }} />
-            </div>
-            <LineAccent />
-          </div>
+          <img src={anrlogo} alt="ANR" style={{ width: "90px", height: "90px", borderRadius: "50%", background: "white", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }} />
 
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#fef2f2", padding: "6px 20px", borderRadius: "30px", color: "#C8102E", fontWeight: "900", fontSize: isMobile ? "15px" : "18px", marginBottom: "15px", border: "2px solid #C8102E" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#C8102E", padding: "6px 25px", borderRadius: "30px", color: "white", fontWeight: "900", fontSize: isMobile ? "15px" : "18px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
             <span>LISTA 2</span>
-            <span>—</span>
+            <LineAccent />
             <span>OPCIÓN 5</span>
           </div>
 
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "40px" : "68px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-1.5px", textShadow: "1px 1px 0px rgba(0,0,0,0.05)" }}>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "38px" : "68px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-1.5px", textShadow: "1px 1px 0px rgba(0,0,0,0.05)", lineHeight: 1.1 }}>
             HAGAMOS QUE SUCEDA
           </h1>
           
-          <p style={{ fontSize: isMobile ? "16px" : "19px", color: "#1e3a8a", margin: "0 0 45px 0", fontWeight: "500", maxWidth: "600px" }}>
+          <p style={{ fontSize: isMobile ? "16px" : "19px", color: "#64748b", margin: "0 0 40px 0", fontWeight: "500", maxWidth: "600px" }}>
             Unidos por el cambio que nuestra ciudad necesita
           </p>
 
-          <button style={{ background: "#C8102E", borderRadius: "50px", padding: "10px 25px 10px 10px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.3)", width: isMobile ? "100%" : "auto", maxWidth: "520px", border: "none", cursor: "default" }}>
+          <button style={{ background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #b91c1c 100%)", borderRadius: "50px", padding: "10px 25px 10px 10px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.4)", width: isMobile ? "100%" : "auto", maxWidth: "520px", border: "none", cursor: "default" }}>
             <div style={{ background: "white", borderRadius: "50%", width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <GreenHeart style={{ width: "24px", height: "24px" }} />
+              <User color="#C8102E" size={24} strokeWidth={2.5} />
             </div>
             <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "16px" : "19px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
               DARÍO CARMONA – CONCEJAL 2026
@@ -579,22 +580,21 @@ export default function App() {
         </div>
       </section>
 
-      {/* ------------------ TARJETA DEL CONTADOR RÉPLICA EXACTA ------------------ */}
+      {/* ------------------ TARJETA DEL CONTADOR RÉPLICA ------------------ */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-70px", display: "flex", justifyContent: "center", padding: "0 15px", marginBottom: "40px" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 45px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "35px", boxShadow: "0 15px 45px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0", maxWidth: "800px", width: "100%" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 45px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "20px" : "35px", boxShadow: "0 15px 45px rgba(0,0,0,0.1)", border: "1px solid #f1f5f9", maxWidth: "800px", width: "100%" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
-            <div style={{ background: "#C8102E", color: "white", width: isMobile ? "50px" : "60px", height: isMobile ? "50px" : "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.2)" }}>
+            <div style={{ background: "#C8102E", color: "white", width: isMobile ? "50px" : "60px", height: isMobile ? "50px" : "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
               <Users size={isMobile ? 26 : 30} strokeWidth={2.5} />
             </div>
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "24px" : "30px", color: "#1e293b", fontStyle: "italic" }}>YA SOMOS</span>
           </div>
 
           <div style={{ position: "relative", padding: "0 10px", display: "flex", alignItems: "center", justifyContent: "center", flex: isMobile ? "none" : 1 }}>
-            {/* El Brillo Replicado Detrás del Número */}
             <BrilloNumero />
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "70px" : "96px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.8, letterSpacing: "-3px" }}>
-              {totalVotantesGeneral}
+              {totalVotantesGeneral.toLocaleString('es-PY')}
             </span>
           </div>
 
@@ -612,13 +612,15 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", marginBottom: "40px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" }}>
-        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026
+      {/* Pie visual inferior parecido */}
+      <div style={{ textAlign: "center", marginBottom: "40px", padding: "0 15px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", lineHeight: 1.5 }}>
+        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026<br/>
+        Desarrollado para la campaña de Darío Carmona
       </div>
       
       {/* ------------------ FIN RÉPLICA VISUAL ------------------ */}
 
-      <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 100 }}>
+      <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 90, borderBottom: "1px solid #e2e8f0" }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Mis Votantes</button>
         {userRole === "administrador" && (
@@ -630,94 +632,104 @@ export default function App() {
         )}
       </nav>
 
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "30px 15px", paddingBottom: 120 }}>
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: isMobile ? "20px 15px" : "30px 15px", paddingBottom: 120 }}>
         {activeTab === "inicio" && (
           <div style={{ display: "grid", gap: 25 }}>
-            <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
+            <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
               <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
-              <div style={{ display: "flex", gap: 10 }}>
-                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value.replace(/\D/g, ''))} placeholder="Cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px" }} />
-                <button onClick={buscarEnPadron} style={{ padding: "0 25px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900" }}>
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
+                <input type="text" value={cedulaRapida} onChange={(e) => setCedulaRapida(e.target.value.replace(/\D/g, ''))} placeholder="Ingrese número de cédula..." style={{ flex: 1, padding: "15px", borderRadius: "12px", border: "2px solid #f1f5f9", fontSize: "16px", outline: "none" }} />
+                <button onClick={buscarEnPadron} style={{ padding: "15px 30px", background: "#C8102E", color: "white", border: "none", borderRadius: "12px", fontWeight: "900", fontSize: "16px", cursor: "pointer" }}>
                   BUSCAR
                 </button>
               </div>
 
               {resultadoPadron && (
                 <div style={{ marginTop: 20, padding: 20, background: "#fef2f2", borderRadius: "20px", border: "2px dashed #C8102E", textAlign: "center" }}>
-                  <h3 style={{ fontSize: "18px", color: "#C8102E", fontWeight: "900" }}>
+                  <h3 style={{ fontSize: "20px", color: "#C8102E", fontWeight: "900", marginBottom: "10px" }}>
                     {resultadoPadron?.nombre} {resultadoPadron?.apellido}
                   </h3>
-                  <p style={{ fontWeight: "700", color: "#444", fontSize: "13px" }}>
-                    Mesa: {resultadoPadron?.mesa} | Orden: {resultadoPadron?.orden} | Sec: {resultadoPadron?.seccional}
+                  <p style={{ fontWeight: "700", color: "#475569", fontSize: "14px", marginBottom: "5px" }}>
+                    Mesa: <span style={{color: "#1e293b"}}>{resultadoPadron?.mesa}</span> | Orden: <span style={{color: "#1e293b"}}>{resultadoPadron?.orden}</span> | Seccional: <span style={{color: "#1e293b"}}>{resultadoPadron?.seccional}</span>
                   </p>
-                  <p style={{ color: "#C8102E", fontWeight: "800", fontSize: "12px", marginBottom: 15 }}>
+                  <p style={{ color: "#C8102E", fontWeight: "800", fontSize: "13px", marginBottom: 18 }}>
                     {resultadoPadron?.local_votacion}
                   </p>
                   <button
                     onClick={() => {
-                      setFormVotante({ ...formVotante, ...resultadoPadron });
+                      const fechaCasteada = resultadoPadron.fecha_nacimiento && resultadoPadron.fecha_nacimiento.includes("-") ? resultadoPadron.fecha_nacimiento.split("-").reverse().join("/") : (resultadoPadron.fecha_nacimiento || "");
+                      setFormVotante({ ...formVotante, ...resultadoPadron, fecha_nacimiento: fechaCasteada });
                       setResultadoPadron(null);
+                      alert("Datos cargados en el formulario inferior.");
                     }}
-                    style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none" }}
+                    style={{ background: "#16a34a", color: "white", padding: "12px 25px", borderRadius: "10px", fontWeight: "900", border: "none", cursor: "pointer", fontSize: "14px" }}
                   >
-                    ASIGNAR AL FORMULARIO
+                    COPIAR AL FORMULARIO
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="card" style={{ background: "white", padding: isMobile ? 25 : 40, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", textAlign: "center", marginBottom: 25, fontSize: "20px", textTransform: "uppercase" }}>REGISTRAR VOTANTE</h3>
-              <form onSubmit={guardarVotante} style={{ display: "grid", gap: 15 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>NOMBRE</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>APELLIDO</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+            <div id="formVotante" className="card" style={{ background: "white", padding: isMobile ? 25 : 40, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+              <h3 style={{ color: "#1e293b", fontWeight: "900", textAlign: "center", marginBottom: 30, fontSize: "22px", textTransform: "uppercase" }}>{editIdVotante ? "Editar Votante" : "Registrar Nuevo Votante"}</h3>
+              <form onSubmit={guardarVotante} style={{ display: "grid", gap: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>NOMBRE *</label><input type="text" value={formVotante.nombre} onChange={(e) => setFormVotante({ ...formVotante, nombre: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>APELLIDO *</label><input type="text" value={formVotante.apellido} onChange={(e) => setFormVotante({ ...formVotante, apellido: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
                 </div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>CÉDULA</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>FECHA DE NACIMIENTO</label><input type="text" placeholder="DD/MM/AAAA" value={formVotante.fecha_nacimiento} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length > 8) v = v.substring(0, 8); if (v.length > 4) { v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3'); } else if (v.length > 2) { v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2'); } setFormVotante({ ...formVotante, fecha_nacimiento: v }); }} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>TELÉFONO</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>CÉDULA DE IDENTIDAD *</label><input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>TELÉFONO / WHATSAPP *</label><input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, '') })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                </div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>FECHA DE NACIMIENTO *</label><input type="text" placeholder="DD/MM/AAAA" value={formVotante.fecha_nacimiento} onChange={(e) => { let v = e.target.value.replace(/\D/g, ''); if (v.length > 8) v = v.substring(0, 8); if (v.length > 4) { v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3'); } else if (v.length > 2) { v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2'); } setFormVotante({ ...formVotante, fecha_nacimiento: v }); }} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                  <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>BARRIO *</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none", appearance: "none" }}><option value="">Seleccione un barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 15, padding: "15px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                   <div style={{gridColumn: isMobile ? "1 / -1" : "auto"}}><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>LOCAL DE VOTACIÓN</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px" }} /></div>
+                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px" }} /></div>
+                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px" }} /></div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>SECCIONAL</label><input type="text" value={formVotante.seccional} onChange={(e) => setFormVotante({ ...formVotante, seccional: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                  <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>LOCAL</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
-                </div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>BARRIO</label><select value={formVotante.barrio} onChange={(e) => setFormVotante({ ...formVotante, barrio: e.target.value })} required style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", background: "white" }}><option value="">Elegir barrio...</option>{LISTA_BARRIOS.map((b) => <option key={b} value={b}>{b}</option>)}</select></div>
-                <div><label style={{ fontWeight: "800", fontSize: "11px", color: "#C8102E" }}>OBSERVACIÓN</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px" }} /></div>
                 
-                <button type="submit" style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "20px", borderRadius: "15px", border: "none", fontSize: "18px", marginTop: 10 }}>{editIdVotante ? "ACTUALIZAR DATOS" : "GUARDAR REGISTRO"}</button>
+                <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>OBSERVACIÓN / COMENTARIO</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
+                
+                <div style={{display: "flex", gap: "10px", marginTop: "15px"}}>
+                   {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "18px", borderRadius: "15px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR EDICIÓN</button>}
+                   <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", fontSize: "18px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdVotante ? "GUARDAR CAMBIOS" : "REGISTRAR VOTANTE"}</button>
+                </div>
               </form>
             </div>
           </div>
         )}
 
         {activeTab === "votantes" && (
-          <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginTop: 20 }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Mis Votantes Captados</h3>
-            <input type="text" placeholder="🔍 Buscar por nombre o CI en mi lista..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
+          <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
+            <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 20, fontSize: "20px", textTransform: "uppercase" }}>Mi Lista de Votantes Captados</h3>
+            <input type="text" placeholder="🔍 Buscar por nombre o cédula en mi lista..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none" }} />
             <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-              <div style={{ minWidth: isMobile ? "500px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
+              <div style={{ minWidth: isMobile ? "600px" : "100%", overflowY: "auto", maxHeight: "65vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead style={{ background: "#f8fafc", position: "sticky", top: 0 }}>
-                    <tr style={{ fontSize: "11px", color: "#64748b" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th><th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
+                  <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
+                    <tr style={{ fontSize: "12px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}><th style={{ padding: "15px", textAlign: "left" }}>NOMBRE COMPLETO</th><th style={{ padding: "15px", textAlign: "left" }}>CÉDULA</th><th style={{ padding: "15px", textAlign: "left" }}>TELÉFONO</th><th style={{ padding: "15px", textAlign: "center" }}>ACCIONES</th></tr>
                   </thead>
                   <tbody>
                     {(votantesUnicos || []).filter((v) => (v?.nombre + v?.apellido + v?.cedula).toLowerCase().includes(busquedaLista.toLowerCase())).map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
-                        <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
-                        <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5, justifyContent: "center" }}>
-                          <button onClick={() => { setFormVotante(v); setEditIdVotante(v.id); setActiveTab("inicio"); window.scrollTo(0, 0); }} style={{ padding: "8px 15px", background: "#f1f5f9", border: "none", borderRadius: "10px", fontWeight: "800", color: "#64748b", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { if (confirm("¿Borrar?")) { const { error } = await supabase.from("votantes").delete().eq("id", v.id); if (!error) { setVotantes(prev => prev.filter(item => item.id !== v.id)); cargarDatos(); } else { alert("Error al borrar: " + error.message); } } }} style={{ padding: "8px 15px", background: "#dc2626", color: "white", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
+                        <td style={{ padding: "18px 15px", fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#C8102E", fontWeight: "600" }}>{v?.barrio}</small></td>
+                        <td style={{ padding: "15px", color: "#475569", fontWeight: "500" }}>{v?.cedula}</td>
+                        <td style={{ padding: "15px", color: "#475569", fontWeight: "500" }}>{v?.telefono}</td>
+                        <td style={{ padding: "15px", textAlign: "center", display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
+                          <button onClick={() => { setFormVotante({ ...v, fecha_nacimiento: v.fecha_nacimiento && v.fecha_nacimiento.includes("-") ? v.fecha_nacimiento.split("-").reverse().join("/") : (v.fecha_nacimiento || "") }); setEditIdVotante(v.id); setActiveTab("inicio"); setTimeout(() => document.getElementById('formVotante').scrollIntoView({ behavior: 'smooth' }), 100); }} style={{ padding: "8px 15px", background: "#f1f5f9", border: "none", borderRadius: "10px", fontWeight: "800", color: "#64748b", fontSize: "11px", cursor: "pointer" }}>EDITAR</button>
+                          <button onClick={async () => { if (confirm(`¿Seguro que desea eliminar a ${v.nombre} ${v.apellido} de su lista?`)) { setLoading(true); const { error } = await supabase.from("votantes").delete().eq("id", v.id); if (!error) { setVotantes(prev => prev.filter(item => item.id !== v.id)); } else { alert("Error al borrar: " + error.message); } setLoading(false); } }} style={{ padding: "8px 15px", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "11px", cursor: "pointer" }}>BORRAR</button>
                         </td>
                       </tr>
                     ))}
+                    {votantesUnicos.length === 0 && (
+                        <tr><td colSpan="4" style={{textAlign: "center", padding: "40px", color: "#64748b", fontWeight: "600"}}>Aún no has registrado votantes en tu lista.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -726,29 +738,31 @@ export default function App() {
         )}
 
         {activeTab === "lista_general" && userRole === "administrador" && (
-          <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", marginTop: 20 }}>
-            <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "18px", textTransform: "uppercase" }}>Control de Asistencia General</h3>
-            <input type="text" placeholder="🔍 Buscar por Cédula..." value={busquedaListaGeneral} onChange={(e) => setBusquedaListaGeneral(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px" }} />
+          <div className="card" style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
+            <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 20, fontSize: "20px", textTransform: "uppercase" }}>Control de Asistencia General (Día E)</h3>
+            <input type="text" placeholder="🔍 Buscar por número de cédula..." value={busquedaListaGeneral} onChange={(e) => setBusquedaListaGeneral(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none" }} />
             
-            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: "20px" }}>
-              <div style={{ minWidth: isMobile ? "500px" : "100%" }}>
+            <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: "30px" }}>
+              <div style={{ minWidth: isMobile ? "600px" : "100%", overflowY: "auto", maxHeight: "60vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead style={{ background: "#f8fafc" }}>
-                    <tr style={{ fontSize: "11px", color: "#64748b" }}>
-                      <th style={{ padding: 15, textAlign: "left" }}>NOMBRE</th>
-                      <th style={{ padding: 15, textAlign: "left" }}>CÉDULA</th>
-                      <th style={{ padding: 15, textAlign: "center" }}>¿YA VOTÓ?</th>
+                  <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
+                    <tr style={{ fontSize: "12px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      <th style={{ padding: "15px", textAlign: "left" }}>NOMBRE COMPLETO</th>
+                      <th style={{ padding: "15px", textAlign: "left" }}>CÉDULA</th>
+                      <th style={{ padding: "15px", textAlign: "left" }}>UBICACIÓN</th>
+                      <th style={{ padding: "15px", textAlign: "center" }}>¿YA VOTÓ?</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(listaGeneralAdmin || [])
                       .filter((v) => busquedaListaGeneral ? v.cedula.includes(busquedaListaGeneral) : true)
-                      .slice(0, 10)
+                      .slice(0, 50) // Limitamos a 50 por performance en vista
                       .map((v) => (
                       <tr key={v?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#94a3b8" }}>{v?.barrio}</small></td>
-                        <td style={{ padding: 15, color: "#475569" }}>{v?.cedula}</td>
-                        <td style={{ padding: 15, textAlign: "center" }}>
+                        <td style={{ padding: "18px 15px", fontWeight: "700", color: "#1e293b" }}>{v?.nombre} {v?.apellido}<br /><small style={{ color: "#64748b" }}>Captado por: {v.por_parte_de_nombre}</small></td>
+                        <td style={{ padding: "15px", color: "#475569", fontWeight: "500" }}>{v?.cedula}</td>
+                        <td style={{ padding: "15px", color: "#475569", fontWeight: "500", fontSize: "13px" }}>Mesa: {v.mesa} | Orden: {v.orden}<br/>{v.local_votacion}</td>
+                        <td style={{ padding: "15px", textAlign: "center" }}>
                           <input 
                             type="checkbox" 
                             checked={v.ha_votado || false}
@@ -761,7 +775,7 @@ export default function App() {
                                 alert("Error al actualizar: " + error.message);
                               }
                             }}
-                            style={{ width: "20px", height: "20px", cursor: "pointer", accentColor: "#C8102E" }}
+                            style={{ width: "22px", height: "22px", cursor: "pointer", accentColor: "#C8102E" }}
                           />
                         </td>
                       </tr>
@@ -771,145 +785,168 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ background: "#f8fafc", padding: "20px", borderRadius: "15px", border: "1px solid #e2e8f0", textAlign: "center" }}>
-              <h4 style={{ margin: 0, color: "#475569", fontSize: "14px", fontWeight: "800" }}>RESUMEN DE ASISTENCIA</h4>
-              <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "10px", marginTop: "10px" }}>
-                <span style={{ fontSize: "32px", fontWeight: "900", color: "#C8102E" }}>
+            <div style={{ background: "#f8fafc", padding: "25px", borderRadius: "20px", border: "1px solid #e2e8f0", textAlign: "center", maxWidth: "500px", margin: "0 auto" }}>
+              <h4 style={{ margin: "0 0 15px 0", color: "#475569", fontSize: "15px", fontWeight: "800", textTransform: "uppercase" }}>RESUMEN DE PARTICIPACIÓN REAL</h4>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "10px" }}>
+                <span style={{ fontSize: "48px", fontWeight: "900", color: "#C8102E", fontStyle: "italic", lineHeight: 1 }}>
                   {listaGeneralAdmin.length > 0 ? Math.round((listaGeneralAdmin.filter(v => v.ha_votado).length / listaGeneralAdmin.length) * 100) : 0}%
                 </span>
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "#64748b" }}>chequeado</span>
+                <span style={{ fontSize: "16px", fontWeight: "700", color: "#64748b" }}>participación</span>
               </div>
-              <p style={{ margin: "5px 0 0 0", color: "#1e293b", fontWeight: "700", fontSize: "16px" }}>
-                {listaGeneralAdmin.filter(v => v.ha_votado).length} de {listaGeneralAdmin.length} personas ya vinieron a votar
+              <p style={{ margin: "10px 0 0 0", color: "#1e293b", fontWeight: "700", fontSize: "17px" }}>
+                Han votado <span style={{color: "#C8102E", fontWeight: "900"}}>{listaGeneralAdmin.filter(v => v.ha_votado).length.toLocaleString('es-PY')}</span> de <span style={{fontWeight: "900"}}>{listaGeneralAdmin.length.toLocaleString('es-PY')}</span> personas registradas.
               </p>
             </div>
           </div>
         )}
 
         {activeTab === "equipo" && userRole === "administrador" && (
-          <div style={{ display: "grid", gap: 30, marginTop: 20 }}>
-            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textAlign: "center", textTransform: "uppercase" }}>Gestión de Equipo</h3>
-              <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 15 }}>
-                <input type="text" placeholder="Nombre completo" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 15 }}>
-                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value.replace(/\D/g, '') })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                  <input type="text" placeholder="Zona o Barrio" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+          <div style={{ display: "grid", gap: 30 }}>
+            <div className="card" style={{ background: "white", padding: isMobile ? 25 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+              <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 30, textAlign: "center", textTransform: "uppercase", fontSize: "20px" }}>Gestión de Miembros del Equipo</h3>
+              <form onSubmit={guardarEquipo} style={{ display: "grid", gap: 18 }}>
+                <input type="text" placeholder="Nombre completo del miembro" value={formEquipo.nombre} onChange={(e) => setFormEquipo({ ...formEquipo, nombre: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 18 }}>
+                  <input type="text" placeholder="Teléfono" value={formEquipo.telefono} onChange={(e) => setFormEquipo({ ...formEquipo, telefono: e.target.value.replace(/\D/g, '') })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px" }} />
+                  <input type="text" placeholder="Zona o Barrio de referencia" value={formEquipo.zona} onChange={(e) => setFormEquipo({ ...formEquipo, zona: e.target.value })} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px" }} />
                 </div>
                 {!editIdEquipo && (
-                  <div style={{ padding: 15, background: "#f8fafc", borderRadius: 12, border: "1px dashed #cbd5e1" }}>
-                    <p style={{ margin: "0 0 10px 0", fontSize: "11px", fontWeight: "800", color: "#64748b" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
+                  <div style={{ padding: "18px", background: "#f8fafc", borderRadius: "15px", border: "1px dashed #cbd5e1" }}>
+                    <p style={{ margin: "0 0 12px 0", fontSize: "12px", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>CREDENCIALES DE ACCESO AL SISTEMA</p>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 15 }}>
-                      <input type="email" placeholder="Correo electrónico" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
-                      <input type="password" placeholder="Contraseña (mín 6 letras)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0" }} />
+                      <input type="email" placeholder="Correo electrónico (Login)" value={formEquipo.email} onChange={(e) => setFormEquipo({ ...formEquipo, email: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px" }} />
+                      <input type="password" placeholder="Contraseña (mín. 6 caracteres)" value={formEquipo.password} onChange={(e) => setFormEquipo({ ...formEquipo, password: e.target.value })} required minLength={6} style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "15px" }} />
                     </div>
                   </div>
                 )}
-                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", background: "white" }}>
-                  <option value="coordinador">Coordinador (Solo ve su zona)</option>
-                  <option value="administrador">Administrador (Ve todo)</option>
+                <select value={formEquipo.rol} onChange={(e) => setFormEquipo({ ...formEquipo, rol: e.target.value })} required style={{ padding: 14, borderRadius: 12, border: "1px solid #e2e8f0", fontSize: "16px", background: "white", outline: "none" }}>
+                  <option value="coordinador">Rol: Coordinador (Solo ve sus cargas)</option>
+                  <option value="administrador">Rol: Administrador (Ve todo)</option>
                 </select>
-                <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none" }}>
-                  {loading ? "GUARDANDO..." : editIdEquipo ? "ACTUALIZAR DATOS" : "CREAR USUARIO"}
-                </button>
+                
+                <div style={{display: "flex", gap: "10px", marginTop: "10px"}}>
+                   {editIdEquipo && <button type="button" onClick={() => { setEditIdEquipo(null); setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
+                   <button type="submit" disabled={loading} style={{ background: "#1e293b", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 2 }}>
+                    {loading ? "PROCESANDO..." : editIdEquipo ? "GUARDAR CAMBIOS" : "CREAR NUEVO USUARIO"}
+                   </button>
+                </div>
               </form>
             </div>
-            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20 }}>MIEMBROS ACTIVOS</h4>
+            
+            <div className="card" style={{ background: "white", padding: isMobile ? 20 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+              <h4 style={{ fontWeight: "900", color: "#1e293b", marginBottom: 20, fontSize: "18px" }}>MIEMBROS ACTIVOS DEL EQUIPO</h4>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", minWidth: "400px" }}>
-                  <tbody>
-                    {(equipo || []).map((m) => (
-                      <tr key={m?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: 15, fontWeight: "700" }}>{m?.nombre}<br /><small style={{ color: "#64748b" }}>{m?.rol}</small><br /><small style={{ color: "#64748b" }}>{m?.telefono}</small></td>
-                        <td style={{ padding: 15, color: "#C8102E", fontWeight: "800", textTransform: "uppercase", fontSize: "10px" }}>{m?.zona}</td>
-                        <td style={{ padding: 15, textAlign: "center", display: "flex", gap: 5 }}>
-                          <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "6px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>EDITAR</button>
-                          <button onClick={async () => { 
-                            if (confirm("¿Seguro que deseas eliminar a este miembro completamente (Equipo, Perfil y Acceso)?")) { 
-                              try {
-                                let uid = m.user_id;
-                                
-                                if (!uid) {
-                                  const { data } = await supabase.from("profiles").select("user_id").eq("equipo_id", m.id).maybeSingle();
-                                  if (data) uid = data.user_id;
-                                }
-                  
-                                if (uid) {
-                                  const { error: errVotantes } = await supabase.from("votantes").update({ user_id: null, created_by: null }).eq("user_id", uid);
-                                  if (errVotantes) return alert("Error al desvincular votantes: " + errVotantes.message);
+                <div style={{ minWidth: "500px", overflowY: "auto", maxHeight: "60vh" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 10 }}>
+                        <tr style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase" }}><th style={{ padding: 15, textAlign: "left" }}>NOMBRE / ROL</th><th style={{ padding: 15, textAlign: "left" }}>CONTACTO</th><th style={{ padding: 15, textAlign: "center" }}>ACCIONES</th></tr>
+                    </thead>
+                    <tbody>
+                      {(equipo || []).map((m) => (
+                        <tr key={m?.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "15px", fontWeight: "700", color: "#1e293b" }}>{m?.nombre}<br /><small style={{ color: m?.rol === 'administrador' ? "#C8102E" : "#64748b", fontWeight: "600", textTransform: "capitalize" }}>{m?.rol}</small></td>
+                          <td style={{ padding: "15px", color: "#475569", fontWeight: "500" }}>{m?.telefono}<br /><small>{m?.zona}</small></td>
+                          <td style={{ padding: "15px", textAlign: "center", display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
+                            <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} style={{ padding: "7px 12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "800", color: "#64748b", fontSize: "10px", cursor: "pointer" }}>EDITAR</button>
+                            <button onClick={async () => { 
+                              if (confirm(`¿Seguro que deseas eliminar a ${m.nombre}? Esto borrará su acceso y perfil, pero mantendrá los votantes que captó (sin asignación).`)) { 
+                                setLoading(true);
+                                try {
+                                  let uid = m.user_id;
                                   
-                                  const { error: errProfile } = await supabase.from("profiles").delete().eq("user_id", uid);
-                                  if (errProfile) return alert("Error al eliminar perfil: " + errProfile.message);
+                                  if (!uid) {
+                                    const { data } = await supabase.from("profiles").select("user_id").eq("equipo_id", m.id).maybeSingle();
+                                    if (data) uid = data.user_id;
+                                  }
+                    
+                                  if (uid) {
+                                    // Desvincular votantes
+                                    const { error: errVotantes } = await supabase.from("votantes").update({ user_id: null, created_by: null }).eq("user_id", uid);
+                                    if (errVotantes) console.error("Error al desvincular votantes:", errVotantes.message);
+                                    
+                                    // Borrar perfil
+                                    const { error: errProfile } = await supabase.from("profiles").delete().eq("user_id", uid);
+                                    if (errProfile) console.error("Error al eliminar perfil:", errProfile.message);
+                                  }
+                    
+                                  // Borrar miembro equipo
+                                  const { error: errEquipo } = await supabase.from("equipo").delete().eq("id", m.id);
+                                  if (errEquipo) throw new Error(errEquipo.message);
+                    
+                                  // Borrar auth user (requiere RPC o servicio backend, Supabase client no puede borrar otros users directamente)
+                                  if (uid) {
+                                    alert("El usuario de autenticación debe ser eliminado manualmente desde el dashboard de Supabase (Sección Auth) buscando por la UID.");
+                                    console.log("Eliminar manualmente UID:", uid);
+                                  }
+                    
+                                  cargarDatos();
+                                  alert("Miembro eliminado exitosamente de la lista del equipo.");
+                                } catch (error) {
+                                  console.error(error);
+                                  alert("Ocurrió un error al intentar borrar: " + error.message);
                                 }
-                  
-                                const { error: errEquipo } = await supabase.from("equipo").delete().eq("id", m.id);
-                                if (errEquipo) return alert("Error al eliminar equipo: " + errEquipo.message);
-                  
-                                if (uid) {
-                                  const { error: errAuth } = await supabase.rpc("eliminar_usuario_auth", { uid_usuario: uid });
-                                  if (errAuth) return alert("Error al eliminar de Auth: " + errAuth.message);
-                                }
-                  
-                                cargarDatos();
-                              } catch (error) {
-                                console.error(error);
-                                alert("Ocurrió un error inesperado al intentar borrar: " + error.message);
-                              }
-                            } 
-                          }} style={{ padding: "6px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px" }}>BORRAR</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                                setLoading(false);
+                              } 
+                            }} style={{ padding: "7px 12px", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "10px", cursor: "pointer" }}>BORRAR</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === "reportes" && userRole === "administrador" && (
-          <div style={{ display: "grid", gap: 30, marginTop: 20 }}>
-            <div className="card" style={{ background: "white", padding: 30, borderRadius: "25px" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Rendimiento</h3>
-              {(rendimientoEquipo || []).map((m) => (
-                <div key={m?.id} style={{ marginBottom: 20 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: "900", color: "#475569", marginBottom: 8 }}>
-                    <span>{m?.nombre}</span>
-                    <span>{m?.cantidad} ({m?.porcentaje}%)</span>
+          <div style={{ display: "grid", gap: 30 }}>
+            <div className="card" style={{ background: "white", padding: 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+              <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 25, textTransform: "uppercase", fontSize: "20px" }}>Ranking de Captación (Top 10)</h3>
+              {(rendimientoEquipo || []).slice(0, 10).map((m, index) => (
+                <div key={m?.id} style={{ marginBottom: 18, padding: "15px", background: index < 3 ? "#fef2f2" : "white", borderRadius: "12px", border: index < 3 ? "1px solid #fecaca" : "1px solid #e2e8f0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                        <span style={{fontWeight: "900", color: "#C8102E", fontSize: "18px"}}>#{index + 1}</span>
+                        <span style={{ fontWeight: "700", color: "#1e293b", fontSize: "15px" }}>{m?.nombre}</span>
+                    </div>
+                    <span style={{ fontSize: "15px", fontWeight: "800", color: "#C8102E" }}>{m?.cantidad.toLocaleString('es-PY')} <small style={{color: "#64748b", fontWeight: "600"}}>votantes ({m?.porcentaje}%)</small></span>
                   </div>
-                  <div style={{ width: "100%", height: "12px", background: "#f1f5f9", borderRadius: "10px", overflow: "hidden" }}>
-                    <div style={{ width: `${m?.porcentaje}%`, height: "100%", background: "#C8102E" }}></div>
+                  <div style={{ width: "100%", height: "10px", background: "#f1f5f9", borderRadius: "10px", overflow: "hidden" }}>
+                    <div style={{ width: `${m?.porcentaje}%`, height: "100%", background: "#C8102E", borderRadius: "10px" }}></div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px" }}>
-              <h3 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 25, textTransform: "uppercase" }}>Votos por Barrio</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead style={{ background: "#C8102E" }}>
-                  <tr style={{ fontSize: "12px", color: "white", fontWeight: "900" }}>
-                    <th style={{ padding: "12px", textAlign: "left" }}>BARRIO</th>
-                    <th style={{ padding: "12px", textAlign: "right" }}>TOTAL</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(conteoBarrio || []).map((b) => (
-                    <tr key={b?.name} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "12px", fontWeight: "700", color: "#334155", fontSize: "14px" }}>{b?.name}</td>
-                      <td style={{ textAlign: "right", fontWeight: "900", color: "#C8102E", fontSize: "15px", paddingRight: "12px" }}>{b?.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            
+            <div className="card" style={{ background: "white", padding: 25, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9" }}>
+              <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 25, textTransform: "uppercase", fontSize: "20px" }}>Distribución por Barrio</h3>
+              <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "400px" }}>
+                    <thead style={{ background: "#C8102E" }}>
+                      <tr style={{ fontSize: "12px", color: "white", fontWeight: "900", textTransform: "uppercase" }}>
+                        <th style={{ padding: "14px", textAlign: "left" }}>BARRIO</th>
+                        <th style={{ padding: "14px", textAlign: "right" }}>TOTAL VOTANTES</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(conteoBarrio || []).sort((a, b) => b.total - a.total).map((b, index) => (
+                        <tr key={b?.name} style={{ borderBottom: "1px solid #f1f5f9", background: index % 2 === 0 ? "white" : "#f8fafc" }}>
+                          <td style={{ padding: "14px", fontWeight: "700", color: "#334155", fontSize: "15px" }}>{b?.name}</td>
+                          <td style={{ textAlign: "right", fontWeight: "900", color: "#C8102E", fontSize: "16px", paddingRight: "14px" }}>{b?.total.toLocaleString('es-PY')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+              </div>
             </div>
           </div>
         )}
       </main>
 
       {userRole === "administrador" && (
-        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#16a34a", color: "white", padding: "18px 40px", borderRadius: "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.3)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center" }}>
-          <span>📥</span> EXPORTAR EXCEL
+        <button onClick={exportarExcel} style={{ position: "fixed", bottom: 25, right: 25, background: "#16a34a", color: "white", padding: isMobile ? "15px" : "18px 35px", borderRadius: isMobile ? "50%" : "50px", fontWeight: "900", border: "none", boxShadow: "0 10px 30px rgba(22,163,74,0.4)", cursor: "pointer", zIndex: 1000, display: "flex", gap: 10, alignItems: "center", fontSize: "16px" }}>
+          <span>📊</span> {!isMobile && "DESCARGAR REPORTE EXCEL"}
         </button>
       )}
     </div>
