@@ -368,7 +368,7 @@ export default function App() {
 
       const headerRow = sheet.getRow(4);
       const headerNombres = esListaGeneral
-        ? ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Observación", "Orden", "Mesa", "Seccional", "Local"]
+        ? ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Observación"]
         : ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Captado por", "Observación"];
       
       headerRow.values = headerNombres;
