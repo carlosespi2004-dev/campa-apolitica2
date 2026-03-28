@@ -240,13 +240,15 @@ export default function App() {
   if (!session) { return <LoginScreen onLogin={async (e, p) => await supabase.auth.signInWithPassword({ email: e, password: p })} loading={loading} />; }
 
   const tabStyle = (id) => ({
-    flex: 1, padding: "18px 5px", border: "none", background: activeTab === id ? "#C8102E" : "#f1f5f9", color: activeTab === id ? "white" : "#64748b", fontWeight: "900", fontSize: isMobile ? "10px" : "13px", textTransform: "uppercase", cursor: "pointer", borderRadius: "15px 15px 0 0", transition: "0.3s", margin: "0 2px", outline: "none",
+    flex: 1, padding: "18px 5px", border: "none", background: activeTab === id ? "#C8102E" : "#f1f5f9", color: activeTab === id ? "white" : "#64748b", fontWeight: "900", fontSize: isMobile ? "10px" : "13px", textTransform: "uppercase", cursor: "pointer", borderRadius: "15px 15px 0 0", transition: "0.3s", margin: "0 2px", outline: "none", whiteSpace: "nowrap"
   });
 
+  // CORRECCIÓN RESPONSIVE 1: width: "100%", maxWidth: "100vw", overflowX: "hidden", boxSizing: "border-box" en el root div para evitar desbordes
   return (
-    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif", width: "100%", overflowX: "hidden" }}>
+    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif", width: "100%", maxWidth: "100vw", overflowX: "hidden", boxSizing: "border-box" }}>
       
       {/* --- ENCABEZADO SUPERIOR RÉPLICA --- */}
+      {/* CORRECCIÓN RESPONSIVE 2: width: "100%", boxSizing: "border-box" */}
       <header style={{ background: "white", padding: isMobile ? "12px 15px" : "15px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #e2e8f0", position: "relative", zIndex: 100, width: "100%", boxSizing: "border-box" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img src={anrlogo} alt="ANR" style={{ width: "35px", height: "35px", borderRadius: "50%" }} />
@@ -277,11 +279,12 @@ export default function App() {
       )}
 
       {/* --- SECCIÓN PRINCIPAL HERO RÉPLICA EXACTA --- */}
-      <section style={{ position: "relative", width: "100%", background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", padding: isMobile ? "40px 15px 160px 15px" : "50px 20px 180px 20px", textAlign: "center", boxSizing: "border-box" }}>
+      {/* CORRECCIÓN RESPONSIVE 3: width: "100%", boxSizing: "border-box" */}
+      <section style={{ position: "relative", width: "100%", background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", padding: isMobile ? "40px 15px 130px 15px" : "60px 20px 140px 20px", textAlign: "center", overflow: "hidden", boxSizing: "border-box" }}>
         
         <BridgeCityBackground />
 
-        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto" }}>
+        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto", width: "100%" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "15px", marginBottom: "25px" }}>
             {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1"/></svg>}
             <div style={{ background: "white", borderRadius: "50%", padding: "6px", boxShadow: "0 4px 15px rgba(0,0,0,0.06)" }}>
@@ -290,7 +293,7 @@ export default function App() {
             {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1"/></svg>}
           </div>
 
-          <div style={{ display: "inline-flex", alignItems: "center", background: "#C8102E", borderRadius: "40px", color: "white", fontWeight: "900", fontSize: isMobile ? "16px" : "18px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)", padding: "4px 6px 4px 20px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", background: "#C8102E", borderRadius: "40px", color: "white", fontWeight: "900", fontSize: isMobile ? "14px" : "18px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)", padding: "4px 6px 4px 20px" }}>
             <span>LISTA 2</span>
             <span style={{ background: "white", color: "#C8102E", padding: "4px 15px", borderRadius: "30px", marginLeft: "10px" }}>OPCIÓN 5</span>
           </div>
@@ -313,8 +316,9 @@ export default function App() {
       </section>
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
-      <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px", width: "100%", boxSizing: "border-box" }}>
-        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%", boxSizing: "border-box" }}>
+      {/* CORRECCIÓN RESPONSIVE 4: width: "100%", boxSizing: "border-box" */}
+      <div style={{ position: "relative", zIndex: 20, marginTop: "-70px", display: "flex", justifyContent: "center", padding: "0 15px", marginBottom: "40px", width: "100%", boxSizing: "border-box" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 45px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 45px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%", boxSizing: "border-box" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "15px", marginRight: isMobile ? 0 : "10px" }}>
             <div style={{ background: "#C8102E", color: "white", width: "60px", height: "60px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
@@ -326,7 +330,8 @@ export default function App() {
           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <BrilloNumero />
             <AccentLeft />
-            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "80px" : "110px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.8, letterSpacing: "-3px", textShadow: "2px 2px 0px rgba(0,0,0,0.05)" }}>
+            {/* CORRECCIÓN RESPONSIVE 5: clamp para número que se achica en móvil estrecho */}
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "clamp(50px, 15vw, 96px)" : "96px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.8, letterSpacing: "-3px", textShadow: "2px 2px 0px rgba(0,0,0,0.05)" }}>
               {totalVotantesGeneral.toLocaleString('es-PY')}
             </span>
             <AccentRight />
@@ -346,11 +351,17 @@ export default function App() {
         </div>
       </div>
 
+      {/* Pie visual inferior parecido */}
+      {/* CORRECCIÓN RESPONSIVE 6: width: "100%", boxSizing: "border-box" */}
+      <div style={{ textAlign: "center", marginBottom: "40px", padding: "0 15px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", lineHeight: 1.5, width: "100%", boxSizing: "border-box" }}>
+        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026<br/>
+        Desarrollado para la campaña de Darío Carmona
+      </div>
       
       {/* --- FIN RÉPLICA VISUAL --- */}
 
-      {/* SECCIÓN NAVEGACIÓN Y CONTENIDO: AJUSTE RESPONSIVE */}
-      <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", position: "sticky", top: 0, zIndex: 90, borderBottom: "1px solid #e2e8f0", width: "100%", boxSizing: "border-box", overflowX: "auto" }}>
+      {/* CORRECCIÓN RESPONSIVE 7: position: "sticky" (en vez del invalido sticky: "top"), flexWrap: "nowrap", overflowX: "auto", boxSizing: "border-box" */}
+      <nav style={{ display: "flex", flexWrap: "nowrap", overflowX: "auto", background: "#f1f5f9", padding: "10px 10px 0 10px", position: "sticky", top: 0, zIndex: 90, borderBottom: "1px solid #e2e8f0", width: "100%", boxSizing: "border-box", WebkitOverflowScrolling: "touch" }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
         <button onClick={() => setActiveTab("votantes")} style={tabStyle("votantes")}>Mis Votantes</button>
         {userRole === "administrador" && (
@@ -362,7 +373,8 @@ export default function App() {
         )}
       </nav>
 
-      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: isMobile ? "20px 10px" : "30px 15px", paddingBottom: 120, width: "100%", boxSizing: "border-box" }}>
+      {/* CORRECCIÓN RESPONSIVE 8: width: "100%", boxSizing: "border-box", overflowX: "hidden" en el contenedor main para que ninguna tabla se desborde al viewport */}
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: isMobile ? "20px 10px" : "30px 15px", paddingBottom: 120, width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
         {activeTab === "inicio" && (
           <div style={{ display: "grid", gap: 25, width: "100%" }}>
             <div style={{ background: "white", padding: isMobile ? 15 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
@@ -439,6 +451,7 @@ export default function App() {
           <div style={{ background: "white", padding: isMobile ? 15 : 30, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9", width: "100%", boxSizing: "border-box" }}>
             <h3 style={{ color: "#1e293b", fontWeight: "900", marginBottom: 20, fontSize: "20px", textTransform: "uppercase" }}>Mi Lista de Votantes</h3>
             <input type="text" placeholder="🔍 Buscar por nombre o cédula..." value={busquedaLista} onChange={(e) => setBusquedaLista(e.target.value)} style={{ width: "100%", padding: "15px", borderRadius: "15px", border: "2px solid #f1f5f9", marginBottom: 25, fontSize: "16px", outline: "none", boxSizing: "border-box" }} />
+            {/* CORRECCIÓN RESPONSIVE 9: width: "100%", overflowX: "auto" para mantener las tablas dentro del contenedor sin empujarlo */}
             <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               <div style={{ minWidth: "600px", overflowY: "auto", maxHeight: "65vh" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
