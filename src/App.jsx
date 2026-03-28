@@ -1,40 +1,43 @@
 import { useEffect, useMemo, useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { LogOut, UserCircle, Users } from "lucide-react";
+import { LogOut, UserCircle, Users, User, CheckCircle2 } from "lucide-react";
 import { supabase, supabaseAuth } from "./lib/supabase";
 import { normalizarCedula, LISTA_BARRIOS } from "./utils/helpers";
 import { ANRLogo, GreenHeart } from "./components/Logos";
 import { LoginScreen } from "./components/LoginScreen";
+import logocarmona from "./img/logocarmona.png";
+import anrlogo from "./img/anrlogo.png";
 
-// --- Micro-componentes de Estilo (Nuevos) ---
-const ANRLogoSmall = () => (
-  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-    <ANRLogo style={{ width: "24px", height: "24px" }} />
-    <span style={{ fontSize: "14px", fontWeight: "600", color: "#C8102E" }}>ANR</span>
-  </div>
-);
-
-const UserAvatar = ({ name, role }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 15px", borderLeft: "1px solid #e2e8f0" }}>
-    <UserCircle size={32} color="#64748b" strokeWidth={1.5} />
-    <div style={{ textAlign: "left" }}>
-      <div style={{ fontSize: "12px", color: "#64748b" }}>Hola, <span style={{ fontWeight: "700", color: "#1e293b" }}>{name}</span></div>
-      <div style={{ background: "#C8102E", color: "white", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: "700", display: "inline-block", textTransform: "uppercase", marginTop: "2px" }}>
-        {role}
-      </div>
-    </div>
-  </div>
-);
-
-const BridgeBackground = () => (
-  <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "auto", zIndex: -1 }} viewBox="0 0 1440 320" preserveAspectRatio="none">
-    <path fill="#f8fafc" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,138.7C672,149,768,203,864,213.3C960,224,1056,192,1152,165.3C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-    <path fill="#dc2626" d="M0,224L48,218.7C96,213,192,203,288,202.7C384,203,480,213,576,218.7C672,224,768,224,864,218.7C960,213,1056,203,1152,208C1248,213,1344,235,1392,245.3L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-    <path fill="#b91c1c" d="M1250,230 L1250,210 Q1300,190 1350,210 L1350,230 Z M1270,230 L1270,215 Q1300,205 1330,215 L1330,230 Z" opacity="0.5"></path>
+// --- SVGs Decorativos para el Diseño Visual ---
+const BackgroundWaves = () => (
+  <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "250px", zIndex: 1, pointerEvents: "none" }} viewBox="0 0 1440 250" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#991b1b" />
+        <stop offset="50%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#991b1b" />
+      </linearGradient>
+    </defs>
+    <path fill="#e2e8f0" opacity="0.4" d="M150,180 L150,140 L170,140 L170,130 L190,130 L190,150 L210,150 L210,180 Z M350,180 L350,120 L380,120 L380,180 Z M850,180 L850,110 L890,110 L890,180 Z M1150,180 L1150,130 L1170,130 L1170,100 L1190,100 L1190,180 Z M1250,180 Q1300,130 1350,180 Z"></path>
+    <path fill="none" stroke="#1e3a8a" strokeWidth="4" d="M0,180 C320,240 420,120 720,160 C1020,200 1220,130 1440,170" opacity="0.6"></path>
+    <circle cx="720" cy="180" r="100" fill="#fef08a" opacity="0.4" filter="blur(20px)" />
+    <path fill="url(#grad1)" d="M0,200 C480,280 720,120 1440,190 L1440,250 L0,250 Z"></path>
+    <path fill="#7f1d1d" d="M0,220 C480,290 820,160 1440,220 L1440,250 L0,250 Z"></path>
   </svg>
 );
 
+const AccentLeft = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: "absolute", left: -15, top: "25%", opacity: 0.8 }}>
+    <path d="M20 4 L10 10 M22 12 L10 12 M20 20 L10 14" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
+
+const AccentRight = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" style={{ position: "absolute", right: -15, top: "25%", opacity: 0.8 }}>
+    <path d="M4 4 L14 10 M2 12 L14 12 M4 20 L14 14" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -101,7 +104,6 @@ export default function App() {
     }
   }, [session]);
 
-  // NUEVO: Funcionalidad de cierre de sesión automático por inactividad (15 minutos)
   useEffect(() => {
     let timeoutId;
 
@@ -486,83 +488,102 @@ export default function App() {
   });
 
   return (
-    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif", position: "relative" }}>
+    <div style={{ background: "white", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
-      {/* Fondo SVG de ondas y puente (Nuevo) */}
-      <BridgeBackground />
-
-      <header style={{ background: "white", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 2px 10px rgba(0,0,0,0.03)", position: "sticky", top: 0, zIndex: 1000 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <ANRLogoSmall />
-          <span style={{ fontSize: "14px", color: "#64748b" }}>| Sistema de Gestión – <span style={{fontWeight: "600", color: "#1e293b"}}>Lista 2 / Opción 5</span></span>
+      {/* ------------------ NUEVO HEADER Y HERO REPLICANDO LA IMAGEN ------------------ */}
+      <header style={{ background: "white", padding: "15px 25px", borderBottom: "1px solid #f1f5f9", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "space-between", gap: isMobile ? "15px" : "0", position: "relative", zIndex: 100 }}>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "center" : "flex-start" }}>
+          <img src={anrlogo} alt="ANR" style={{ width: "35px", height: "35px", borderRadius: "50%" }} />
+          <span style={{ fontSize: isMobile ? "12px" : "14px", color: "#64748b", fontWeight: "500" }}>Sistema de Gestión – <span style={{fontWeight: "800", color: "#1e293b"}}>Lista 2 / Opción 5</span></span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "15px" : "30px", width: isMobile ? "100%" : "auto", justifyContent: isMobile ? "space-between" : "flex-end" }}>
           <UserAvatar name={userName} role={userRole === "administrador" ? "Administrador" : "Coordinador"} />
           <button 
             onClick={() => supabase.auth.signOut()} 
-            style={{ background: "#f1f5f9", color: "#C8102E", padding: "8px 18px", borderRadius: "10px", border: "1px solid #e2e8f0", fontWeight: "700", cursor: "pointer", fontSize: "12px", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.2s" }}
-            onMouseOver={(e) => e.currentTarget.style.background = "#e2e8f0"}
-            onMouseOut={(e) => e.currentTarget.style.background = "#f1f5f9"}
+            style={{ background: "white", color: "#C8102E", padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: "700", cursor: "pointer", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}
           >
-            <LogOut size={16} />
-            Cerrar sesión
+            <LogOut size={16} /> {!isMobile && "Cerrar sesión"}
           </button>
         </div>
       </header>
 
-      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 15px", textAlign: "center", paddingBottom: 120 }}>
+      <section style={{ position: "relative", width: "100%", background: "#f8fafc", padding: isMobile ? "30px 15px 120px 15px" : "50px 20px 120px 20px", textAlign: "center", overflow: "hidden" }}>
         
-        {/* Sección Hero Principal (Nuevo Diseño) */}
-        <section style={{ marginBottom: "50px", position: "relative" }}>
-          <ANRLogo style={{ width: "80px", height: "80px", marginBottom: "20px" }} />
-          
-          <br/>
+        <BackgroundWaves />
 
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#C8102E", padding: "6px 20px", borderRadius: "20px", border: "1px solid #fee2e2", boxShadow: "0 2px 5px rgba(0,0,0,0.03)", marginBottom: "15px" }}>
-            <span style={{ fontSize: "14px", fontWeight: "800", color: "white", textTransform: "uppercase" }}>Lista 2</span>
-            <span style={{ color: "white" }}>—</span>
-            <span style={{ fontSize: "14px", fontWeight: "800", color: "white", textTransform: "uppercase" }}>Opción 5</span>
+        <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ background: "white", borderRadius: "50%", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }}>
+            <img src={anrlogo} alt="ANR" style={{ width: isMobile ? "70px" : "90px", height: isMobile ? "70px" : "90px", borderRadius: "50%" }} />
           </div>
 
-          <h1 style={{ fontFamily: "Inter, sans-serif", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "36px" : "64px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-2px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#C8102E", padding: "5px 25px", borderRadius: "30px", color: "white", fontWeight: "900", fontSize: isMobile ? "16px" : "20px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
+            <span>LISTA 2</span>
+            <span style={{ color: "#fca5a5", fontWeight: "400" }}>—</span>
+            <span>OPCIÓN 5</span>
+          </div>
+
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "34px" : "64px", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "-1.5px", textShadow: "1px 1px 0px rgba(0,0,0,0.05)" }}>
             HAGAMOS QUE SUCEDA
           </h1>
           
-          <p style={{ fontSize: "16px", color: "#64748b", margin: "0 0 30px 0", fontWeight: "500" }}>
+          <p style={{ fontSize: isMobile ? "15px" : "18px", color: "#64748b", margin: "0 0 35px 0", fontWeight: "500" }}>
             Unidos por el cambio que nuestra ciudad necesita
           </p>
 
-          <button style={{ background: "linear-gradient(180deg, #dc2626 0%, #b91c1c 100%)", color: "white", fontWeight: "800", padding: "15px 35px", borderRadius: "30px", border: "none", fontSize: "16px", display: "inline-flex", alignItems: "center", gap: "10px", boxShadow: "0 10px 20px rgba(220,38,38,0.2)", cursor: "pointer", transition: "transform 0.1s" }} onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.98)"} onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}>
-            <GreenHeart style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
-            DARÍO CARMONA – CONCEJAL 2026
-            <span>→</span>
+          <button style={{ background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #b91c1c 100%)", borderRadius: "50px", padding: "8px 20px 8px 8px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.4)", width: isMobile ? "100%" : "auto", maxWidth: "500px", border: "none", cursor: "default" }}>
+            <div style={{ background: "white", borderRadius: "50%", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <User color="#C8102E" size={24} strokeWidth={2.5} />
+            </div>
+            <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "14px" : "18px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
+              DARÍO CARMONA – CONCEJAL 2026
+            </span>
+            <span style={{ color: "white", fontSize: "20px", fontWeight: "bold" }}>→</span>
           </button>
           
-          <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "10px" }}>Ir al panel / Ver perfil / Gestionar campaña</div>
-        </section>
+          <div style={{ fontSize: "13px", color: "#1e293b", marginTop: "20px", fontWeight: "600" }}>
+            Ir al panel / Ver perfil / Gestionar campaña
+          </div>
+        </div>
+      </section>
 
-        {/* Sección del Contador (Nuevo Diseño) */}
-        <section style={{ background: "white", padding: "20px 30px", borderRadius: "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.05)", display: "inline-flex", alignItems: "center", gap: "25px", border: "1px solid #f1f5f9", marginBottom: "40px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ background: "#C8102E", color: "white", width: "40px", height: "40px", borderRadius: "50%", display: "grid", placeItems: "center" }}>
-              <Users size={20} strokeWidth={2.5} />
+      {/* Tarjeta del Contador (Solapando la franja roja) */}
+      <div style={{ position: "relative", zIndex: 20, marginTop: "-60px", display: "flex", justifyContent: "center", padding: "0 15px", marginBottom: "40px" }}>
+        <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "25px 20px" : "20px 40px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", gap: isMobile ? "15px" : "30px", boxShadow: "0 15px 40px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9" }}>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+            <div style={{ background: "#C8102E", width: isMobile ? "45px" : "55px", height: isMobile ? "45px" : "55px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 10px rgba(200,16,46,0.3)" }}>
+              <Users color="white" size={isMobile ? 24 : 28} />
             </div>
-            <span style={{ fontSize: "16px", fontWeight: "800", color: "#1e293b", textTransform: "uppercase" }}>Ya somos</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "22px" : "28px", color: "#1e293b", fontStyle: "italic" }}>YA SOMOS</span>
           </div>
 
-          <span style={{ fontSize: "72px", fontWeight: "900", color: "#C8102E", lineHeight: 1 }}>
-            {totalVotantesGeneral}
-          </span>
-
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: "14px", fontWeight: "600", color: "#64748b" }}>personas<br />registradas</div>
-            <div style={{ background: "#fee2e2", color: "#C8102E", padding: "2px 10px", borderRadius: "10px", fontSize: "11px", fontWeight: "700", marginTop: "5px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-              <span>✓</span>
-              ¡Y vamos por más!
-            </div>
+          <div style={{ position: "relative", padding: "0 25px", display: "flex", alignItems: "center" }}>
+            <AccentLeft />
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "64px" : "90px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.9 }}>
+              {totalVotantesGeneral}
+            </span>
+            <AccentRight />
           </div>
-        </section>
+
+          <div style={{ fontFamily: "'Inter', sans-serif", fontWeight: "800", color: "#475569", fontSize: isMobile ? "14px" : "18px", lineHeight: 1.2, textAlign: isMobile ? "center" : "left" }}>
+            personas<br/>registradas
+          </div>
+
+          <div style={{ position: "absolute", bottom: "-15px", left: "50%", transform: "translateX(-50%)", background: "#fee2e2", border: "3px solid white", borderRadius: "30px", padding: "4px 20px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 10px rgba(0,0,0,0.05)", width: "max-content" }}>
+            <div style={{ background: "#C8102E", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", width: "16px", height: "16px" }}>
+              <CheckCircle2 color="white" size={12} strokeWidth={4} />
+            </div>
+            <span style={{ color: "#C8102E", fontWeight: "800", fontSize: "13px" }}>¡Y vamos por más!</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ textAlign: "center", marginBottom: "30px", fontSize: "11px", fontWeight: "700", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px" }}>
+        Partido Colorado - ANR &nbsp;|&nbsp; Lista 2 &nbsp;|&nbsp; Opción 5 &nbsp;|&nbsp; Elecciones Municipales 2026
+      </div>
+      {/* ------------------ FIN DEL NUEVO HEADER / HERO ------------------ */}
 
       <nav style={{ display: "flex", background: "#f1f5f9", padding: "10px 10px 0 10px", sticky: "top", top: 0, zIndex: 100 }}>
         <button onClick={() => setActiveTab("inicio")} style={tabStyle("inicio")}>Inicio</button>
@@ -576,8 +597,9 @@ export default function App() {
         )}
       </nav>
 
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "30px 15px", paddingBottom: 120 }}>
         {activeTab === "inicio" && (
-          <div style={{ display: "grid", gap: 25, marginTop: 20 }}>
+          <div style={{ display: "grid", gap: 25 }}>
             <div className="card" style={{ background: "white", padding: isMobile ? 20 : 35, borderRadius: "25px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
               <h4 style={{ color: "#C8102E", fontWeight: "900", marginBottom: 20, fontSize: "14px", textTransform: "uppercase" }}>🔍 BUSCADOR DE PADRÓN</h4>
               <div style={{ display: "flex", gap: 10 }}>
