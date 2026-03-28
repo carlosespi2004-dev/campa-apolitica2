@@ -295,13 +295,9 @@ export default function App() {
             <span style={{ background: "white", color: "#C8102E", padding: "4px 15px", borderRadius: "30px", marginLeft: "10px" }}>OPCIÓN 5</span>
           </div>
 
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "42px" : "72px", margin: "0 0 5px 0", textTransform: "uppercase", letterSpacing: "-2px", lineHeight: 1.1 }}>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontStyle: "italic", fontWeight: "900", color: "#C8102E", fontSize: isMobile ? "30px" : "65px", margin: "0 0 5px 0", textTransform: "uppercase", letterSpacing: "-2px", lineHeight: 1.1 }}>
             HAGAMOS QUE SUCEDA
           </h1>
-          
-          <p style={{ fontSize: isMobile ? "16px" : "20px", color: "#64748b", margin: "0 0 45px 0", fontWeight: "500", maxWidth: "600px" }}>
-            Unidos por el cambio que nuestra ciudad necesita
-          </p>
 
           <button style={{ background: "linear-gradient(90deg, #a00d25 0%, #C8102E 50%, #a00d25 100%)", borderRadius: "50px", padding: "8px 30px 8px 8px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.4)", width: isMobile ? "100%" : "auto", maxWidth: "550px", border: "none" }}>
             <div style={{ background: "white", borderRadius: "50%", width: "46px", height: "46px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
@@ -313,9 +309,6 @@ export default function App() {
             <span style={{ color: "white", fontSize: "22px", fontWeight: "bold" }}>→</span>
           </button>
           
-          <div style={{ fontSize: "13px", color: "#1e293b", marginTop: "20px", fontWeight: "600" }}>
-            Ir al panel / Ver perfil / Gestionar campaña
-          </div>
         </div>
       </section>
 
