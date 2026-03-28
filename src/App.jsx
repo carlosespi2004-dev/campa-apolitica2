@@ -549,7 +549,7 @@ export default function App() {
         <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "800px", margin: "0 auto" }}>
           
           <img src={anrlogo} alt="ANR" style={{ width: "90px", height: "90px", borderRadius: "50%", background: "white", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)", marginBottom: "25px" }} />
-
+          
           <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "#C8102E", padding: "6px 25px", borderRadius: "30px", color: "white", fontWeight: "900", fontSize: isMobile ? "15px" : "18px", marginBottom: "15px", boxShadow: "0 5px 15px rgba(200,16,46,0.3)" }}>
             <span>LISTA 2</span>
             <LineAccent />
@@ -560,9 +560,7 @@ export default function App() {
             HAGAMOS QUE SUCEDA
           </h1>
           
-          <p style={{ fontSize: isMobile ? "16px" : "19px", color: "#64748b", margin: "0 0 40px 0", fontWeight: "500", maxWidth: "600px" }}>
-            Unidos por el cambio que nuestra ciudad necesita
-          </p>
+          
 
           <button style={{ background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #b91c1c 100%)", borderRadius: "50px", padding: "10px 25px 10px 10px", display: "flex", alignItems: "center", gap: "15px", boxShadow: "0 10px 25px rgba(200,16,46,0.4)", width: isMobile ? "100%" : "auto", maxWidth: "520px", border: "none", cursor: "default" }}>
             <div style={{ background: "white", borderRadius: "50%", width: "42px", height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -571,12 +569,10 @@ export default function App() {
             <span style={{ color: "white", fontWeight: "800", fontSize: isMobile ? "16px" : "19px", flex: 1, textAlign: "center", letterSpacing: "0.5px" }}>
               DARÍO CARMONA – CONCEJAL 2026
             </span>
-            <span style={{ color: "white", fontSize: "20px", fontWeight: "bold" }}>→</span>
+            <span style={{ color: "white", fontSize: "20px", fontWeight: "bold" }}></span>
           </button>
           
-          <div style={{ fontSize: "13px", color: "#1e293b", marginTop: "25px", fontWeight: "600" }}>
-            Ir al panel / Ver perfil / Gestionar campaña
-          </div>
+          
         </div>
       </section>
 
