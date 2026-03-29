@@ -63,7 +63,6 @@ export default function App() {
   const [userEquipoId, setUserEquipoId] = useState(null);
   const [votantes, setVotantes] = useState([]);
   const [equipo, setEquipo] = useState([]);
-  const [totalGlobal, setTotalGlobal] = useState(0); // <-- ESTADO AGREGADO PARA EL CONTADOR GENERAL
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState("inicio");
@@ -78,7 +77,7 @@ export default function App() {
   const [busquedaListaGeneral, setBusquedaListaGeneral] = useState("");
 
   const limpiarEstado = () => {
-    setVotantes([]); setEquipo([]); setUserRole(null); setUserName(""); setUserEquipoId(null); setTotalGlobal(0);
+    setVotantes([]); setEquipo([]); setUserRole(null); setUserName(""); setUserEquipoId(null);
     setActiveTab("inicio");
     setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" });
     setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" });
@@ -118,14 +117,8 @@ export default function App() {
 
   async function cargarDatos() {
     try {
-      // <-- MODIFICADO: Se agrega una consulta adicional para obtener el total global exacto y bypass del RLS si aplica
-      const [v, e, c] = await Promise.all([ 
-        supabase.from("votantes").select("*").order("created_at", { ascending: false }), 
-        supabase.from("equipo").select("*").order("created_at", { ascending: false }),
-        supabase.from("votantes").select("*", { count: "exact", head: true })
-      ]);
+      const [v, e] = await Promise.all([ supabase.from("votantes").select("*").order("created_at", { ascending: false }), supabase.from("equipo").select("*").order("created_at", { ascending: false }) ]);
       setVotantes(v.data || []); setEquipo(e.data || []);
-      setTotalGlobal(c?.count || 0); // Guardamos el conteo global
     } catch (err) { console.error(err); }
   }
 
@@ -147,7 +140,7 @@ export default function App() {
 
   const totalVotantesGeneral = useMemo(() => {
     const seen = new Set();
-    return votantes.filter(v => { const duplicate = seen.has(normalizarCedula(v.cedula)); seen.add(normalizarCedula(v.cedula)); return !duplicate; }).length;
+    return (votantes || []).filter(v => { const duplicate = seen.has(normalizarCedula(v.cedula)); seen.add(normalizarCedula(v.cedula)); return !duplicate; }).length;
   }, [votantes]); 
 
   const listaGeneralAdmin = useMemo(() => {
@@ -160,9 +153,6 @@ export default function App() {
     (fuenteDatos || []).forEach((v) => { const b = v.barrio || "Sin barrio"; counts[b] = (counts[b] || 0) + 1; });
     return Object.entries(counts).map(([name, total]) => ({ name, total }));
   }, [votantes, votantesFiltrados, userRole]);
-
-  // <-- LÓGICA DE MOSTRADO: Aseguramos que el coordinador vea el número global mayor a 0
-  const totalMostrar = userRole === "administrador" ? totalVotantesGeneral : Math.max(totalVotantesGeneral, totalGlobal);
 
   async function buscarEnPadron() {
     const limpia = normalizarCedula(cedulaRapida);
@@ -282,7 +272,7 @@ export default function App() {
       
       {isMobile && (
         <div style={{ background: "#f8fafc", padding: "10px", borderBottom: "1px solid #e2e8f0", textAlign: "center", fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-           Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
+            Sistema de Gestión – <span style={{fontWeight: "800", color: "#C8102E"}}>Lista 2 / Opción 5</span>
         </div>
       )}
 
@@ -323,6 +313,7 @@ export default function App() {
       </section>
 
       {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
+      {/* --- TARJETA DEL CONTADOR RÉPLICA EXACTA --- */}
       <div style={{ position: "relative", zIndex: 20, marginTop: "-80px", display: "flex", justifyContent: "center", padding: "0 20px", marginBottom: "50px" }}>
         <div style={{ background: "white", borderRadius: "20px", padding: isMobile ? "30px 20px" : "25px 50px", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "center", gap: isMobile ? "15px" : "20px", boxShadow: "0 15px 35px rgba(0,0,0,0.1)", position: "relative", border: "1px solid #f1f5f9", maxWidth: "850px", width: "100%" }}>
           
@@ -337,8 +328,7 @@ export default function App() {
             <BrilloNumero />
             <AccentLeft />
             <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: "900", fontSize: isMobile ? "80px" : "110px", color: "#C8102E", fontStyle: "italic", lineHeight: 0.8, letterSpacing: "-3px", textShadow: "2px 2px 0px rgba(0,0,0,0.05)" }}>
-              {/* <-- MODIFICADO: Se utiliza totalMostrar para que todos vean el contador global correctamente */}
-              {totalMostrar.toLocaleString('es-PY')}
+              {totalVotantesGeneral.toLocaleString('es-PY')}
             </span>
             <AccentRight />
           </div>
@@ -429,16 +419,16 @@ export default function App() {
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 15, padding: "15px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                   <div style={{gridColumn: isMobile ? "1 / -1" : "auto"}}><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>LOCAL DE VOTACIÓN</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
-                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
-                   <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
+                    <div style={{gridColumn: isMobile ? "1 / -1" : "auto"}}><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>LOCAL DE VOTACIÓN</label><input type="text" value={formVotante.local_votacion} onChange={(e) => setFormVotante({ ...formVotante, local_votacion: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
+                    <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>MESA</label><input type="text" value={formVotante.mesa} onChange={(e) => setFormVotante({ ...formVotante, mesa: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
+                    <div><label style={{ fontWeight: "700", fontSize: "11px", color: "#64748b", marginBottom: "3px", display: "block" }}>ORDEN</label><input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, '') })} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", outline: "none" }} /></div>
                 </div>
                 
                 <div><label style={{ fontWeight: "700", fontSize: "12px", color: "#64748b", marginBottom: "5px", display: "block" }}>OBSERVACIÓN / COMENTARIO</label><input type="text" value={formVotante.observacion} onChange={(e) => setFormVotante({ ...formVotante, observacion: e.target.value })} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "16px", outline: "none" }} /></div>
                 
                 <div style={{display: "flex", gap: "10px", marginTop: "15px"}}>
-                   {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "18px", borderRadius: "15px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
-                   <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", fontSize: "18px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdVotante ? "GUARDAR CAMBIOS" : "REGISTRAR VOTANTE"}</button>
+                    {editIdVotante && <button type="button" onClick={() => { setEditIdVotante(null); setFormVotante({ nombre: "", apellido: "", cedula: "", orden: "", mesa: "", local_votacion: "", seccional: "", barrio: "", fecha_nacimiento: "", telefono: "", observacion: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "18px", borderRadius: "15px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
+                    <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", fontSize: "18px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdVotante ? "GUARDAR CAMBIOS" : "REGISTRAR VOTANTE"}</button>
                 </div>
               </form>
             </div>
@@ -546,8 +536,8 @@ export default function App() {
                   <option value="administrador">Rol: Administrador</option>
                 </select>
                 <div style={{display: "flex", gap: "10px", marginTop: "10px"}}>
-                   {editIdEquipo && <button type="button" onClick={() => { setEditIdEquipo(null); setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
-                   <button type="submit" disabled={loading} style={{ background: "#1e293b", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdEquipo ? "GUARDAR CAMBIOS" : "CREAR USUARIO"}</button>
+                    {editIdEquipo && <button type="button" onClick={() => { setEditIdEquipo(null); setFormEquipo({ nombre: "", telefono: "", rol: "coordinador", zona: "", email: "", password: "" }); }} style={{ background: "#f1f5f9", color: "#64748b", fontWeight: "700", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 1 }}>CANCELAR</button>}
+                    <button type="submit" disabled={loading} style={{ background: "#1e293b", color: "white", fontWeight: "900", padding: "16px", borderRadius: "12px", border: "none", fontSize: "16px", cursor: "pointer", flex: 2 }}>{loading ? "PROCESANDO..." : editIdEquipo ? "GUARDAR CAMBIOS" : "CREAR USUARIO"}</button>
                 </div>
               </form>
             </div>
