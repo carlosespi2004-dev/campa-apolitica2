@@ -646,13 +646,31 @@ tr:hover { background: #f8e7e9; }
 .is-mobile .form-grid-three__full-mobile { grid-column: 1 / -1; }
 
 @media (max-width: 767px) {
-  .form-grid-two,
-  .form-grid-three,
-  .search-row {
-    grid-template-columns: 1fr;
+  /* Forzar que el contenedor no tenga un ancho mínimo mayor a la pantalla */
+  .table-viewport--general {
+    min-width: 100% !important;
+    overflow-x: hidden; /* Elimina el scroll horizontal */
   }
 
-  .search-row { display: grid; }
-  .table-viewport--votantes,
-  .table-viewport--general { min-width: 600px; }
+  /* Ajuste de celdas para la Lista General en móvil */
+  .table-viewport--general .table-cell {
+    padding: 8px 4px; /* Reducción drástica de espacio interno */
+    font-size: 11px;  /* Fuente más pequeña para que quepa el texto */
+  }
+
+  /* Ajuste específico para la columna de ubicación y nombre */
+  .table-viewport--general .table-cell--strong {
+    padding: 8px 4px;
+    line-height: 1.2;
+  }
+
+  /* Reducir el ancho de la columna del checkbox */
+  .table-viewport--general .ta-center {
+    width: 40px;
+  }
+
+  .table-viewport--general .vote-checkbox {
+    width: 18px;
+    height: 18px;
+  }
 }
