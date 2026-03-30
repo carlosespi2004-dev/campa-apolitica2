@@ -522,7 +522,7 @@ export default function App() {
                       <tr key={v?.id} className="table-row">
                         <td className="table-cell table-cell--strong">{v?.nombre} {v?.apellido}<br /><small className="text-muted">Captado por: {v.por_parte_de_nombre}</small></td>
                         <td className="table-cell table-cell--muted">{v?.cedula}</td>
-                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.order}<br />{v.local_votacion}</td>
+                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.orden}<br />{v.local_votacion}</td>
                         <td className="table-cell ta-center">
                           <input type="checkbox" checked={v.ha_votado || false} onChange={async (e) => { const checked = e.target.checked; const { error } = await supabase.from("votantes").update({ ha_votado: checked }).eq("id", v.id); if (!error) { setVotantes(prev => prev.map(item => item.id === v.id ? { ...item, ha_votado: checked } : item)); } else { alert("Error: " + error.message); } }} className="vote-checkbox" />
                         </td>
