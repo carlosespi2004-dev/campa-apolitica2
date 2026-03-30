@@ -504,7 +504,7 @@ tr:hover { background: #f8e7e9; }
   width: 100%;
   border-collapse: collapse;
 }
-.table--min-400 { min-width: 400px; }
+.table--min-400 { min-width: 100%; }
 .table-head { position: sticky; top: 0; z-index: 10; }
 .table-head--light { background: #f8fafc; }
 .table-head--red { background: #c8102e; }
