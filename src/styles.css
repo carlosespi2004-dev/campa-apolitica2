@@ -11,6 +11,12 @@
   --radius: 12px;
 }
 
+/* --- CORRECCIÓN GLOBAL PREVENTIVA --- */
+html, body {
+  overflow-x: hidden; /* NUEVA LÍNEA: Evita scroll lateral en el contenedor raíz */
+  width: 100%;        /* NUEVA LÍNEA */
+}
+
 * { 
   box-sizing: border-box; 
   transition: all 0.2s ease; 
@@ -95,17 +101,11 @@ tr:hover { background: #f8e7e9; }
   background: #94a3b8; 
 }
 
-
-
-
-
-
-
-
 .app-shell {
   background: white;
   min-height: 100vh;
   font-family: "Inter", sans-serif;
+  overflow-x: hidden; /* NUEVA LÍNEA: Asegura que el shell no desborde */
 }
 
 .topbar {
@@ -391,6 +391,7 @@ tr:hover { background: #f8e7e9; }
   border-radius: 25px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.03);
   border: 1px solid #f1f5f9;
+  max-width: 100%; /* NUEVA LÍNEA: Asegura que el panel no exceda el viewport */
 }
 .panel--shadow-strong { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 .panel--padded-md { padding: 30px; }
@@ -494,7 +495,11 @@ tr:hover { background: #f8e7e9; }
 .padron-result__meta span { color: #1e293b; }
 .padron-result__place { color: #c8102e; font-weight: 800; font-size: 13px; margin-bottom: 18px; }
 
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll { 
+  overflow-x: auto; 
+  -webkit-overflow-scrolling: touch;
+  width: 100%; /* NUEVA LÍNEA: Forza a que el scroll contenga la tabla */
+}
 .table-viewport { overflow-y: auto; }
 .table-viewport--votantes { min-width: 100%; max-height: 65vh; }
 .table-viewport--general { min-width: 100%; max-height: 60vh; }
@@ -623,13 +628,17 @@ tr:hover { background: #f8e7e9; }
 .is-mobile .hero-candidate-button { width: 100%; }
 .is-mobile .hero-candidate-text { font-size: 13px; }
 .is-mobile .counter-card {
-  padding: 30px 20px;
+  padding: 25px 15px; /* MODIFICADO: Se redujo el padding lateral de 20 a 15 */
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;           /* MODIFICADO: Se redujo el gap */
+  width: calc(100% - 30px); /* NUEVA LÍNEA: Asegura que no toque los bordes */
+  margin: 0 auto;           /* NUEVA LÍNEA */
 }
 .is-mobile .counter-card__left { margin-right: 0; }
-.is-mobile .counter-card__number { font-size: 80px; }
-.is-mobile .counter-card__text { text-align: center; margin-left: 0; }
+.is-mobile .counter-card__number { 
+  font-size: 70px; /* MODIFICADO: Reducido de 80 a 70 para evitar desborde en pantallas de 320px */
+}
+.is-mobile .counter-card__text { text-align: center; margin-left: 0; font-size: 14px; } /* MODIFICADO: Reducida fuente */
 .is-mobile .tab-button { font-size: 10px; }
 .is-mobile .main-content { padding: 20px 15px 120px; }
 .is-mobile .panel--padded-md { padding: 15px; }
@@ -654,4 +663,10 @@ tr:hover { background: #f8e7e9; }
   .search-row { display: grid; }
   .table-viewport--votantes,
   .table-viewport--general { min-width: 600px; }
+}
+
+/* --- CIERRE DE CORRECCIONES --- */
+@media (max-width: 480px) {
+  .hero-candidate-button { padding: 8px 15px 8px 8px; } /* NUEVA LÍNEA: Ajuste de padding para botones anchos */
+  .hero-pill { font-size: 14px; } /* NUEVA LÍNEA */
 }
