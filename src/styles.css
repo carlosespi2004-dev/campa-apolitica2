@@ -646,7 +646,7 @@ tr:hover { background: #f8e7e9; }
 .is-mobile .form-grid-three__full-mobile { grid-column: 1 / -1; }
 
 @media (max-width: 767px) {
-  /* Forzamos al contenedor a no dejar que nada salga a la derecha */
+  /* Forzamos al contenedor a ser del ancho exacto del celular */
   .table-viewport--general {
     min-width: 100% !important;
     width: 100% !important;
@@ -654,42 +654,42 @@ tr:hover { background: #f8e7e9; }
     padding: 0 !important;
   }
 
-  /* Obligamos a la tabla a dividirse exactamente en el ancho del celular */
+  /* La tabla DEBE tener ancho fijo para que no se estire */
   .table-viewport--general .table {
-    display: table;
-    table-layout: fixed !important; /* CLAVE: impide que las celdas se ensanchen */
+    display: table !important;
+    table-layout: fixed !important; 
     width: 100% !important;
-    border-spacing: 0;
+    border-collapse: collapse !important;
   }
 
-  /* Ajuste de fuentes y quiebre de texto */
+  /* Ajuste agresivo de celdas para que el texto salte de línea */
   .table-viewport--general .table-cell,
   .table-viewport--general th {
-    padding: 6px 2px !important; /* Mínimo espacio posible */
-    font-size: 9px !important;    /* Fuente pequeña para nombres largos */
-    word-wrap: break-word !important; 
-    overflow-wrap: break-word !important; 
-    white-space: normal !important; /* Permite saltos de línea */
-    vertical-align: middle;
+    padding: 4px 2px !important;
+    font-size: 9px !important; /* Fuente mínima para legibilidad */
+    line-height: 1.1 !important;
+    word-break: break-all !important; /* Rompe palabras largas si es necesario */
+    white-space: normal !important;   /* Obliga al texto a ir hacia abajo, no hacia el lado */
+    vertical-align: top !important;
   }
 
-  /* Definición de anchos fijos por columna para que no haya error de cálculo */
+  /* Asignación estricta de anchos por columna */
   .table-viewport--general th:nth-child(1), 
-  .table-viewport--general td:nth-child(1) { width: 35% !important; } /* Nombre completo */
+  .table-viewport--general td:nth-child(1) { width: 35% !important; } /* Nombre */
   
   .table-viewport--general th:nth-child(2), 
   .table-viewport--general td:nth-child(2) { width: 20% !important; } /* Cédula */
   
   .table-viewport--general th:nth-child(3), 
-  .table-viewport--general td:nth-child(3) { width: 35% !important; } /* Ubicación (Mesa/Local) */
+  .table-viewport--general td:nth-child(3) { width: 35% !important; } /* Ubicación */
   
   .table-viewport--general th:nth-child(4), 
-  .table-viewport--general td:nth-child(4) { width: 10% !important; text-align: center; } /* Checkbox */
+  .table-viewport--general td:nth-child(4) { width: 10% !important; text-align: center !important; } /* Checkbox */
 
-  /* Hacemos el checkbox pequeño para que no rompa la fila */
+  /* Reducimos el checkbox para que no empuje la fila */
   .table-viewport--general .vote-checkbox {
-    width: 16px !important;
-    height: 16px !important;
-    margin: 0 auto;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 !important;
   }
 }
