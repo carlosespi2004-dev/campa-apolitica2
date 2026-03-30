@@ -391,6 +391,7 @@ tr:hover { background: #f8e7e9; }
   border-radius: 25px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.03);
   border: 1px solid #f1f5f9;
+  min-width: 0;
 }
 .panel--shadow-strong { box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 .panel--padded-md { padding: 30px; }
