@@ -522,7 +522,7 @@ export default function App() {
                       <tr key={v?.id} className="table-row">
                         <td className="table-cell table-cell--strong">{v?.nombre} {v?.apellido}<br /><small className="text-muted">Captado por: {v.por_parte_de_nombre}</small></td>
                         <td className="table-cell table-cell--muted">{v?.cedula}</td>
-                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.orden}<br />{v.local_votacion}</td>
+                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.order}<br />{v.local_votacion}</td>
                         <td className="table-cell ta-center">
                           <input type="checkbox" checked={v.ha_votado || false} onChange={async (e) => { const checked = e.target.checked; const { error } = await supabase.from("votantes").update({ ha_votado: checked }).eq("id", v.id); if (!error) { setVotantes(prev => prev.map(item => item.id === v.id ? { ...item, ha_votado: checked } : item)); } else { alert("Error: " + error.message); } }} className="vote-checkbox" />
                         </td>
@@ -593,7 +593,21 @@ export default function App() {
                           <td className="table-cell table-cell--muted">{m?.telefono}<br /><small>{m?.zona}</small></td>
                           <td className="table-cell table-cell--actions">
                             <button onClick={() => { setFormEquipo(m); setEditIdEquipo(m.id); window.scrollTo(0, 0); }} className="mini-btn mini-btn--edit mini-btn--tiny">EDITAR</button>
-                            <button onClick={async () => { if (confirm(`¿Borrar a ${m.nombre}?`)) { setLoading(true); try { let uid = m.user_id; if (!uid) { const { data } = await supabase.from("profiles").select("user_id").eq("equipo_id", m.id).maybeSingle(); if (data) uid = data.user_id; } if (uid) { await supabase.from("votantes").update({ user_id: null, created_by: null }).eq("user_id", uid); await supabase.from("profiles").delete().eq("user_id", uid); } await supabase.from("equipo").delete().eq("id", m.id); cargarDatos(); } catch (error) { alert("Error: " + error.message); } setLoading(false); } }} className="mini-btn mini-btn--delete mini-btn--tiny">BORRAR</button>
+                            <button onClick={async () => { 
+                                if (confirm(`¿Borrar a ${m.nombre}? Esta acción eliminará su acceso y sus datos permanentemente.`)) { 
+                                    setLoading(true); 
+                                    try { 
+                                        const { data, error } = await supabase.rpc('eliminar_usuario_completo', { target_equipo_id: m.id });
+                                        if (error) throw error;
+                                        alert("✅ Usuario y acceso eliminados correctamente");
+                                        cargarDatos(); 
+                                    } catch (error) { 
+                                        alert("Error: " + error.message); 
+                                    } finally {
+                                        setLoading(false); 
+                                    }
+                                } 
+                            }} className="mini-btn mini-btn--delete mini-btn--tiny">BORRAR</button>
                           </td>
                         </tr>
                       ))}
