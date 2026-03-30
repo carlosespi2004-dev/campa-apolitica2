@@ -30,13 +30,13 @@ const BridgeCityBackground = () => (
 );
 
 const AccentLeft = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "5px" }} className="accent-svg">
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "5px" }}>
     <path d="M20 2 L8 10 M22 15 L6 15 M20 28 L8 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
 
 const AccentRight = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "5px" }} className="accent-svg">
+  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "5px" }}>
     <path d="M4 2 L16 10 M2 15 L18 15 M4 28 L16 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
   </svg>
 );
@@ -438,7 +438,7 @@ export default function App() {
                   </div>
                   <div>
                     <label className="field-label field-label--xs">ORDEN</label>
-                    <input type="text" value={formVotante.order || formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, "") })} className="input input--compact" />
+                    <input type="text" value={formVotante.orden} onChange={(e) => setFormVotante({ ...formVotante, orden: e.target.value.replace(/\D/g, "") })} className="input input--compact" />
                   </div>
                 </div>
 
@@ -522,7 +522,7 @@ export default function App() {
                       <tr key={v?.id} className="table-row">
                         <td className="table-cell table-cell--strong">{v?.nombre} {v?.apellido}<br /><small className="text-muted">Captado por: {v.por_parte_de_nombre}</small></td>
                         <td className="table-cell table-cell--muted">{v?.cedula}</td>
-                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.orden || v.order}<br />{v.local_votacion}</td>
+                        <td className="table-cell table-cell--muted table-cell--small">Mesa: {v.mesa} | Orden: {v.order}<br />{v.local_votacion}</td>
                         <td className="table-cell ta-center">
                           <input type="checkbox" checked={v.ha_votado || false} onChange={async (e) => { const checked = e.target.checked; const { error } = await supabase.from("votantes").update({ ha_votado: checked }).eq("id", v.id); if (!error) { setVotantes(prev => prev.map(item => item.id === v.id ? { ...item, ha_votado: checked } : item)); } else { alert("Error: " + error.message); } }} className="vote-checkbox" />
                         </td>
