@@ -214,7 +214,7 @@ export default function App() {
       sheet.addRow(["Darío Carmona Concejal 2026"]); sheet.mergeCells(`A2:${colFinal}2`);
       sheet.getRow(2).height = 20; sheet.getRow(2).getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC8102E" } }; sheet.getRow(2).getCell(1).font = { color: { argb: "FFFFFFFF" }, size: 12, bold: true }; sheet.getRow(2).getCell(1).alignment = { vertical: "middle", horizontal: "center" };
       sheet.addRow([]);
-      const anchosColumnas = esListaGeneral ? [5, 25, 25, 12, 17, 15, 20, 10, 10, 10, 37, 40] : [5, 25, 25, 12, 17, 15, 20, 10, 10, 10, 37, 20, 40];
+      const anchosColumnas = esListaGeneral ? [5, 25, 25, 12, 17, 15, 25, 10, 10, 10, 37, 40] : [5, 25, 25, 12, 17, 15, 25, 10, 10, 10, 37, 20, 40];
       anchosColumnas.forEach((ancho, index) => sheet.getColumn(index + 1).width = ancho);
       const headerRow = sheet.getRow(4);
       const headerNombres = esListaGeneral ? ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Observación"] : ["Nro", "Nombre", "Apellido", "Cedula", "Fecha Nacimiento", "Teléfono", "Barrio", "Orden", "Mesa", "Seccional", "Local", "Captado por", "Observación"];
