@@ -10,7 +10,10 @@ export function ANRLogo() {
         width: "100px",
         height: "100px",
         borderRadius: "50%",
-        objectFit: "cover"
+        objectFit: "cover",
+        background: "white",
+        padding: "6px",
+        boxShadow: "0 6px 15px rgba(0,0,0,0.15)"
       }}
     />
   );
