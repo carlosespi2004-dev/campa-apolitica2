@@ -6,7 +6,7 @@ export function ANRLogo() {
     <img
       src={anrlogo}
       alt="Logo Oficial"
-      style={{ width: "100px", borderRadius: "50%" }}
+      style={{ width: "180px", borderRadius: "50%" }}
     />
   );
 }
