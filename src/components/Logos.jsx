@@ -1,33 +1,21 @@
 import anrlogo from "../img/anrlogo.png";
 import logocarmona from "../img/logocarmona.png";
 
-export function ANRLogo({ isMobile }) {
+export function ANRLogo() {
   return (
-    <div
+    <img
+      src={anrlogo}
+      alt="Logo Oficial"
       style={{
-        width: isMobile ? "80px" : "110px",
-        height: isMobile ? "80px" : "110px",
+        width: "100px",
+        height: "100px",
         borderRadius: "50%",
-        overflow: "hidden",
-        background: "#C8102E",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
-        border: "4px solid white"
+        objectFit: "cover",
+        background: "white",
+        padding: "6px",
+        boxShadow: "0 6px 15px rgba(0,0,0,0.15)"
       }}
-    >
-      <img
-        src={anrlogo}
-        alt="Logo ANR"
-        style={{
-          width: "80%",
-          height: "80%",
-          objectFit: "contain",
-          display: "block"
-        }}
-      />
-    </div>
+    />
   );
 }
 
