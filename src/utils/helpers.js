@@ -8,5 +8,5 @@ export const LISTA_BARRIOS = [
   "Fray Luis de Bolaños", "Fátima 1", "Santo Tomás", "Area 5", "CONAVI",
   "Centro", "María Auxiliadora", "Caacupe-mí", "Kilómetro 7 Monday", "Tres Fronteras", "San Miguel vila baja",
   "Kilómetro 8 Monday", "Kilómetro 9 Monday", "Kilómetro 10 Monday",
-  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "otros...."
+  "Colonia Alfredo Pla", "Península", "Puerto Bertoni", "Saltos del Monday", "otros...."
 ];
