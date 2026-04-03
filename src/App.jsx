@@ -282,11 +282,11 @@ export default function App() {
 
         <div className="hero-content">
           <div className="hero-logo-row">
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <div style={{ flex: 1, height: "2px", background: "linear-gradient(to right, transparent, #c8102e)" }} />}
             <div className="hero-logo-wrap">
               <img src={anrlogo} alt="ANR" className="hero-logo" />
             </div>
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <div style={{ flex: 1, height: "2px", background: "linear-gradient(to left, transparent, #c8102e)" }} />}
           </div>
 
           <div className="hero-pill">
@@ -301,7 +301,7 @@ export default function App() {
               <img src={logocarmona} alt="Carmona" className="hero-candidate-image" />
             </div>
             <span className="hero-candidate-text">DARÍO CARMONA – CONCEJAL 2026</span>
-            <span className="hero-candidate-spacer"></span>
+            <span className="hero-candidate-spacer">→</span>
           </button>
         </div>
       </section>

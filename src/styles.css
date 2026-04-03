@@ -198,7 +198,7 @@ tr:hover { background: #f8e7e9; }
   max-width: 800px;
   margin: 0 auto;
 }
-.hero-logo-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+.hero-logo-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; width: 100%; }
 .hero-logo-wrap {
   background: white;
   border-radius: 50%;
