@@ -8,34 +8,24 @@ import { ANRLogo, GreenHeart } from "./components/Logos";
 import { LoginScreen } from "./components/LoginScreen";
 import logocarmona from "./img/logocarmona.png";
 import anrlogo from "./img/anrlogo.png";
-import ondaroja from "./img/ondaroja.png";
-import fondoblanco from "./img/fondoblanco.png";
-import ciudades from "./img/ciudades.png";
-import cintaparaguaya from "./img/cintaparaguaya.png";
 import "./styles.css";
 
-const HeroBackground = () => (
-  <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-    <img
-      src={fondoblanco}
-      alt=""
-      style={{ position: "absolute", top: 0, right: 0, width: "52%", height: "65%", objectFit: "cover", opacity: 0.55 }}
-    />
-    <img
-      src={ondaroja}
-      alt=""
-      style={{ position: "absolute", bottom: "108px", left: 0, width: "100%", objectFit: "cover" }}
-    />
-    <img
-      src={ciudades}
-      alt=""
-      style={{ position: "absolute", bottom: "80px", left: "50%", transform: "translateX(-50%)", width: "88%", opacity: 0.38 }}
-    />
-    <img
-      src={cintaparaguaya}
-      alt=""
-      style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", height: "100px", objectFit: "contain" }}
-    />
+const BridgeCityBackground = () => (
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
+      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
+    </svg>
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
+      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
+      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
+    </svg>
+    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
+      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
+      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
+      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
+    </svg>
   </div>
 );
 
@@ -288,7 +278,7 @@ export default function App() {
       )}
 
       <section className="hero-section">
-        <HeroBackground />
+        <BridgeCityBackground />
 
         <div className="hero-content">
           <div className="hero-logo-row">

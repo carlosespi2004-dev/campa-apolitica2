@@ -185,11 +185,9 @@ tr:hover { background: #f8e7e9; }
 .hero-section {
   position: relative;
   width: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f6f8 100%);
-  padding: 50px 20px 220px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 50px 20px 180px;
   text-align: center;
-  min-height: 530px;
-  overflow: hidden;
 }
 .hero-content {
   position: relative;
