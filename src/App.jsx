@@ -11,20 +11,64 @@ import anrlogo from "./img/anrlogo.png";
 import "./styles.css";
 
 const BridgeCityBackground = () => (
-  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
-      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "300px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+
+    {/* Glow central tipo amanecer */}
+    <div style={{ position: "absolute", bottom: "60px", left: "50%", transform: "translateX(-50%)", width: "400px", height: "200px", background: "radial-gradient(ellipse at bottom, rgba(254,200,100,0.55) 0%, rgba(255,255,255,0) 70%)", borderRadius: "50%" }} />
+
+    {/* Silueta ciudad: iglesia izquierda + edificios + puente derecha */}
+    <svg style={{ position: "absolute", bottom: "38px", left: 0, width: "100%", height: "180px" }} viewBox="0 0 1440 180" preserveAspectRatio="none">
+      {/* Iglesia / catedral izquierda */}
+      <path fill="#7f1d1d" opacity="0.85" d="
+        M30,180 L30,100 L45,100 L45,75 L52,65 L52,50 L56,50 L56,42 L60,36 L64,42 L64,50 L68,50 L68,65 L75,75 L75,100 L90,100 L90,180 Z
+        M46,95 L46,80 L74,80 L74,95 Z
+      " />
+      {/* Torre campanario */}
+      <path fill="#991b1b" opacity="0.75" d="
+        M55,42 L55,20 L58,14 L61,8 L64,14 L65,20 L65,42 Z
+      " />
+      {/* Edificios izquierda */}
+      <path fill="#991b1b" opacity="0.7" d="
+        M100,180 L100,110 L115,110 L115,95 L130,95 L130,110 L145,110 L145,180 Z
+        M155,180 L155,120 L175,120 L175,105 L195,105 L195,180 Z
+        M205,180 L205,130 L225,130 L225,115 L240,115 L240,130 L255,130 L255,180 Z
+        M265,180 L265,140 L290,140 L290,125 L305,125 L305,180 Z
+      " />
+
+      {/* Edificios centro-izquierda (más bajos, relleno de skyline) */}
+      <path fill="#7f1d1d" opacity="0.5" d="
+        M310,180 L310,150 L330,150 L330,140 L350,140 L350,180 Z
+        M355,180 L355,155 L380,155 L380,145 L400,145 L400,180 Z
+        M405,180 L405,160 L430,160 L430,180 Z
+      " />
+
+      {/* Puente arco derecha */}
+      <path fill="#7f1d1d" opacity="0.85" d="
+        M1050,180 L1050,120 L1060,120 L1060,180 Z
+        M1370,180 L1370,120 L1380,120 L1380,180 Z
+      " />
+      {/* Arco del puente */}
+      <path fill="none" stroke="#7f1d1d" strokeWidth="6" opacity="0.85"
+        d="M1050,120 Q1215,30 1380,120" />
+      {/* Cables del puente */}
+      <path fill="none" stroke="#991b1b" strokeWidth="2" opacity="0.6"
+        d="M1100,180 L1155,68 M1150,180 L1185,52 M1200,180 L1215,45 M1250,180 L1245,52 M1300,180 L1275,68 M1340,180 L1310,92" />
+      {/* Tablero del puente */}
+      <rect fill="#7f1d1d" opacity="0.7" x="1045" y="117" width="340" height="7" />
+
+      {/* Edificios derecha del puente */}
+      <path fill="#991b1b" opacity="0.65" d="
+        M1390,180 L1390,110 L1405,110 L1405,95 L1415,95 L1415,110 L1430,110 L1430,180 Z
+        M1435,180 L1435,130 L1440,130 L1440,180 Z
+      " />
     </svg>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
-      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
-      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
-    </svg>
-    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
-      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
-      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
-      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
-      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
+
+    {/* Ondas bandera paraguaya */}
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "85px" }} viewBox="0 0 1440 85" preserveAspectRatio="none">
+      <path fill="#991b1b" d="M0,15 C360,75 720,-20 1440,35 L1440,85 L0,85 Z" />
+      <path fill="#C8102E" d="M0,28 C360,90 720,-5 1440,48 L1440,85 L0,85 Z" />
+      <path fill="#ffffff" opacity="0.92" d="M0,50 C360,108 720,15 1440,62 L1440,85 L0,85 Z" />
+      <path fill="#1e3a8a" d="M0,65 C360,120 720,30 1440,72 L1440,85 L0,85 Z" />
     </svg>
   </div>
 );
@@ -301,7 +345,7 @@ export default function App() {
               <img src={logocarmona} alt="Carmona" className="hero-candidate-image" />
             </div>
             <span className="hero-candidate-text">DARÍO CARMONA – CONCEJAL 2026</span>
-            <span className="hero-candidate-spacer">→</span>
+            <span className="hero-candidate-spacer"></span>
           </button>
         </div>
       </section>
