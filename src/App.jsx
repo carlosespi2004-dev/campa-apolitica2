@@ -395,14 +395,14 @@ export default function App() {
                     <input type="text" value={formVotante.cedula} onChange={(e) => setFormVotante({ ...formVotante, cedula: e.target.value.replace(/\D/g, "") })} required className="input" />
                   </div>
                   <div>
-                    <label className="field-label">TELÉFONO / WHATSAPP *</label>
+                    <label className="field-label">TELÉFONO / WHATSAPP</label>
                     <input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, "") })} className="input" />
                   </div>
                 </div>
 
                 <div className="form-grid-two">
                   <div>
-                    <label className="field-label">FECHA DE NACIMIENTO *</label>
+                    <label className="field-label">FECHA DE NACIMIENTO </label>
                     <input
                       type="text"
                       placeholder="DD/MM/AAAA"
