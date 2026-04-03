@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Montserrat:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Montserrat:wght@700;800&family=Domine:wght@400;700;900&family=Piedra&display=swap');
 
 :root {
   --color-colorado: #C8102E;
@@ -96,12 +96,6 @@ tr:hover { background: #f8e7e9; }
 }
 
 
-
-
-
-
-
-
 .app-shell {
   background: white;
   min-height: 100vh;
@@ -182,164 +176,208 @@ tr:hover { background: #f8e7e9; }
 }
 .topbar-mobile-label span { font-weight: 800; color: #c8102e; }
 
+/* --- HERO SECTION EXACt --- */
 .hero-section {
   position: relative;
   width: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  padding: 50px 20px 180px;
+  padding: 40px 20px 150px;
   text-align: center;
+  background: white;
+  overflow: hidden;
+  min-height: 480px;
 }
+
+.hero-bg-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero-img-fondoblanco { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; z-index: 1; opacity: 0.5; }
+.hero-img-sun { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 300px; height: 150px; background: radial-gradient(circle, rgba(255,230,150,0.8) 0%, rgba(255,255,255,0) 70%); z-index: 2; filter: blur(20px); }
+.hero-img-ciudades { position: absolute; width: 100%; bottom: 60px; left: 0; z-index: 3; opacity: 0.15; object-fit: cover; max-height: 150px; }
+.hero-img-cinta { position: absolute; width: 100%; bottom: 10px; left: 0; z-index: 4; object-fit: cover; max-height: 120px; }
+.hero-img-ondaroja { position: absolute; width: 100%; bottom: -5px; left: 0; z-index: 5; object-fit: cover; max-height: 200px; }
+
 .hero-content {
   position: relative;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 800px;
-  margin: 0 auto;
 }
-.hero-logo-row { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+
+.hero-logo-row { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 500px; }
+.hero-line-left, .hero-line-right { height: 2px; flex: 1; background: linear-gradient(to right, transparent, #c8102e); opacity: 0.5; }
+.hero-line-right { background: linear-gradient(to left, transparent, #c8102e); }
 .hero-logo-wrap {
   background: white;
   border-radius: 50%;
-  padding: 6px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-}
-.hero-logo { width: 90px; height: 90px; border-radius: 50%; }
-.hero-pill {
-  display: inline-flex;
+  padding: 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex;
   align-items: center;
-  background: #c8102e;
+  justify-content: center;
+}
+.hero-logo { width: 80px; height: 80px; border-radius: 50%; }
+
+.hero-pill-container {
+  display: flex;
+  align-items: center;
+  background: white;
   border-radius: 40px;
+  border: 1px solid #fee2e2;
+  box-shadow: 0 4px 10px rgba(200,16,46,0.1);
+  padding: 4px 20px 4px 4px;
+  margin-bottom: 15px;
+}
+.hero-pill-red {
+  background: #c8102e;
   color: white;
   font-weight: 900;
-  font-size: 18px;
-  margin-bottom: 15px;
-  box-shadow: 0 5px 15px rgba(200,16,46,0.3);
-  padding: 4px 6px 4px 20px;
-}
-.hero-pill__secondary {
-  background: white;
-  color: #c8102e;
-  padding: 4px 15px;
+  font-size: 16px;
+  padding: 6px 16px;
   border-radius: 30px;
-  margin-left: 10px;
+  letter-spacing: 0.5px;
 }
+.hero-pill-white {
+  color: #c8102e;
+  font-weight: 800;
+  font-size: 16px;
+  margin-left: 10px;
+  letter-spacing: 0.5px;
+}
+
 .hero-title {
   font-style: italic;
   font-weight: 900;
   color: #c8102e;
-  font-size: 65px;
-  margin: 0 0 5px;
+  font-size: 48px;
+  margin: 0 0 20px;
   text-transform: uppercase;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
   line-height: 1.1;
+  text-shadow: 2px 2px 0px white, -2px -2px 0px white, 2px -2px 0px white, -2px 2px 0px white;
 }
-.hero-candidate-button {
-  background: linear-gradient(90deg, #a00d25 0%, #c8102e 50%, #a00d25 100%);
-  border-radius: 50px;
-  padding: 8px 30px 8px 8px;
+
+.hero-main-btn {
+  background: linear-gradient(to right, #b90e28, #e01333, #b90e28);
+  border-radius: 40px;
+  padding: 8px 25px 8px 8px;
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 0 10px 25px rgba(200,16,46,0.4);
-  width: auto;
-  max-width: 550px;
+  box-shadow: 0 10px 20px rgba(200,16,46,0.3);
   border: none;
+  cursor: default;
 }
-.hero-candidate-avatar {
+.hero-main-btn-icon {
   background: white;
   border-radius: 50%;
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
 }
-.hero-candidate-image { width: 100%; height: auto; }
-.hero-candidate-text {
+.hero-main-btn-text {
   color: white;
   font-weight: 800;
-  font-size: 19px;
-  flex: 1;
-  text-align: center;
+  font-size: 16px;
+  letter-spacing: 0.5px;
 }
-.hero-candidate-spacer { color: white; font-size: 22px; font-weight: bold; }
 
+/* --- COUNTER EXACt --- */
 .counter-wrap {
   position: relative;
   z-index: 20;
-  margin-top: -80px;
+  margin-top: -60px;
   display: flex;
   justify-content: center;
   padding: 0 20px;
   margin-bottom: 50px;
 }
+.counter-card-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 600px;
+}
 .counter-card {
   background: white;
   border-radius: 20px;
-  padding: 25px 50px;
+  padding: 25px 40px 35px 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 20px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   border: 1px solid #f1f5f9;
-  max-width: 850px;
   width: 100%;
 }
-.counter-card__left { display: flex; align-items: center; gap: 15px; margin-right: 10px; }
+.counter-card__left { display: flex; align-items: center; gap: 12px; }
 .counter-card__icon {
   background: #c8102e;
   color: white;
-  width: 60px;
-  height: 60px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 5px 15px rgba(200,16,46,0.3);
+  box-shadow: 0 4px 10px rgba(200,16,46,0.3);
 }
 .counter-card__label {
-  font-weight: 900;
-  font-size: 32px;
-  color: #1e293b;
+  font-family: 'Piedra', 'Domine', serif;
   font-style: italic;
+  font-weight: 800;
+  font-size: 24px;
+  color: #1e293b;
+  line-height: 1;
 }
-.counter-card__number-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+
+.counter-card__number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 .counter-card__number {
   font-weight: 900;
-  font-size: 110px;
+  font-size: 85px;
   color: #c8102e;
-  font-style: italic;
   line-height: 0.8;
-  letter-spacing: -3px;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.05);
+  letter-spacing: -2px;
 }
+.accent-left, .accent-right { opacity: 0.8; }
+
 .counter-card__text {
   font-weight: 800;
-  color: #64748b;
-  font-size: 18px;
+  color: #475569;
+  font-size: 14px;
   line-height: 1.2;
   text-align: left;
-  margin-left: 10px;
 }
+
 .counter-card__capsule {
   position: absolute;
-  bottom: -20px;
+  bottom: -18px;
   left: 50%;
   transform: translateX(-50%);
-  background: #fee2e2;
-  border: 4px solid white;
+  background: #fde8e8;
+  border: 3px solid white;
   border-radius: 30px;
-  padding: 6px 25px;
+  padding: 6px 20px;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
   white-space: nowrap;
 }
 .counter-card__capsule-icon {
@@ -348,10 +386,11 @@ tr:hover { background: #f8e7e9; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
-.counter-card__capsule span { color: #c8102e; font-weight: 800; font-size: 15px; }
+.counter-card__capsule span { color: #c8102e; font-weight: 800; font-size: 14px; }
+
 
 .tabs-nav {
   display: flex;
@@ -619,17 +658,16 @@ tr:hover { background: #f8e7e9; }
 .is-mobile .topbar { padding: 12px 15px; }
 .is-mobile .topbar__right { gap: 10px; }
 .is-mobile .hero-section { padding: 40px 15px 160px; }
-.is-mobile .hero-pill { font-size: 16px; }
-.is-mobile .hero-title { font-size: 30px; }
-.is-mobile .hero-candidate-button { width: 100%; }
-.is-mobile .hero-candidate-text { font-size: 13px; }
+.is-mobile .hero-title { font-size: 32px; }
+.is-mobile .hero-main-btn { width: 100%; justify-content: center; }
+.is-mobile .hero-main-btn-text { font-size: 13px; }
 .is-mobile .counter-card {
-  padding: 30px 20px;
+  padding: 25px 20px 40px 20px;
   flex-direction: column;
   gap: 15px;
 }
 .is-mobile .counter-card__left { margin-right: 0; }
-.is-mobile .counter-card__number { font-size: 80px; }
+.is-mobile .counter-card__number { font-size: 65px; }
 .is-mobile .counter-card__text { text-align: center; margin-left: 0; }
 .is-mobile .tab-button { font-size: 10px; }
 .is-mobile .main-content { padding: 20px 15px 120px; }
