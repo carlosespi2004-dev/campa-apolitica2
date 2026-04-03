@@ -11,46 +11,20 @@ import anrlogo from "./img/anrlogo.png";
 import "./styles.css";
 
 const BridgeCityBackground = () => (
-  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "300px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-
-    {/* Glow central tipo amanecer */}
-    <div style={{ position: "absolute", bottom: "60px", left: "50%", transform: "translateX(-50%)", width: "400px", height: "200px", background: "radial-gradient(ellipse at bottom, rgba(254,200,100,0.55) 0%, rgba(255,255,255,0) 70%)", borderRadius: "50%" }} />
-
-    {/* Silueta skyline ciudad completa */}
-    <svg style={{ position: "absolute", bottom: "55px", left: 0, width: "100%", height: "200px" }} viewBox="0 0 1440 200" preserveAspectRatio="xMidYMax meet">
-      <path fill="#991b1b" opacity="0.85" d="
-        M0,200
-        L0,158 L18,158 L18,148 L32,148 L32,135 L44,135 L44,148 L56,148 L56,155 L68,155
-        L68,140 L80,140 L80,128 L90,128 L90,118 L100,118 L100,110 L108,110 L108,100 L116,100 L116,92 L124,92 L124,100 L132,100 L132,110 L140,110
-        L140,120 L150,120 L150,108 L160,108 L160,96 L170,96 L170,86 L180,86 L180,78 L188,78 L188,70 L196,70 L196,78 L204,78 L204,88 L212,88
-        L212,98 L222,98 L222,84 L234,84 L234,72 L244,72 L244,62 L254,62 L254,55 L262,55 L262,48 L270,48 L270,42 L278,42 L278,50 L286,50 L286,58 L296,58
-        L296,68 L308,68 L308,55 L320,55 L320,44 L330,44 L330,36 L340,36 L340,28 L348,28 L348,22 L356,22 L356,16 L364,16 L364,22 L372,22 L372,30 L380,30
-        L380,40 L390,40 L390,28 L402,28 L402,18 L412,18 L412,10 L420,10 L420,5 L428,5 L428,10 L436,10 L436,18 L446,18 L446,28 L456,28
-        L456,40 L468,40 L468,52 L480,52 L480,40 L490,40 L490,30 L500,30 L500,22 L510,22 L510,15 L518,15 L518,8 L526,8 L526,4 L534,4 L534,8 L542,8 L542,15 L550,15
-        L550,22 L560,22 L560,32 L572,32 L572,42 L584,42 L584,30 L594,30 L594,20 L604,20 L604,12 L614,12 L614,6 L622,6 L622,2 L630,2 L630,6 L638,6 L638,12 L648,12
-        L648,20 L658,20 L658,30 L670,30 L670,42
-        L682,42 L682,54 L694,54 L694,42 L706,42 L706,32 L716,32 L716,42 L728,42 L728,54
-        L740,54 L740,66 L752,66 L752,55 L764,55 L764,44 L774,44 L774,55 L786,55 L786,66
-        L798,66 L798,78 L810,78 L810,90 L822,90 L822,78 L832,78 L832,68 L842,68 L842,78 L852,78 L852,90
-        L864,90 L864,102 L876,102 L876,115 L888,115 L888,128
-        L900,128 L900,115 L912,115 L912,104 L924,104 L924,115 L936,115 L936,128
-        L948,128 L948,138 L960,138 L960,150 L972,150 L972,138 L984,138 L984,128 L996,128 L996,138 L1008,138 L1008,148
-        L1020,148 L1020,158 L1032,158 L1032,148 L1044,148 L1044,158 L1056,158 L1056,165
-        L1068,165 L1068,158 L1080,158 L1080,150 L1092,150 L1092,158 L1104,158 L1104,165
-        L1116,165 L1116,172 L1128,172 L1128,165 L1140,165 L1140,170 L1152,170 L1152,175
-        L1164,175 L1164,170 L1178,170 L1178,174 L1192,174 L1192,178
-        L1208,178 L1208,172 L1224,172 L1224,176 L1240,176 L1240,180
-        L1256,180 L1272,180 L1288,178 L1304,178 L1320,180 L1340,180 L1360,182 L1390,182 L1420,184 L1440,184
-        L1440,200 Z
-      " />
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
+      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
     </svg>
-
-    {/* Ondas bandera paraguaya */}
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "85px" }} viewBox="0 0 1440 85" preserveAspectRatio="none">
-      <path fill="#991b1b" d="M0,15 C360,75 720,-20 1440,35 L1440,85 L0,85 Z" />
-      <path fill="#C8102E" d="M0,28 C360,90 720,-5 1440,48 L1440,85 L0,85 Z" />
-      <path fill="#ffffff" opacity="0.92" d="M0,50 C360,108 720,15 1440,62 L1440,85 L0,85 Z" />
-      <path fill="#1e3a8a" d="M0,65 C360,120 720,30 1440,72 L1440,85 L0,85 Z" />
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
+      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
+      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
+    </svg>
+    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
+      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
+      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
+      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
     </svg>
   </div>
 );
@@ -308,11 +282,11 @@ export default function App() {
 
         <div className="hero-content">
           <div className="hero-logo-row">
-            {!isMobile && <div style={{ flex: 1, height: "2px", background: "linear-gradient(to right, transparent, #c8102e)" }} />}
+            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
             <div className="hero-logo-wrap">
               <img src={anrlogo} alt="ANR" className="hero-logo" />
             </div>
-            {!isMobile && <div style={{ flex: 1, height: "2px", background: "linear-gradient(to left, transparent, #c8102e)" }} />}
+            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
           </div>
 
           <div className="hero-pill">
