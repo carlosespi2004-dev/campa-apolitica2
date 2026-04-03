@@ -396,7 +396,7 @@ export default function App() {
                   </div>
                   <div>
                     <label className="field-label">TELÉFONO / WHATSAPP *</label>
-                    <input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, "") })} required className="input" />
+                    <input type="tel" value={formVotante.telefono} onChange={(e) => setFormVotante({ ...formVotante, telefono: e.target.value.replace(/\D/g, "") })} className="input" />
                   </div>
                 </div>
 
@@ -417,7 +417,6 @@ export default function App() {
                         }
                         setFormVotante({ ...formVotante, fecha_nacimiento: v });
                       }}
-                      required
                       className="input"
                     />
                   </div>
