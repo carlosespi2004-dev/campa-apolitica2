@@ -1,52 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { LogOut, UserCircle, Users, CheckCircle2 } from "lucide-react";
+import { LogOut, UserCircle, Users, CheckCircle2, User, ArrowRight } from "lucide-react";
 import { supabase, supabaseAuth } from "./lib/supabase";
 import { normalizarCedula, LISTA_BARRIOS } from "./utils/helpers";
 import { ANRLogo, GreenHeart } from "./components/Logos";
 import { LoginScreen } from "./components/LoginScreen";
 import logocarmona from "./img/logocarmona.png";
 import anrlogo from "./img/anrlogo.png";
+import ondaroja from "./img/ondaroja.png";
+import cintaparaguaya from "./img/cintaparaguaya.png";
+import fondoblanco from "./img/fondoblanco.png";
+import ciudades from "./img/ciudades.png";
 import "./styles.css";
-
-const BridgeCityBackground = () => (
-  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
-      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
-    </svg>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
-      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
-      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
-    </svg>
-    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
-      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
-      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
-      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
-      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
-    </svg>
-  </div>
-);
-
-
-
-
-const AccentLeft = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "5px" }}>
-    <path d="M20 2 L8 10 M22 15 L6 15 M20 28 L8 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
-  </svg>
-);
-
-const AccentRight = () => (
-  <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginLeft: "5px" }}>
-    <path d="M4 2 L16 10 M2 15 L18 15 M4 28 L16 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
-  </svg>
-);
-
-const BrilloNumero = () => (
-  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "160px", height: "160px", background: "radial-gradient(circle, rgba(254,240,138,0.6) 0%, rgba(254,240,138,0) 65%)", borderRadius: "50%", filter: "blur(12px)", pointerEvents: "none", zIndex: -1 }} />
-);
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -277,59 +243,72 @@ export default function App() {
         </div>
       )}
 
+      {/* --- INICIO VISUAL EXACTO --- */}
       <section className="hero-section">
-        <BridgeCityBackground />
+        <div className="hero-bg-container">
+          <img src={fondoblanco} alt="" className="hero-img-fondoblanco" />
+          <div className="hero-img-sun"></div>
+          <img src={ciudades} alt="" className="hero-img-ciudades" />
+          <img src={cintaparaguaya} alt="" className="hero-img-cinta" />
+          <img src={ondaroja} alt="" className="hero-img-ondaroja" />
+        </div>
 
         <div className="hero-content">
           <div className="hero-logo-row">
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            <div className="hero-line-left"></div>
             <div className="hero-logo-wrap">
               <img src={anrlogo} alt="ANR" className="hero-logo" />
             </div>
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            <div className="hero-line-right"></div>
           </div>
 
-          <div className="hero-pill">
-            <span>LISTA 2</span>
-            <span className="hero-pill__secondary">OPCIÓN 5</span>
+          <div className="hero-pill-container">
+            <div className="hero-pill-red">LISTA 2</div>
+            <div className="hero-pill-white">- OPCIÓN 5</div>
           </div>
 
           <h1 className="hero-title">HAGAMOS QUE SUCEDA</h1>
 
-          <button className="hero-candidate-button">
-            <div className="hero-candidate-avatar">
-              <img src={logocarmona} alt="Carmona" className="hero-candidate-image" />
+          <button className="hero-main-btn">
+            <div className="hero-main-btn-icon">
+              <User size={22} color="#C8102E" strokeWidth={2.5} />
             </div>
-            <span className="hero-candidate-text">DARÍO CARMONA – CONCEJAL 2026</span>
-            <span className="hero-candidate-spacer"></span>
+            <span className="hero-main-btn-text">DARÍO CARMONA – CONCEJAL 2026</span>
+            <ArrowRight size={22} color="white" strokeWidth={2.5} />
           </button>
         </div>
       </section>
 
       <div className="counter-wrap">
-        <div className="counter-card">
-          <div className="counter-card__left">
-            <div className="counter-card__icon"><Users size={32} strokeWidth={2.5} /></div>
-            <span className="counter-card__label">YA SOMOS</span>
-          </div>
+        <div className="counter-card-container">
+          <div className="counter-card">
+            <div className="counter-card__left">
+              <div className="counter-card__icon"><Users size={24} strokeWidth={2.5} /></div>
+              <span className="counter-card__label">YA SOMOS</span>
+            </div>
 
-          <div className="counter-card__number-wrap">
-            <BrilloNumero />
-            <AccentLeft />
-            <span className="counter-card__number">{totalVotantesGeneral.toLocaleString("es-PY")}</span>
-            <AccentRight />
-          </div>
+            <div className="counter-card__number-wrap">
+              <svg width="24" height="34" viewBox="0 0 24 34" className="accent-left">
+                <path d="M20 4 L4 10 M22 17 L2 17 M20 30 L4 24" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+              <span className="counter-card__number">{totalVotantesGeneral.toLocaleString("es-PY")}</span>
+              <svg width="24" height="34" viewBox="0 0 24 34" className="accent-right">
+                <path d="M4 4 L20 10 M2 17 L22 17 M4 30 L20 24" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
 
-          <div className="counter-card__text">
-            personas<br />confiando en este objetivo
+            <div className="counter-card__text">
+              personas<br />registradas
+            </div>
           </div>
-
+          
           <div className="counter-card__capsule">
-            <div className="counter-card__capsule-icon"><CheckCircle2 color="white" size={14} strokeWidth={4} /></div>
+            <div className="counter-card__capsule-icon"><CheckCircle2 color="white" size={12} strokeWidth={4} /></div>
             <span>¡Y vamos por más!</span>
           </div>
         </div>
       </div>
+      {/* --- FIN INICIO VISUAL EXACTO --- */}
 
       <nav className="tabs-nav">
         <button onClick={() => setActiveTab("inicio")} className={tabClass("inicio")}>Inicio</button>
