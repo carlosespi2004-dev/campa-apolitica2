@@ -36,34 +36,32 @@ const BridgeCityBackground = () => (
         M275,200 L275,145 L300,145 L300,130 L318,130 L318,200 Z
       " />
       {/* Relleno skyline centro-izquierda */}
-      <path fill="#7f1d1d" opacity="0.55" d="
-        M322,200 L322,158 L345,158 L345,148 L368,148 L368,200 Z
-        M372,200 L372,162 L398,162 L398,152 L420,152 L420,200 Z
-        M424,200 L424,168 L448,168 L448,200 Z
-        M452,200 L452,172 L470,172 L470,200 Z
+      <path fill="#7f1d1d" opacity="0.45" d="
+        M322,200 L322,170 L345,170 L345,162 L368,162 L368,200 Z
+        M372,200 L372,174 L398,174 L398,200 Z
       " />
 
-      {/* Puente arco derecha — más grande y prominente */}
+      {/* Puente arco derecha — completo y visible */}
       {/* Pilares */}
       <path fill="#7f1d1d" opacity="0.9" d="
-        M1020,200 L1020,130 L1035,130 L1035,200 Z
-        M1390,200 L1390,130 L1405,130 L1405,200 Z
+        M980,200 L980,138 L996,138 L996,200 Z
+        M1340,200 L1340,138 L1356,138 L1356,200 Z
       " />
-      {/* Arco principal - doble línea para mayor grosor */}
+      {/* Arco principal */}
       <path fill="none" stroke="#7f1d1d" strokeWidth="10" opacity="0.9"
-        d="M1020,130 Q1212,18 1405,130" />
-      <path fill="none" stroke="#991b1b" strokeWidth="5" opacity="0.5"
-        d="M1020,130 Q1212,18 1405,130" />
-      {/* Cables verticales del puente */}
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1065" y1="200" x2="1095" y2="80" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1110" y1="200" x2="1130" y2="58" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1158" y1="200" x2="1168" y2="40" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1212" y1="200" x2="1212" y2="28" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1265" y1="200" x2="1256" y2="40" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1312" y1="200" x2="1294" y2="58" />
-      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1358" y1="200" x2="1328" y2="80" />
+        d="M980,138 Q1168,30 1356,138" />
+      <path fill="none" stroke="#b91c1c" strokeWidth="4" opacity="0.4"
+        d="M980,138 Q1168,30 1356,138" />
+      {/* Cables verticales */}
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1020" y1="200" x2="1046" y2="92" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1062" y1="200" x2="1078" y2="66" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1108" y1="200" x2="1115" y2="48" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1168" y1="200" x2="1168" y2="36" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1228" y1="200" x2="1221" y2="48" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1274" y1="200" x2="1258" y2="66" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1316" y1="200" x2="1290" y2="92" />
       {/* Tablero del puente */}
-      <rect fill="#7f1d1d" opacity="0.85" x="1015" y="127" width="395" height="8" />
+      <rect fill="#7f1d1d" opacity="0.85" x="975" y="135" width="386" height="8" />
     </svg>
 
     {/* Ondas bandera paraguaya */}
