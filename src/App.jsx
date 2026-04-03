@@ -29,6 +29,9 @@ const BridgeCityBackground = () => (
   </div>
 );
 
+
+
+
 const AccentLeft = () => (
   <svg width="24" height="30" viewBox="0 0 24 30" style={{ opacity: 0.8, marginRight: "5px" }}>
     <path d="M20 2 L8 10 M22 15 L6 15 M20 28 L8 20" stroke="#C8102E" strokeWidth="2.5" strokeLinecap="round" />
