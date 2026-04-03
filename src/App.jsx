@@ -17,50 +17,53 @@ const BridgeCityBackground = () => (
     <div style={{ position: "absolute", bottom: "60px", left: "50%", transform: "translateX(-50%)", width: "400px", height: "200px", background: "radial-gradient(ellipse at bottom, rgba(254,200,100,0.55) 0%, rgba(255,255,255,0) 70%)", borderRadius: "50%" }} />
 
     {/* Silueta ciudad: iglesia izquierda + edificios + puente derecha */}
-    <svg style={{ position: "absolute", bottom: "38px", left: 0, width: "100%", height: "180px" }} viewBox="0 0 1440 180" preserveAspectRatio="none">
+    <svg style={{ position: "absolute", bottom: "55px", left: 0, width: "100%", height: "200px" }} viewBox="0 0 1440 200" preserveAspectRatio="none">
       {/* Iglesia / catedral izquierda */}
-      <path fill="#7f1d1d" opacity="0.85" d="
-        M30,180 L30,100 L45,100 L45,75 L52,65 L52,50 L56,50 L56,42 L60,36 L64,42 L64,50 L68,50 L68,65 L75,75 L75,100 L90,100 L90,180 Z
-        M46,95 L46,80 L74,80 L74,95 Z
+      <path fill="#7f1d1d" opacity="0.9" d="
+        M20,200 L20,110 L38,110 L38,82 L46,70 L46,54 L50,54 L50,44 L55,36 L60,28 L65,36 L70,44 L70,54 L74,54 L74,70 L82,82 L82,110 L100,110 L100,200 Z
       " />
+      {/* Ventana iglesia */}
+      <path fill="#991b1b" opacity="0.4" d="M50,100 L50,85 L70,85 L70,100 Z" />
       {/* Torre campanario */}
-      <path fill="#991b1b" opacity="0.75" d="
-        M55,42 L55,20 L58,14 L61,8 L64,14 L65,20 L65,42 Z
+      <path fill="#6b1414" opacity="0.9" d="
+        M56,44 L56,18 L60,10 L64,4 L68,10 L68,18 L68,44 Z
       " />
-      {/* Edificios izquierda */}
-      <path fill="#991b1b" opacity="0.7" d="
-        M100,180 L100,110 L115,110 L115,95 L130,95 L130,110 L145,110 L145,180 Z
-        M155,180 L155,120 L175,120 L175,105 L195,105 L195,180 Z
-        M205,180 L205,130 L225,130 L225,115 L240,115 L240,130 L255,130 L255,180 Z
-        M265,180 L265,140 L290,140 L290,125 L305,125 L305,180 Z
+      {/* Edificios izquierda - más altos y hundidos en olas */}
+      <path fill="#991b1b" opacity="0.8" d="
+        M105,200 L105,115 L122,115 L122,98 L140,98 L140,115 L158,115 L158,200 Z
+        M163,200 L163,125 L185,125 L185,108 L208,108 L208,200 Z
+        M213,200 L213,135 L235,135 L235,118 L252,118 L252,135 L270,135 L270,200 Z
+        M275,200 L275,145 L300,145 L300,130 L318,130 L318,200 Z
+      " />
+      {/* Relleno skyline centro-izquierda */}
+      <path fill="#7f1d1d" opacity="0.55" d="
+        M322,200 L322,158 L345,158 L345,148 L368,148 L368,200 Z
+        M372,200 L372,162 L398,162 L398,152 L420,152 L420,200 Z
+        M424,200 L424,168 L448,168 L448,200 Z
+        M452,200 L452,172 L470,172 L470,200 Z
       " />
 
-      {/* Edificios centro-izquierda (más bajos, relleno de skyline) */}
-      <path fill="#7f1d1d" opacity="0.5" d="
-        M310,180 L310,150 L330,150 L330,140 L350,140 L350,180 Z
-        M355,180 L355,155 L380,155 L380,145 L400,145 L400,180 Z
-        M405,180 L405,160 L430,160 L430,180 Z
+      {/* Puente arco derecha — más grande y prominente */}
+      {/* Pilares */}
+      <path fill="#7f1d1d" opacity="0.9" d="
+        M1020,200 L1020,130 L1035,130 L1035,200 Z
+        M1390,200 L1390,130 L1405,130 L1405,200 Z
       " />
-
-      {/* Puente arco derecha */}
-      <path fill="#7f1d1d" opacity="0.85" d="
-        M1050,180 L1050,120 L1060,120 L1060,180 Z
-        M1370,180 L1370,120 L1380,120 L1380,180 Z
-      " />
-      {/* Arco del puente */}
-      <path fill="none" stroke="#7f1d1d" strokeWidth="6" opacity="0.85"
-        d="M1050,120 Q1215,30 1380,120" />
-      {/* Cables del puente */}
-      <path fill="none" stroke="#991b1b" strokeWidth="2" opacity="0.6"
-        d="M1100,180 L1155,68 M1150,180 L1185,52 M1200,180 L1215,45 M1250,180 L1245,52 M1300,180 L1275,68 M1340,180 L1310,92" />
+      {/* Arco principal - doble línea para mayor grosor */}
+      <path fill="none" stroke="#7f1d1d" strokeWidth="10" opacity="0.9"
+        d="M1020,130 Q1212,18 1405,130" />
+      <path fill="none" stroke="#991b1b" strokeWidth="5" opacity="0.5"
+        d="M1020,130 Q1212,18 1405,130" />
+      {/* Cables verticales del puente */}
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1065" y1="200" x2="1095" y2="80" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1110" y1="200" x2="1130" y2="58" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1158" y1="200" x2="1168" y2="40" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1212" y1="200" x2="1212" y2="28" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1265" y1="200" x2="1256" y2="40" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1312" y1="200" x2="1294" y2="58" />
+      <line stroke="#7f1d1d" strokeWidth="2.5" opacity="0.7" x1="1358" y1="200" x2="1328" y2="80" />
       {/* Tablero del puente */}
-      <rect fill="#7f1d1d" opacity="0.7" x="1045" y="117" width="340" height="7" />
-
-      {/* Edificios derecha del puente */}
-      <path fill="#991b1b" opacity="0.65" d="
-        M1390,180 L1390,110 L1405,110 L1405,95 L1415,95 L1415,110 L1430,110 L1430,180 Z
-        M1435,180 L1435,130 L1440,130 L1440,180 Z
-      " />
+      <rect fill="#7f1d1d" opacity="0.85" x="1015" y="127" width="395" height="8" />
     </svg>
 
     {/* Ondas bandera paraguaya */}
