@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ANRLogo } from "./Logos";
+import anrlogo from "../img/anrlogo.png";
 
 export function LoginScreen({ onLogin, loading }) {
   const [email, setEmail] = useState("");
@@ -14,26 +14,49 @@ export function LoginScreen({ onLogin, loading }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#e2e8f0", padding: 15 }}>
-      <div style={{ width: "100%", maxWidth: 400, padding: "40px 30px", textAlign: "center", borderRadius: "30px", background: "white", boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
-        <ANRLogo />
-        <h1 style={{ fontFamily: "Montserrat", fontWeight: "900", color: "#C8102E", fontSize: "28px", marginTop: 15, marginBottom: 5 }}>BIENVENIDO</h1>
-        <p style={{ color: "#64748b", marginBottom: 35, fontWeight: "600", fontSize: "13px" }}>Gestión Política Darío Carmona</p>
+    <div className="login-screen">
+      <div className="login-card">
+        <img src={anrlogo} alt="Logo Oficial" className="login-card__logo" />
+
+        <h1 className="login-card__title">BIENVENIDO</h1>
+        <p className="login-card__subtitle">Gestión Política · Darío Carmona</p>
+
         {loginError && (
-          <div style={{ background: "#fee2e2", color: "#dc2626", padding: "10px", borderRadius: "10px", marginBottom: 20, fontSize: "13px", fontWeight: "700", border: "1px solid #fca5a5" }}>
+          <div className="login-card__error">
             Credenciales incorrectas. Intente de nuevo.
           </div>
         )}
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
-          <div style={{ textAlign: "left" }}>
-            <label style={{ fontWeight: "800", fontSize: "11px", color: "#444" }}>CORREO</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ padding: "15px", borderRadius: "12px", border: "1px solid #eee", width: "100%", marginTop: 5, fontSize: "16px", background: "#f8fafc" }} />
+
+        <form onSubmit={handleSubmit} className="login-card__form">
+          <div className="login-card__field">
+            <label style={{ fontFamily: "var(--f-condensed)", fontWeight: 700, fontSize: 11, color: "var(--text-2)", letterSpacing: "0.07em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+              CORREO
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="usuario@campaña.com"
+              className="login-card__input"
+            />
           </div>
-          <div style={{ textAlign: "left" }}>
-            <label style={{ fontWeight: "800", fontSize: "11px", color: "#444" }}>CONTRASEÑA</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ padding: "15px", borderRadius: "12px", border: "1px solid #eee", width: "100%", marginTop: 5, fontSize: "16px", background: "#f8fafc" }} />
+
+          <div className="login-card__field">
+            <label style={{ fontFamily: "var(--f-condensed)", fontWeight: 700, fontSize: 11, color: "var(--text-2)", letterSpacing: "0.07em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+              CONTRASEÑA
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className="login-card__input"
+            />
           </div>
-          <button type="submit" disabled={loading} style={{ background: "#C8102E", color: "white", fontWeight: "900", padding: "18px", borderRadius: "15px", border: "none", cursor: "pointer", fontSize: "16px" }}>
+
+          <button type="submit" disabled={loading} className="login-card__btn">
             {loading ? "VERIFICANDO..." : "ENTRAR AL PANEL"}
           </button>
         </form>

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(where claude *)",
+      "Read(//c/Users/HP/AppData/Local/Programs/**)",
+      "Read(//c/Users/HP/AppData/Local/**)",
+      "Read(//c/Users/HP/AppData/Local/Programs//**)"
+    ]
+  }
+}
