@@ -824,7 +824,7 @@ tr:hover { background: var(--bg-hover); }
 .summary-card__percent {
   font-family: var(--f-display);
   font-size: 56px;
-  color: var(--gold);
+  color: var(--text-1);
   line-height: 1;
   animation: pulseGold 3.5s ease-in-out infinite;
 }
@@ -875,7 +875,7 @@ tr:hover { background: var(--bg-hover); }
 .ranking-card__position {
   font-family: var(--f-display);
   font-size: 22px;
-  color: var(--gold);
+  color: var(--text-1);
   line-height: 1;
   min-width: 36px;
 }
@@ -894,7 +894,7 @@ tr:hover { background: var(--bg-hover); }
 
 /* ─── TABLE NEIGHBORHOOD / TOTAL ─────────────────────────────── */
 .table-cell--neighborhood { padding: 14px; font-weight: 600; color: var(--text-1); font-size: 14px; }
-.table-cell--total { text-align: right; font-family: var(--f-condensed); font-weight: 900; color: var(--gold); font-size: 17px; padding-right: 14px; }
+.table-cell--total { text-align: right; font-family: var(--f-condensed); font-weight: 900; color: var(--red); font-size: 17px; padding-right: 14px; }
 
 /* ─── FLOATING EXCEL BTN ─────────────────────────────────────── */
 .floating-excel-btn {
