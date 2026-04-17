@@ -11,20 +11,88 @@ import anrlogo from "./img/anrlogo.png";
 import "./styles.css";
 
 const BridgeCityBackground = () => (
-  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
-      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "360px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+
+    {/* Skyline de edificios - centro */}
+    <svg style={{ position: "absolute", bottom: "58px", left: "15%", width: "70%", height: "190px", opacity: 0.32 }} viewBox="0 0 864 190" preserveAspectRatio="xMidYMax meet">
+      <path fill="#78909c" d="
+        M0,190 L0,130 L18,130 L18,110 L30,110 L30,100 L38,100 L38,88 L46,88 L46,100 L54,100 L54,110 L66,110 L66,130 L84,130 L84,190
+        M90,190 L90,100 L104,100 L104,78 L114,78 L114,65 L122,65 L122,55 L130,55 L130,65 L138,65 L138,78 L148,78 L148,100 L162,100 L162,190
+        M170,190 L170,118 L184,118 L184,100 L198,100 L198,190
+        M206,190 L206,90 L220,90 L220,65 L230,65 L230,50 L238,50 L238,40 L246,40 L246,50 L254,50 L254,65 L264,65 L264,90 L278,90 L278,190
+        M286,190 L286,108 L300,108 L300,88 L314,88 L314,190
+        M322,190 L322,78 L336,78 L336,52 L346,52 L346,38 L354,38 L354,28 L362,28 L362,38 L370,38 L370,52 L380,52 L380,78 L394,78 L394,190
+        M402,190 L402,102 L416,102 L416,82 L430,82 L430,190
+        M438,190 L438,88 L452,88 L452,62 L462,62 L462,48 L470,48 L470,40 L478,40 L478,48 L486,48 L486,62 L496,62 L496,88 L510,88 L510,190
+        M518,190 L518,112 L532,112 L532,90 L546,90 L546,190
+        M554,190 L554,96 L568,96 L568,74 L582,74 L582,190
+        M590,190 L590,122 L604,122 L604,100 L618,100 L618,190
+        M626,190 L626,108 L640,108 L640,86 L654,86 L654,190
+        M662,190 L662,130 L676,130 L676,110 L690,110 L690,190
+        M698,190 L698,118 L712,118 L712,96 L726,96 L726,190
+        M734,190 L734,128 L748,128 L748,190
+        M756,190 L756,138 L770,138 L770,190
+        M778,190 L778,120 L792,120 L792,190
+        M800,190 L800,132 L814,132 L814,190
+        M820,190 L820,140 L834,140 L834,190
+        M840,190 L840,148 L854,148 L854,190
+      "/>
     </svg>
-    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
-      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
-      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
+
+    {/* Catedral / Iglesia - izquierda */}
+    <svg style={{ position: "absolute", bottom: "58px", left: "3%", width: "9%", height: "210px", opacity: 0.48 }} viewBox="0 0 130 210" preserveAspectRatio="xMidYMax meet">
+      <path fill="#607080" d="
+        M25,210 L25,120 L40,120 L40,105 L47,105 L47,94 L51,94 L51,82 L54,82 L54,60 L57,60 L57,38 L59,38 L59,10 L60,0 L61,10 L61,38 L63,38 L63,60 L66,60 L66,82 L69,82 L69,94 L73,94 L73,105 L80,105 L80,120 L95,120 L95,210 Z
+        M42,120 L42,108 L48,108 L48,120 Z
+        M72,120 L72,108 L78,108 L78,120 Z
+        M50,94 L50,85 L70,85 L70,94 Z
+      "/>
     </svg>
-    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
-      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
-      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
-      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
-      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
+
+    {/* Puente de la Amistad - derecha */}
+    <svg style={{ position: "absolute", bottom: "58px", right: "1%", width: "20%", height: "185px", opacity: 0.42 }} viewBox="0 0 280 185" preserveAspectRatio="xMidYMax meet">
+      <path fill="#607898" d="M75,185 L75,38 L92,38 L92,185 Z M185,185 L185,22 L202,22 L202,185 Z"/>
+      <rect fill="#607898" x="0" y="112" width="280" height="9"/>
+      <path fill="none" stroke="#607898" strokeWidth="1.8" d="
+        M83,43 L0,115 M83,48 L28,115 M83,54 L55,115
+        M193,27 L280,115 M193,32 L252,115 M193,38 L224,115
+        M83,43 L138,115 M83,48 L116,115
+        M193,27 L138,115 M193,32 L160,115
+      "/>
+    </svg>
+
+    {/* Resplandor dorado central */}
+    <div style={{
+      position: "absolute", bottom: "70px", left: "50%",
+      transform: "translateX(-50%)",
+      width: "440px", height: "240px",
+      background: "radial-gradient(ellipse at 50% 100%, rgba(255,218,45,0.9) 0%, rgba(255,200,35,0.45) 28%, rgba(255,210,60,0.12) 55%, transparent 68%)"
+    }} />
+
+    {/* Colinas rojas - IZQUIERDA (capa trasera oscura) */}
+    <svg style={{ position: "absolute", bottom: "42px", left: 0, width: "54%", height: "295px" }} viewBox="0 0 780 295" preserveAspectRatio="none">
+      <path fill="#8b0e1e" d="M0,295 L0,130 C55,88 110,148 175,112 C232,80 292,128 362,104 C422,84 488,116 552,96 C608,78 662,105 720,88 C745,80 762,84 780,78 L780,295 Z"/>
+    </svg>
+    {/* Colinas rojas - IZQUIERDA (capa delantera) */}
+    <svg style={{ position: "absolute", bottom: "42px", left: 0, width: "54%", height: "295px" }} viewBox="0 0 780 295" preserveAspectRatio="none">
+      <path fill="#C8102E" d="M0,295 L0,162 C68,118 142,172 218,144 C286,118 354,162 428,138 C490,118 558,148 626,128 C672,114 718,134 780,118 L780,295 Z"/>
+    </svg>
+
+    {/* Colinas rojas - DERECHA (capa trasera oscura) */}
+    <svg style={{ position: "absolute", bottom: "42px", right: 0, width: "54%", height: "295px" }} viewBox="0 0 780 295" preserveAspectRatio="none">
+      <path fill="#8b0e1e" d="M780,295 L780,130 C725,88 670,148 605,112 C548,80 488,128 418,104 C358,84 292,116 228,96 C172,78 118,105 60,88 C35,80 18,84 0,78 L0,295 Z"/>
+    </svg>
+    {/* Colinas rojas - DERECHA (capa delantera) */}
+    <svg style={{ position: "absolute", bottom: "42px", right: 0, width: "54%", height: "295px" }} viewBox="0 0 780 295" preserveAspectRatio="none">
+      <path fill="#C8102E" d="M780,295 L780,162 C712,118 638,172 562,144 C494,118 426,162 352,138 C290,118 222,148 154,128 C108,114 62,134 0,118 L0,295 Z"/>
+    </svg>
+
+    {/* Bandera Paraguay - ondas al fondo */}
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "54px" }} viewBox="0 0 1440 54" preserveAspectRatio="none">
+      <path fill="#C8102E" d="M0,0 C360,16 720,-2 1080,12 C1200,16 1320,10 1440,14 L1440,18 C1320,14 1200,20 1080,16 C720,4 360,22 0,6 Z"/>
+      <path fill="#C8102E" d="M0,5 C360,21 720,1 1080,17 C1200,21 1320,13 1440,17 L1440,54 L0,54 Z" opacity="0.97"/>
+      <path fill="#f1f5f9" d="M0,17 C360,28 720,13 1080,24 C1200,28 1320,20 1440,24 L1440,36 C1320,32 1200,38 1080,34 C720,24 360,36 0,30 Z"/>
+      <path fill="#1e3a8a" d="M0,30 C360,40 720,26 1080,36 C1200,40 1320,34 1440,38 L1440,54 L0,54 Z"/>
     </svg>
   </div>
 );
@@ -291,6 +359,7 @@ export default function App() {
 
           <div className="hero-pill">
             <span>LISTA 2</span>
+            <span className="hero-pill__sep">–</span>
             <span className="hero-pill__secondary">OPCIÓN 5</span>
           </div>
 

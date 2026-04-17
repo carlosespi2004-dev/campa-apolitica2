@@ -315,8 +315,8 @@ tr:hover { background: var(--bg-hover); }
 .hero-section {
   position: relative;
   width: 100%;
-  background: linear-gradient(180deg, #f5f6f8 0%, #ffffff 60%);
-  padding: 60px 20px 200px;
+  background: linear-gradient(180deg, #f4f5f7 0%, #ffffff 55%);
+  padding: 60px 20px 230px;
   text-align: center;
   overflow: hidden;
 }
@@ -351,7 +351,7 @@ tr:hover { background: var(--bg-hover); }
   padding: 6px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
 }
-.hero-logo { width: 90px; height: 90px; border-radius: 50%; }
+.hero-logo { width: 108px; height: 108px; border-radius: 50%; }
 
 .hero-pill {
   display: inline-flex;
@@ -367,12 +367,16 @@ tr:hover { background: var(--bg-hover); }
   box-shadow: var(--shadow-red);
   padding: 5px 8px 5px 22px;
 }
+.hero-pill__sep {
+  margin: 0 8px;
+  opacity: 0.75;
+  font-weight: 400;
+}
 .hero-pill__secondary {
   background: white;
   color: var(--red);
   padding: 4px 16px;
   border-radius: var(--r-pill);
-  margin-left: 10px;
   font-weight: 900;
 }
 .hero-title {
