@@ -11,44 +11,20 @@ import anrlogo from "./img/anrlogo.png";
 import "./styles.css";
 
 const BridgeCityBackground = () => (
-  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "215px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
-
-    {/* Skyline central — tops visibles sobre las colinas */}
-    <svg style={{ position: "absolute", bottom: "58px", left: "18%", width: "64%", height: "125px", opacity: 0.28 }} viewBox="0 0 720 125" preserveAspectRatio="xMidYMax meet">
-      <path fill="#78909c" d="M0,125 L0,85 L14,85 L14,68 L24,68 L24,58 L31,58 L31,50 L38,50 L38,58 L45,58 L45,68 L55,68 L55,85 L68,85 L68,125 M75,125 L75,72 L88,72 L88,52 L97,52 L97,40 L104,40 L104,32 L111,32 L111,40 L118,40 L118,52 L127,52 L127,72 L140,72 L140,125 M147,125 L147,80 L158,80 L158,64 L170,64 L170,125 M176,125 L176,60 L187,60 L187,40 L195,40 L195,28 L202,28 L202,20 L209,20 L209,28 L216,28 L216,40 L224,40 L224,60 L235,60 L235,125 M241,125 L241,74 L252,74 L252,56 L264,56 L264,125 M270,125 L270,64 L281,64 L281,42 L289,42 L289,30 L296,30 L296,22 L303,22 L303,30 L310,30 L310,42 L318,42 L318,64 L329,64 L329,125 M335,125 L335,78 L346,78 L346,60 L358,60 L358,125 M364,125 L364,68 L375,68 L375,46 L383,46 L383,35 L390,35 L390,27 L397,27 L397,35 L404,35 L404,46 L412,46 L412,68 L423,68 L423,125 M429,125 L429,80 L440,80 L440,62 L452,62 L452,125 M458,125 L458,72 L469,72 L469,52 L481,52 L481,125 M487,125 L487,84 L498,84 L498,66 L510,66 L510,125 M516,125 L516,76 L527,76 L527,58 L539,58 L539,125 M545,125 L545,86 L556,86 L556,68 L568,68 L568,125 M574,125 L574,80 L585,80 L585,125 M591,125 L591,88 L602,88 L602,125 M608,125 L608,82 L620,82 L620,125 M626,125 L626,90 L638,90 L638,125 M644,125 L644,85 L656,85 L656,125 M662,125 L662,92 L674,92 L674,125 M680,125 L680,88 L692,88 L692,125 M698,125 L698,82 L710,82 L710,125 M716,125 L716,90 L720,90 L720,125"/>
+  <div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "280px", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "140px", opacity: 0.8 }} viewBox="0 0 1440 140" preserveAspectRatio="none">
+      <path fill="#94a3b8" d="M150,140 L150,50 L170,50 L170,40 L190,40 L190,60 L210,60 L210,140 Z M350,140 L350,30 L380,30 L380,140 Z M850,140 L850,20 L890,20 L890,140 Z M1150,140 L1150,40 L1170,40 L1170,10 L1190,10 L1190,140 Z M1250,140 Q1300,40 1350,140 Z"></path>
     </svg>
-
-    {/* Catedral — izquierda */}
-    <svg style={{ position: "absolute", bottom: "58px", left: "3%", width: "8%", height: "158px", opacity: 0.45 }} viewBox="0 0 120 158" preserveAspectRatio="xMidYMax meet">
-      <path fill="#607080" d="M22,158 L22,106 L36,106 L36,92 L42,92 L42,82 L46,82 L46,70 L49,70 L49,50 L52,50 L52,30 L55,30 L55,8 L58,0 L60,8 L60,30 L63,30 L63,50 L66,50 L66,70 L69,70 L69,82 L73,82 L73,92 L79,92 L79,106 L93,106 L93,158 Z M38,106 L38,96 L42,96 L42,106 Z M73,106 L73,96 L77,96 L77,106 Z M46,82 L46,74 L69,74 L69,82 Z"/>
+    <svg style={{ position: "absolute", bottom: "40px", left: 0, width: "100%", height: "150px" }} viewBox="0 0 1440 150" preserveAspectRatio="none">
+      <path fill="none" stroke="#64748b" strokeWidth="3" d="M0,90 C320,150 420,30 720,70 C1020,110 1220,40 1440,80" opacity="0.6"></path>
+      <path fill="none" stroke="#94a3b8" strokeWidth="1.5" d="M720,70 L680,90 M720,70 L760,90 M720,70 L640,90 M720,70 L800,90" opacity="0.5"></path>
     </svg>
-
-    {/* Puente — derecha */}
-    <svg style={{ position: "absolute", bottom: "58px", right: "1%", width: "18%", height: "148px", opacity: 0.4 }} viewBox="0 0 260 148" preserveAspectRatio="xMidYMax meet">
-      <path fill="#607898" d="M72,148 L72,34 L88,34 L88,148 Z M172,148 L172,18 L188,18 L188,148 Z"/>
-      <rect fill="#607898" x="0" y="96" width="260" height="8"/>
-      <path fill="none" stroke="#607898" strokeWidth="1.5" d="M80,38 L0,100 M80,43 L26,100 M80,49 L54,100 M180,23 L260,100 M180,28 L230,100 M180,34 L204,100 M80,38 L128,100 M180,23 L128,100"/>
-    </svg>
-
-    {/* Resplandor dorado central */}
-    <div style={{
-      position: "absolute", bottom: "55px", left: "50%",
-      transform: "translateX(-50%)",
-      width: "400px", height: "210px",
-      background: "radial-gradient(ellipse at 50% 100%, rgba(255,218,45,0.92) 0%, rgba(255,205,35,0.48) 26%, rgba(255,210,60,0.12) 52%, transparent 66%)"
-    }} />
-
-    {/* Colinas rojas — ancho completo, forma de valle (altas en lados, bajas en centro) */}
-    <svg style={{ position: "absolute", bottom: "38px", left: 0, width: "100%", height: "178px" }} viewBox="0 0 1440 178" preserveAspectRatio="none">
-      <path fill="#8b0e1e" d="M0,178 L0,72 C110,44 240,88 380,65 C480,48 558,70 612,96 C652,114 688,126 720,132 C752,126 788,114 828,96 C882,70 960,48 1060,65 C1200,88 1330,44 1440,72 L1440,178 Z"/>
-      <path fill="#C8102E" d="M0,178 L0,94 C110,64 240,108 380,86 C480,68 558,90 612,116 C652,134 688,146 720,150 C752,146 788,134 828,116 C882,90 960,68 1060,86 C1200,108 1330,64 1440,94 L1440,178 Z"/>
-    </svg>
-
-    {/* Bandera Paraguay — ondas */}
-    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "46px" }} viewBox="0 0 1440 46" preserveAspectRatio="none">
-      <path fill="#C8102E" d="M0,0 C360,13 720,0 1080,11 C1200,14 1320,8 1440,12 L1440,46 L0,46 Z"/>
-      <path fill="#f1f5f9" d="M0,13 C360,22 720,11 1080,20 C1200,24 1320,16 1440,20 L1440,30 C1320,26 1200,32 1080,28 C720,20 360,30 0,26 Z"/>
-      <path fill="#1e3a8a" d="M0,26 C360,35 720,23 1080,33 C1200,37 1320,29 1440,33 L1440,46 L0,46 Z"/>
+    <div style={{ position: "absolute", bottom: "50px", left: "50%", transform: "translateX(-50%)", width: "250px", height: "150px", background: "radial-gradient(ellipse at bottom, rgba(254,240,138,0.8) 0%, rgba(255,255,255,0) 70%)" }} />
+    <svg style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: "80px" }} viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path fill="#991b1b" d="M0,20 C480,90 720,-30 1440,40 L1440,80 L0,80 Z"></path>
+      <path fill="#C8102E" d="M0,35 C480,105 720,-10 1440,55 L1440,80 L0,80 Z"></path>
+      <path fill="#ffffff" opacity="0.9" d="M0,55 C480,120 720,10 1440,68 L1440,80 L0,80 Z"></path>
+      <path fill="#1e3a8a" d="M0,65 C480,130 720,20 1440,73 L1440,80 L0,80 Z"></path>
     </svg>
   </div>
 );
@@ -69,7 +45,7 @@ const AccentRight = () => (
 );
 
 const BrilloNumero = () => (
-  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "160px", height: "160px", background: "radial-gradient(circle, rgba(200,16,46,0.08) 0%, rgba(200,16,46,0) 65%)", borderRadius: "50%", filter: "blur(12px)", pointerEvents: "none", zIndex: -1 }} />
+  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "160px", height: "160px", background: "radial-gradient(circle, rgba(254,240,138,0.6) 0%, rgba(254,240,138,0) 65%)", borderRadius: "50%", filter: "blur(12px)", pointerEvents: "none", zIndex: -1 }} />
 );
 
 export default function App() {
@@ -306,16 +282,15 @@ export default function App() {
 
         <div className="hero-content">
           <div className="hero-logo-row">
-            {!isMobile && <svg width="120" height="2"><rect width="120" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
             <div className="hero-logo-wrap">
               <img src={anrlogo} alt="ANR" className="hero-logo" />
             </div>
-            {!isMobile && <svg width="120" height="2"><rect width="120" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
           </div>
 
           <div className="hero-pill">
             <span>LISTA 2</span>
-            <span className="hero-pill__sep">–</span>
             <span className="hero-pill__secondary">OPCIÓN 5</span>
           </div>
 
@@ -326,7 +301,7 @@ export default function App() {
               <img src={logocarmona} alt="Carmona" className="hero-candidate-image" />
             </div>
             <span className="hero-candidate-text">DARÍO CARMONA – CONCEJAL 2026</span>
-            <span className="hero-candidate-spacer">→</span>
+            <span className="hero-candidate-spacer"></span>
           </button>
         </div>
       </section>
@@ -346,7 +321,7 @@ export default function App() {
           </div>
 
           <div className="counter-card__text">
-            personas<br />registradas
+            personas<br />confiando en este objetivo
           </div>
 
           <div className="counter-card__capsule">
