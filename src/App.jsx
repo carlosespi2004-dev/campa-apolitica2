@@ -45,7 +45,7 @@ const AccentRight = () => (
 );
 
 const BrilloNumero = () => (
-  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "160px", height: "160px", background: "radial-gradient(circle, rgba(254,240,138,0.6) 0%, rgba(254,240,138,0) 65%)", borderRadius: "50%", filter: "blur(12px)", pointerEvents: "none", zIndex: -1 }} />
+  <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "160px", height: "160px", background: "radial-gradient(circle, rgba(200,16,46,0.08) 0%, rgba(200,16,46,0) 65%)", borderRadius: "50%", filter: "blur(12px)", pointerEvents: "none", zIndex: -1 }} />
 );
 
 export default function App() {
@@ -282,11 +282,11 @@ export default function App() {
 
         <div className="hero-content">
           <div className="hero-logo-row">
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <svg width="120" height="2"><rect width="120" height="2" fill="#cbd5e1" /></svg>}
             <div className="hero-logo-wrap">
               <img src={anrlogo} alt="ANR" className="hero-logo" />
             </div>
-            {!isMobile && <svg width="50" height="2"><rect width="50" height="2" fill="#cbd5e1" /></svg>}
+            {!isMobile && <svg width="120" height="2"><rect width="120" height="2" fill="#cbd5e1" /></svg>}
           </div>
 
           <div className="hero-pill">
@@ -301,7 +301,7 @@ export default function App() {
               <img src={logocarmona} alt="Carmona" className="hero-candidate-image" />
             </div>
             <span className="hero-candidate-text">DARÍO CARMONA – CONCEJAL 2026</span>
-            <span className="hero-candidate-spacer"></span>
+            <span className="hero-candidate-spacer">→</span>
           </button>
         </div>
       </section>
@@ -321,7 +321,7 @@ export default function App() {
           </div>
 
           <div className="counter-card__text">
-            personas<br />confiando en este objetivo
+            personas<br />registradas
           </div>
 
           <div className="counter-card__capsule">

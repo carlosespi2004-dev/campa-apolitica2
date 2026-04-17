@@ -267,9 +267,9 @@ tr:hover { background: var(--bg-hover); }
 .topbar__hello { font-size: 12px; color: var(--text-2); font-weight: 500; }
 .topbar__hello span { font-weight: 700; color: var(--text-1); }
 .topbar__role {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid var(--border-red);
+  background: var(--red);
+  color: white;
+  border: none;
   padding: 2px 8px;
   border-radius: var(--r-pill);
   font-family: var(--f-condensed);
@@ -315,7 +315,7 @@ tr:hover { background: var(--bg-hover); }
 .hero-section {
   position: relative;
   width: 100%;
-  background: var(--bg-base);
+  background: linear-gradient(180deg, #f5f6f8 0%, #ffffff 60%);
   padding: 60px 20px 200px;
   text-align: center;
   overflow: hidden;
@@ -326,7 +326,7 @@ tr:hover { background: var(--bg-hover); }
   top: 0; left: 0; right: 0;
   height: 280px;
   background: radial-gradient(ellipse 70% 50% at 50% -10%,
-    rgba(200,16,46,0.18) 0%, transparent 70%);
+    rgba(200,16,46,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 .hero-content {
@@ -349,7 +349,7 @@ tr:hover { background: var(--bg-hover); }
   background: white;
   border-radius: 50%;
   padding: 6px;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06);
 }
 .hero-logo { width: 90px; height: 90px; border-radius: 50%; }
 
@@ -376,13 +376,14 @@ tr:hover { background: var(--bg-hover); }
   font-weight: 900;
 }
 .hero-title {
-  font-family: var(--f-display);
-  font-style: normal;
-  color: var(--text-1);
-  font-size: 82px;
+  font-family: var(--f-condensed);
+  font-style: italic;
+  font-weight: 900;
+  color: var(--red);
+  font-size: 88px;
   margin: 0 0 6px;
-  letter-spacing: 0.04em;
-  line-height: 0.95;
+  letter-spacing: 0.02em;
+  line-height: 0.92;
   text-shadow: none;
 }
 .hero-title span.red { color: var(--red); }
@@ -457,9 +458,9 @@ tr:hover { background: var(--bg-hover); }
   margin-right: 8px;
 }
 .counter-card__icon {
-  background: var(--red-dim);
-  border: 1px solid var(--border-red);
-  color: var(--red);
+  background: var(--red);
+  border: none;
+  color: white;
   width: 58px;
   height: 58px;
   border-radius: 50%;
@@ -501,8 +502,8 @@ tr:hover { background: var(--bg-hover); }
   bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-high);
-  border: 2px solid var(--border-mid);
+  background: rgba(200, 16, 46, 0.07);
+  border: 1.5px solid rgba(200, 16, 46, 0.18);
   border-radius: var(--r-pill);
   padding: 7px 24px;
   display: flex;
