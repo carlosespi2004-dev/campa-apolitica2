@@ -137,7 +137,7 @@ export default function App() {
     return Array.from(captadoresMap.values()).map((m) => ({ ...m, porcentaje: total > 0 ? Math.round((m.cantidad / total) * 100) : 0 })).sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
 
-  const VOTER_OFFSET = 176;
+  const VOTER_OFFSET = 400;
   const totalVotantesGeneral = useMemo(() => {
     const base = conteoGlobal > 0 ? conteoGlobal : (() => {
       const seen = new Set();
