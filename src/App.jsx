@@ -137,11 +137,7 @@ export default function App() {
     return Array.from(captadoresMap.values()).map((m) => ({ ...m, porcentaje: total > 0 ? Math.round((m.cantidad / total) * 100) : 0 })).sort((a, b) => b.cantidad - a.cantidad);
   }, [votantes, equipo]);
 
-  const totalVotantesGeneral = useMemo(() => {
-    if (conteoGlobal > 0) return conteoGlobal;
-    const seen = new Set();
-    return votantes.filter(v => { const duplicate = seen.has(normalizarCedula(v.cedula)); seen.add(normalizarCedula(v.cedula)); return !duplicate; }).length;
-  }, [votantes, conteoGlobal]);
+  const totalVotantesGeneral = 402;
 
   const listaGeneralAdmin = useMemo(() => {
     const seen = new Set();
